@@ -38,6 +38,7 @@ services:
       - "4501:5432"
     volumes:
       - ./db_data:/var/lib/postgresql
+      - ./postgres/init:/docker-entrypoint-initdb.d
     networks:
       - oficina-manager
 

@@ -9,11 +9,13 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.5",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "laravellegends/pt-br-validator": "^12.2"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.6",
         "fakerphp/faker": "^1.23",
         "laravel/boost": "^1.8",
         "laravel/pail": "^1.2.2",
@@ -35,6 +37,9 @@
             "Tests\\": "tests/"
         }
     },
+    "files" : [
+        "app/helpers.php"
+    ],
     "scripts": {
         "setup": [
             "composer install",
