@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Actions\admin\CreateTenantAction;
+use App\Actions\Admin\CreateTenantAction;
 use App\Dto\TenantCreateDto;
 use Illuminate\Console\Command;
 use Throwable;

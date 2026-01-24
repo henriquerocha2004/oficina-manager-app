@@ -11,7 +11,7 @@
  */
 
 
-namespace App\Models{
+namespace App\Models{use App\Models\Tenant\Client;
 /**
  * @method static Builder<static>|Client newModelQuery()
  * @method static Builder<static>|Client newQuery()

@@ -1,26 +1,27 @@
 <?php
 
-namespace App\Actions\admin;
+namespace App\Actions\Admin;
 
+use App\Actions\Tenant\User\CreateUserAction;
+use Exception;
+use Throwable;
+use App\Dto\UserDto;
 use App\Constants\Messages;
 use App\Dto\TenantCreateDto;
-use App\Exceptions\Tenant\TenantAlreadyExistsException;
-use App\Models\Tenant;
-use App\Services\admin\TenantManager;
-use Database\Seeders\AdminTenantUsers;
-use Exception;
-use Illuminate\Support\Facades\Artisan;
+use App\Models\Admin\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\admin\TenantManager;
+use Illuminate\Support\Facades\Artisan;
 use Symfony\Component\HttpFoundation\Response;
-use Throwable;
+use App\Exceptions\Tenant\TenantAlreadyExistsException;
 
 class CreateTenantAction
 {
     private const string PREFIX_DATABASE = 'tenant_%s';
 
     public function __construct(
-       private readonly TenantManager $tenantManager,
+        private readonly TenantManager $tenantManager,
     ) {
     }
 
@@ -54,6 +55,11 @@ class CreateTenantAction
                 'tenant' => $tenantCreated->toArray(),
             ]);
             $tenantCreated->delete();
+
+            $tenantConnection = config('database.connections_names.tenant');
+            DB::disconnect($tenantConnection);
+            DB::purge($tenantConnection);
+
             $this->dropDatabase($databaseName);
 
             throw new Exception(
@@ -73,12 +79,12 @@ class CreateTenantAction
                 TEMPLATE template0
             ', $databaseName);
 
-        DB::connection('manager')->statement($dataBaseCreateSQL);
+        DB::connection(config('database.connections_names.admin'))->statement($dataBaseCreateSQL);
     }
 
     private function dropDatabase(string $database): void
     {
-        DB::connection('manager')
+        DB::connection(config('database.connections_names.admin'))
             ->statement(sprintf('DROP DATABASE IF EXISTS "%s"', $database));
     }
 
@@ -93,7 +99,7 @@ class CreateTenantAction
         Artisan::call(
             command: 'migrate',
             parameters: [
-                '--database' => 'tenant',
+                '--database' => config('database.connections_names.tenant'),
                 '--path' => 'database/migrations/tenants',
                 '--force' => true,
             ]
@@ -102,8 +108,12 @@ class CreateTenantAction
 
     private function createUser(Tenant $tenant): void
     {
-        /** @var AdminTenantUsers $userSeed */
-        $userSeed = app(AdminTenantUsers::class);
-        $userSeed->run($tenant->name, $tenant->email);
+        /** @var CreateUserAction $userSeed */
+        $userSeed = app(CreateUserAction::class);
+        $userSeed(new UserDto(
+            name: $tenant->name,
+            email: $tenant->email,
+            password: 'password'
+        ));
     }
 }

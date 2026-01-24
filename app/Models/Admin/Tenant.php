@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Admin;
 
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
@@ -48,9 +49,9 @@ use Illuminate\Support\Carbon;
  */
 class Tenant extends ManagerBaseModel
 {
-    protected $table = 'tenant';
+    use HasFactory;
 
-    protected $connection = 'manager';
+    protected $table = 'tenant';
     protected $guarded = [];
 
     protected $fillable = [

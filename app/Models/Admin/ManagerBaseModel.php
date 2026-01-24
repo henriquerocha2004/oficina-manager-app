@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\Admin;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,8 +10,6 @@ class ManagerBaseModel extends Model
     {
         parent::__construct($attributes);
 
-        if (app()->environment('testing')) {
-            $this->connection = config('database.default');
-        }
+        $this->connection = config('database.connections_names.admin');
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Services\admin;
 
-use App\Models\Tenant;
+use App\Models\Admin\Tenant;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 
@@ -40,11 +40,12 @@ class TenantManager
             $tenant = Tenant::findOrFail($tenant);
         }
 
-        config(['database.connections.tenant.database' => $tenant->database_name]);
-        DB::purge('tenant');
-        DB::connection('tenant')->reconnect();
+        $connectionName = config('database.connections_names.tenant');
+        config(["database.connections.{$connectionName}.database" => $tenant->database_name]);
+        DB::purge($connectionName);
+        DB::connection($connectionName)->reconnect();
         $this->setTenant($tenant);
-        DB::setDefaultConnection('tenant');
+        DB::setDefaultConnection($connectionName);
         $this->setTenantGlobally();
     }
 

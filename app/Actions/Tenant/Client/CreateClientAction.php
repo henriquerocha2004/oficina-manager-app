@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Actions\tenant\Client;
+namespace App\Actions\Tenant\Client;
 
 use App\Dto\ClientDto;
 use App\Exceptions\Client\ClientAlreadyExistsException;
-use App\Models\Client;
+use App\Models\Tenant\Client;
 use Throwable;
 
 class CreateClientAction
