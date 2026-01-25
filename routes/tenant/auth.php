@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
-   echo "Tenant Login";
+      return Inertia::render("Tenant/Test");
 });
