@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 class IdentifyTenant
 {
     public function __construct(
-       protected TenantManager $tenantManager
+        protected TenantManager $tenantManager
     ) {
     }
 
@@ -26,7 +26,6 @@ class IdentifyTenant
 
         if (app()->environment() === 'testing') return $next($request);
         $tenantManager = $this->tenantManager->loadTenant($request->getHost());
-
         if (!$tenantManager->getTenant()) {
             Log::error(Messages::TENANT_NOT_FOUND, [
                 'host' => $request->getHost(),

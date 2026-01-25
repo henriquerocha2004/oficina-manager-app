@@ -152,14 +152,12 @@ const form = useForm({
 });
 
 const handleSubmit = () => {
-  // Quando o back-end estiver pronto, descomente a linha abaixo
-  // form.post('/forgot-password', {
-  //   onSuccess: () => {
-  //     submitted.value = true;
-  //   },
-  // });
-  
-  // Simulação temporária (remover quando integrar com back-end)
+  form.post('/forgot-password', {
+    onSuccess: () => {
+      submitted.value = true;
+    },
+  });
+
   form.processing = true;
   setTimeout(() => {
     form.processing = false;

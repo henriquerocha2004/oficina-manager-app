@@ -117,12 +117,23 @@
             {{ form.errors.password }}
           </span>
         </div>
-         <Link
-              href="/forgot-password"
-              class="kt-link kt-link-underline text-sm text-primary hover:text-primary/90"
-            >
-              Esqueceu sua senha?
-        </Link>
+
+        <!-- Remember Me -->
+        <div class="flex items-center justify-between">
+          <Checkbox
+            id="remember"
+            v-model="form.remember"
+            size="sm"
+          >
+            Lembrar-me
+          </Checkbox>
+          <Link
+            href="/forgot-password"
+            class="kt-link kt-link-underline text-sm text-primary hover:text-primary/90"
+          >
+            Esqueceu sua senha?
+          </Link>
+        </div>
 
         <!-- Submit Button -->
         <Button
@@ -144,6 +155,7 @@ import AuthLayout from '@/Layouts/AuthLayout.vue';
 import AuthBrandedPanel from '@/Components/Auth/AuthBrandedPanel.vue';
 import Button from '@/Components/UI/Button.vue';
 import Input from '@/Components/UI/Input.vue';
+import Checkbox from '@/Components/UI/Checkbox.vue';
 import PasswordInput from '@/Components/Auth/PasswordInput.vue';
 
 const form = useForm({

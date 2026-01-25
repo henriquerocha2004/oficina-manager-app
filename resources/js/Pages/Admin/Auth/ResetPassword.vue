@@ -25,34 +25,18 @@
         <!-- Título e Subtítulo -->
         <div class="mb-12">
           <h2 class="mb-3 text-4xl font-bold text-white">
-            Painel de<br />Administração
+            Nova Senha<br />Administrativa
           </h2>
           <p class="text-lg text-gray-300">
-            Gerencie todo o sistema com segurança e eficiência
+            Defina uma senha forte e segura
           </p>
-        </div>
-
-        <!-- Estatísticas -->
-        <div class="grid grid-cols-3 gap-8">
-          <div class="text-center">
-            <div class="mb-2 text-4xl font-bold text-primary">100%</div>
-            <div class="text-sm text-gray-300">Seguro</div>
-          </div>
-          <div class="text-center">
-            <div class="mb-2 text-4xl font-bold text-primary">24/7</div>
-            <div class="text-sm text-gray-300">Disponível</div>
-          </div>
-          <div class="text-center">
-            <div class="mb-2 text-4xl font-bold text-primary">Admin</div>
-            <div class="text-sm text-gray-300">Acesso Total</div>
-          </div>
         </div>
       </AuthBrandedPanel>
     </template>
 
-    <!-- Login Form -->
+    <!-- Reset Password Form -->
     <form
-      id="admin_login_form"
+      id="admin_reset_password_form"
       @submit.prevent="handleSubmit"
     >
       <div class="flex flex-col gap-3.5">
@@ -60,17 +44,16 @@
         <div class="mb-2 flex flex-col items-center gap-3">
           <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-primary">
             <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
           <div class="text-center">
-            <h2 class="text-xl font-bold text-foreground">Painel Administrativo</h2>
-            <p class="text-sm text-muted-foreground">Acesse o sistema de gerenciamento</p>
+            <h2 class="text-xl font-bold text-foreground">Redefinir Senha</h2>
+            <p class="text-sm text-muted-foreground">Crie uma nova senha para sua conta</p>
           </div>
         </div>
 
-        <!-- Email Input -->
+        <!-- Email Input (readonly) -->
         <div class="flex flex-col gap-1">
           <label
             for="email"
@@ -82,32 +65,23 @@
             id="email"
             v-model="form.email"
             type="email"
-            placeholder="admin@email.com"
-            required
-            :aria-invalid="form.errors.email ? 'true' : 'false'"
+            readonly
+            class="bg-gray-50"
           />
-          <span
-            v-if="form.errors.email"
-            class="text-xs text-destructive"
-          >
-            {{ form.errors.email }}
-          </span>
         </div>
 
-        <!-- Password Input -->
+        <!-- New Password Input -->
         <div class="flex flex-col gap-1">
-          <div class="flex items-center justify-between">
-            <label
-              for="password"
-              class="kt-form-label font-normal text-mono"
-            >
-              Senha
-            </label>
-          </div>
+          <label
+            for="password"
+            class="kt-form-label font-normal text-mono"
+          >
+            Nova Senha
+          </label>
           <PasswordInput
             id="password"
             v-model="form.password"
-            placeholder="Digite sua senha"
+            placeholder="Digite sua nova senha"
             required
             :aria-invalid="form.errors.password ? 'true' : 'false'"
           />
@@ -119,21 +93,27 @@
           </span>
         </div>
 
-        <!-- Remember Me -->
-        <div class="flex items-center justify-between">
-          <Checkbox
-            id="remember"
-            v-model="form.remember"
-            size="sm"
+        <!-- Password Confirmation Input -->
+        <div class="flex flex-col gap-1">
+          <label
+            for="password_confirmation"
+            class="kt-form-label font-normal text-mono"
           >
-            Lembrar-me
-          </Checkbox>
-          <Link
-            href="/admin/forgot-password"
-            class="kt-link kt-link-underline text-sm text-primary hover:text-primary/90"
+            Confirmar Senha
+          </label>
+          <PasswordInput
+            id="password_confirmation"
+            v-model="form.password_confirmation"
+            placeholder="Confirme sua nova senha"
+            required
+            :aria-invalid="form.errors.password_confirmation ? 'true' : 'false'"
+          />
+          <span
+            v-if="form.errors.password_confirmation"
+            class="text-xs text-destructive"
           >
-            Esqueceu a senha?
-          </Link>
+            {{ form.errors.password_confirmation }}
+          </span>
         </div>
 
         <!-- Submit Button -->
@@ -143,8 +123,19 @@
           :disabled="form.processing"
           class="flex grow justify-center"
         >
-          {{ form.processing ? 'Entrando...' : 'Entrar' }}
+          {{ form.processing ? 'Redefinindo...' : 'Redefinir Senha' }}
         </Button>
+
+        <!-- Back to login link -->
+        <div class="text-center text-sm text-muted-foreground">
+          Lembrou sua senha?
+          <Link
+            href="/admin"
+            class="kt-link kt-link-underline text-primary hover:text-primary/90"
+          >
+            Voltar ao login
+          </Link>
+        </div>
       </div>
     </form>
   </AuthLayout>
@@ -156,22 +147,26 @@ import AuthLayout from '@/Layouts/AuthLayout.vue';
 import AuthBrandedPanel from '@/Components/Auth/AuthBrandedPanel.vue';
 import Button from '@/Components/UI/Button.vue';
 import Input from '@/Components/UI/Input.vue';
-import Checkbox from '@/Components/UI/Checkbox.vue';
 import PasswordInput from '@/Components/Auth/PasswordInput.vue';
-import SocialLoginButtons from '@/Components/Auth/SocialLoginButtons.vue';
+
+const props = defineProps({
+  token: String,
+  email: String,
+});
 
 const form = useForm({
-  email: '',
+  token: props.token,
+  email: props.email || '',
   password: '',
-  remember: false,
+  password_confirmation: '',
 });
 
 const handleSubmit = () => {
-  form.post('/admin/login', {
+  form.post('/admin/reset-password', {
     onFinish: () => {
-      // Reset password field on error
       if (Object.keys(form.errors).length > 0) {
         form.password = '';
+        form.password_confirmation = '';
       }
     },
   });
