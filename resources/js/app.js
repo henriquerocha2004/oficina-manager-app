@@ -2,6 +2,11 @@ import './bootstrap';
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import FlashMessages from './Components/FlashMessages.vue'
+import { useTheme } from './Composables/useTheme'
+
+// Inicializar tema
+const { initTheme } = useTheme();
+initTheme();
 
 createInertiaApp({
     resolve: name => {

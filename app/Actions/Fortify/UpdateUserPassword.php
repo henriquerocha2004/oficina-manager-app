@@ -20,7 +20,7 @@ class UpdateUserPassword implements UpdatesUserPasswords
     public function update(User|AdminUsers $user, array $input): void
     {
         $guard = config('fortify.guard');
-        
+
         Validator::make($input, [
             'current_password' => ['required', 'string', 'current_password:' . $guard],
             'password' => $this->passwordRules(),
