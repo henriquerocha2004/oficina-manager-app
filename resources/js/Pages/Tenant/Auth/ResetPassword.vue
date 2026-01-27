@@ -1,0 +1,174 @@
+<template>
+  <AuthLayout>
+    <!-- Customizar lado direito via slot "branded" -->
+    <template #branded>
+      <AuthBrandedPanel
+        :overlay="true"
+        overlay-color="rgba(0, 0, 0, 0.7)"
+      >
+        <!-- Logo -->
+        <div class="mb-8">
+          <div class="flex items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
+              <svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-white">Auto Mecânica Pro</h1>
+              <p class="text-sm text-gray-300">Portal de Acesso Seguro</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Título e Subtítulo -->
+        <div class="mb-12">
+          <h2 class="mb-3 text-4xl font-bold text-white">
+            Recupere o<br />Controle
+          </h2>
+          <p class="text-lg text-gray-300">
+            Defina uma senha forte e segura
+          </p>
+        </div>
+      </AuthBrandedPanel>
+    </template>
+
+    <!-- Reset Password Form -->
+    <form
+      id="tenant_reset_password_form"
+      @submit.prevent="handleSubmit"
+    >
+      <div class="flex flex-col gap-3.5">
+        <!-- Logo no topo do formulário -->
+        <div class="mb-2 flex flex-col items-center gap-3">
+          <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-primary">
+            <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </div>
+          <div class="text-center">
+            <h2 class="text-xl font-bold text-foreground">Redefinir Senha</h2>
+            <p class="text-sm text-muted-foreground">Crie uma nova senha para sua conta</p>
+          </div>
+        </div>
+
+        <!-- Email Input (readonly) -->
+        <div class="flex flex-col gap-1">
+          <label
+            for="email"
+            class="kt-form-label font-normal text-mono"
+          >
+            Email
+          </label>
+          <Input
+            id="email"
+            v-model="form.email"
+            type="email"
+            readonly
+            class="bg-gray-50"
+          />
+        </div>
+
+        <!-- New Password Input -->
+        <div class="flex flex-col gap-1">
+          <label
+            for="password"
+            class="kt-form-label font-normal text-mono"
+          >
+            Nova Senha
+          </label>
+          <PasswordInput
+            id="password"
+            v-model="form.password"
+            placeholder="Digite sua nova senha"
+            required
+            :aria-invalid="form.errors.password ? 'true' : 'false'"
+          />
+          <span
+            v-if="form.errors.password"
+            class="text-xs text-destructive"
+          >
+            {{ form.errors.password }}
+          </span>
+        </div>
+
+        <!-- Password Confirmation Input -->
+        <div class="flex flex-col gap-1">
+          <label
+            for="password_confirmation"
+            class="kt-form-label font-normal text-mono"
+          >
+            Confirmar Senha
+          </label>
+          <PasswordInput
+            id="password_confirmation"
+            v-model="form.password_confirmation"
+            placeholder="Confirme sua nova senha"
+            required
+            :aria-invalid="form.errors.password_confirmation ? 'true' : 'false'"
+          />
+          <span
+            v-if="form.errors.password_confirmation"
+            class="text-xs text-destructive"
+          >
+            {{ form.errors.password_confirmation }}
+          </span>
+        </div>
+
+        <!-- Submit Button -->
+        <Button
+          type="submit"
+          variant="primary"
+          :disabled="form.processing"
+          class="flex grow justify-center"
+        >
+          {{ form.processing ? 'Redefinindo...' : 'Redefinir Senha' }}
+        </Button>
+
+        <!-- Back to login link -->
+        <div class="text-center text-sm text-muted-foreground">
+          Lembrou sua senha?
+          <Link
+            href="/"
+            class="kt-link kt-link-underline text-primary hover:text-primary/90"
+          >
+            Voltar ao login
+          </Link>
+        </div>
+      </div>
+    </form>
+  </AuthLayout>
+</template>
+
+<script setup>
+import { useForm, Link } from '@inertiajs/vue3';
+import AuthLayout from '@/Layouts/AuthLayout.vue';
+import AuthBrandedPanel from '@/Components/Auth/AuthBrandedPanel.vue';
+import Button from '@/Components/UI/Button.vue';
+import Input from '@/Components/UI/Input.vue';
+import PasswordInput from '@/Components/Auth/PasswordInput.vue';
+
+const props = defineProps({
+  token: String,
+  email: String,
+});
+
+const form = useForm({
+  token: props.token,
+  email: props.email || '',
+  password: '',
+  password_confirmation: '',
+});
+
+const handleSubmit = () => {
+  form.post('/reset-password', {
+    onFinish: () => {
+      if (Object.keys(form.errors).length > 0) {
+        form.password = '';
+        form.password_confirmation = '';
+      }
+    },
+  });
+};
+</script>

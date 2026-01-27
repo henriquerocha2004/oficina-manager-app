@@ -1,3 +1,9 @@
+/* Keenicons Font Icons */
+@import '@assets/vendors/keenicons/styles.bundle.css';
+
+/* Metronic Components CSS - Extract only needed components */
+@import '@assets/css/styles.css';
+
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -5,7 +11,116 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Metronic Design Tokens */
+    --color-foreground: #0f172a;
+    --color-background: #ffffff;
+    --color-secondary-foreground: #64748b;
+    --color-muted-foreground: #94a3b8;
+    --color-border: #e2e8f0;
+    --color-mono: #0f172a;
+    --color-primary: #ff5722;
+    --color-primary-foreground: #ffffff;
+    --color-card: #ffffff;
+    --color-card-foreground: #0f172a;
+    --color-input: #e2e8f0;
+    --color-accent: #f1f5f9;
+    --color-accent-foreground: #0f172a;
+    --color-destructive: #ef4444;
+    --color-destructive-foreground: #ffffff;
+    --color-ring: #ff5722;
+    --color-secondary: #f8fafc;
+    --color-popover: #ffffff;
+    --color-popover-foreground: #0f172a;
+    --color-muted: #f8fafc;
+    --color-mono-foreground: #ffffff;
+
+    /* Aliases for compatibility */
+    --foreground: var(--color-foreground);
+    --background: var(--color-background);
+    --secondary-foreground: var(--color-secondary-foreground);
+    --muted-foreground: var(--color-muted-foreground);
+    --border: var(--color-border);
+    --mono: var(--color-mono);
+    --primary: var(--color-primary);
+    --primary-foreground: var(--color-primary-foreground);
+    --card: var(--color-card);
+    --card-foreground: var(--color-card-foreground);
+    --input: var(--color-input);
+    --accent: var(--color-accent);
+    --accent-foreground: var(--color-accent-foreground);
+    --destructive: var(--color-destructive);
+    --destructive-foreground: var(--color-destructive-foreground);
+    --ring: var(--color-ring);
+    --secondary: var(--color-secondary);
+    --popover: var(--color-popover);
+    --popover-foreground: var(--color-popover-foreground);
+    --muted: var(--color-muted);
+    --mono-foreground: var(--color-mono-foreground);
+    --radius: 0.5rem;
+}
+
+/* Dark Mode Variables */
+.dark {
+    --color-foreground: #f8fafc;
+    --color-background: #080808;
+    --color-secondary-foreground: #cbd5e1;
+    --color-muted-foreground: #94a3b8;
+    --color-border: #1f1f1f;
+    --color-mono: #f8fafc;
+    --color-card: #1a1a1a;
+    --color-card-foreground: #f8fafc;
+    --color-input: #1f1f1f;
+    --color-accent: #1a1a1a;
+    --color-accent-foreground: #f8fafc;
+    --color-popover: #1a1a1a;
+    --color-popover-foreground: #f8fafc;
+    --color-muted: #1a1a1a;
+    --color-secondary: #1a1a1a;
+}
+
+/* Custom Button Overrides - Garantir cor primária laranja */
+.kt-btn {
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-foreground) !important;
+}
+
+.kt-btn:hover {
+    background-color: #e64a19 !important;
+    /* Laranja mais escuro no hover */
+}
+
+.kt-btn:disabled {
+    opacity: 0.5;
+}
+
+.kt-btn-outline {
+    background-color: transparent !important;
+    border: 1px solid var(--color-primary) !important;
+    color: var(--color-primary) !important;
+}
+
+.kt-btn-outline:hover {
+    background-color: var(--color-primary) !important;
+    color: var(--color-primary-foreground) !important;
+}
+
+.kt-btn-secondary {
+    background-color: var(--color-secondary) !important;
+    color: var(--color-foreground) !important;
+}
+
+.kt-btn-ghost {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.kt-btn-destructive {
+    background-color: var(--color-destructive) !important;
+    color: var(--color-destructive-foreground) !important;
 }
