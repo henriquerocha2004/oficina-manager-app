@@ -32,7 +32,7 @@ class CreateTenantAction
     {
         $tenant = Tenant::whereDomain($tenantCreateDto->domain)->first();
         throw_if(!is_null($tenant), TenantAlreadyExistsException::class);
-
+        $databaseName = "";
         $tenantCreated =  Tenant::query()->create([
             'name' => $tenantCreateDto->name,
             'document' => $tenantCreateDto->document,
