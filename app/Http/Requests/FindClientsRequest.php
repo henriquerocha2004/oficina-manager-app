@@ -17,9 +17,9 @@ class FindClientsRequest extends FormRequest
         return [
             'page' => 'sometimes|integer|min:1',
             'per_page' => 'sometimes|integer|min:1|max:100',
-            'search' => 'sometimes|string|max:255',
+            'search' => 'nullable|string|max:255',
             'sort_direction' => 'sometimes|in:asc,desc',
-            'sort_field' => 'sometimes|string|in:name,document_number,created_at',
+            'sort_field' => 'sometimes|string',
             'filters' => 'sometimes|array',
         ];
     }

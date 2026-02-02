@@ -119,6 +119,42 @@ function clearSearch() { localSearch.value = ''; emit('search', ''); }
 </script>
 
 <style scoped>
+@media (max-width: 640px) {
+  .card {
+    border-radius: 0 !important;
+    margin: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    box-sizing: border-box;
+  }
+  .card-header {
+    padding: 0.75rem 0.5rem !important;
+  }
+  .p-3 {
+    padding: 0.5rem !important;
+  }
+  table {
+    width: 100vw !important;
+    min-width: 0 !important;
+  }
+}
+/* Protege font-size e zoom do grid contra alterações globais */
+@media (max-width: 640px) {
+  .card, .card-header, table, th, td {
+    font-size: 1.1rem !important;
+    zoom: 1 !important;
+  }
+}
+
+/* Responsividade para mobile */
+@media (max-width: 640px) {
+  .card-header { flex-direction: column; gap: 0.5rem; padding: 1rem 0.5rem; }
+  table { font-size: 1rem; }
+  th, td { padding: 0.75rem 0.5rem !important; }
+  th { font-size: 1.1rem; }
+  .kt-btn, .kt-btn-sm { min-width: 2.5rem; min-height: 2.5rem; font-size: 1.1rem; }
+}
+
 .sortable { cursor: pointer; user-select: none; }
 .sort-indicator { width: 0.75rem; display: inline-block; text-align: center; }
 .page { cursor: pointer; }

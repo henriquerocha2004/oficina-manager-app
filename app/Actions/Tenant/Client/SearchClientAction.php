@@ -4,7 +4,7 @@ namespace App\Actions\Tenant\Client;
 
 use App\Dto\SearchDto;
 use App\Models\Tenant\Client;
-use App\Services\Traits\QueryBuilderTrait;
+use App\Traits\QueryBuilderTrait;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class SearchClientAction

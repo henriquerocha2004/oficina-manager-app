@@ -12,7 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\FindClientsRequest;
 use App\Http\Requests\tenant\ClientRequest;
 use Symfony\Component\HttpFoundation\Response;
-use App\Actions\tenant\Client\CreateClientAction;
+use App\Actions\Tenant\Client\CreateClientAction;
 use App\Actions\Tenant\Client\DeleteClientAction;
 use App\Actions\Tenant\Client\FindOneAction;
 use App\Actions\Tenant\Client\SearchClientAction;
@@ -82,7 +82,7 @@ class ClientController extends Controller
         }
     }
 
-    public function update(ClientRequest $request, int $id, UpdateClientAction $updateClientAction): JsonResponse
+    public function update(ClientRequest $request, string $id, UpdateClientAction $updateClientAction): JsonResponse
     {
         try {
             $clientId =  Ulid::fromString($id);
@@ -109,7 +109,7 @@ class ClientController extends Controller
         }
     }
 
-    public function delete(int $id, DeleteClientAction $deleteClientAction): JsonResponse
+    public function delete(string $id, DeleteClientAction $deleteClientAction): JsonResponse
     {
         try {
              $clientId =  Ulid::fromString($id);
