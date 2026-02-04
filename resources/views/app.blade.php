@@ -6,6 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ config('app.name', 'Laravel') }}</title>
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script src="{{ asset('assets/ktui/ktui.min.js') }}"></script>
         @inertiaHead
     </head>
     <body class="bg-white dark:bg-background">

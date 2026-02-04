@@ -19,7 +19,7 @@ Route::middleware(['guest.admin', 'guard.resolver'])->group(function () {
     // Password reset routes
     Route::get('/forgot-password', [AuthController::class, 'forgotPassword'])->name('admin.password.request');
     Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('admin.password.email');
-    
+
     Route::get('/reset-password/{token}', function ($token) {
         return inertia('Admin/Auth/ResetPassword', ['token' => $token]);
     })->name('admin.password.reset');

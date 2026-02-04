@@ -30,7 +30,6 @@ class ClientRequest extends FormRequest
             'phone' => [
                 'required',
                 'string',
-                'celular',
             ],
             'street' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:100'],
@@ -38,7 +37,7 @@ class ClientRequest extends FormRequest
             'zip_code' => [
                 'nullable',
                 'string',
-                'regex:/^[0-9]{5}-[0-9]{3}$/',
+                'regex:/^[0-9]{5}[0-9]{3}$/',
             ],
             'observations' => ['nullable', 'string', 'max:1000'],
         ];
