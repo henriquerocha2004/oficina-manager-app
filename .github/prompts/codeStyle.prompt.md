@@ -149,6 +149,7 @@ public function store(StoreUserRequest $request)
 - Siga os principios FIRST nos testes automatizados.
 - Use namespaces conforme a estrutura de pastas do projeto. Nos testes também.
 - Dentro dos métodos dos controllers, use try/catch para capturar exceptions e retornar respostas HTTP adequadas.
+- Siga os principios do object calisthenics.
 
 **Exemplo de teste:**
 ```php

@@ -3,7 +3,6 @@ import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import FlashMessages from './Components/FlashMessages.vue'
 import { useTheme } from './Composables/useTheme'
-import ConfirmModal from './Shared/Components/ConfirmModal.vue'
 
 // Inicializar tema
 const { initTheme } = useTheme();

@@ -17,4 +17,12 @@ class Messages
     public const string ERROR_UPDATING_CLIENT = 'An error occurred while updating the client.';
     public const string CLIENT_DELETED_SUCCESS = 'Client deleted successfully.';
     public const string ERROR_DELETING_CLIENT = 'An error occurred while deleting the client.';
+    public const string VEHICLE_CREATED_SUCCESS = 'Vehicle created successfully.';
+    public const string ERROR_CREATING_VEHICLE = 'An error occurred while creating the vehicle.';
+    public const string VEHICLES_FETCHED_SUCCESS = 'Vehicles fetched successfully.';
+    public const string ERROR_FETCHING_VEHICLES = 'Failed to fetch vehicles.';
+    public const string VEHICLE_UPDATED_SUCCESS = 'Vehicle updated successfully.';
+    public const string ERROR_UPDATING_VEHICLE = 'An error occurred while updating the vehicle.';
+    public const string VEHICLE_DELETED_SUCCESS = 'Vehicle deleted successfully.';
+    public const string ERROR_DELETING_VEHICLE = 'An error occurred while deleting the vehicle.';
 }
