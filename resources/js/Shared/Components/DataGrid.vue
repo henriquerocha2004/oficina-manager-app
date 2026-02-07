@@ -24,6 +24,11 @@
         </div>
       </div>
 
+      <!-- Slot para filtros -->
+      <div v-if="$slots.filters" class="px-6 py-4 border-b border-neutral-300 dark:border-white/20">
+        <slot name="filters"></slot>
+      </div>
+
       <div class="p-3 overflow-x-auto">
         <table class="min-w-full table-auto border-collapse">
           <thead>
@@ -42,7 +47,7 @@
             </tr>
             <tr v-for="row in items" :key="row.id" class="last:border-b-0">
               <td v-for="col in columns" :key="col.key + '-' + row.id" class="px-6 py-4 text-sm border-b border-neutral-300 dark:border-white/20 align-top">
-                <slot v-if="col.key === 'actions'" name="cell-actions" :row="row" />
+                <slot v-if="$slots['cell-' + col.key]" :name="'cell-' + col.key" :row="row" />
                 <template v-else>{{ row[col.key] }}</template>
               </td>
             </tr>

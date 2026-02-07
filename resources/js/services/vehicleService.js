@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 /**
- * Busca clientes do endpoint backend com paginação, ordenação e busca.
+ * Busca veículos do endpoint backend com paginação, ordenação e busca.
  * @param {Object} params
  * @param {number} params.page
  * @param {number} params.perPage
@@ -10,7 +10,7 @@ import axios from 'axios';
  * @param {string} params.sortDir
  * @returns {Promise<{items: Array, total: number, page: number, perPage: number}>}
  */
-export async function fetchClients({ page = 1, perPage = 10, search = '', sortKey = '', sortDir = 'asc' } = {}) {
+export async function fetchVehicles({ page = 1, perPage = 10, search = '', sortKey = '', sortDir = 'asc', filters = {} } = {}) {
     const params = {
         page,
         per_page: perPage,
@@ -23,25 +23,35 @@ export async function fetchClients({ page = 1, perPage = 10, search = '', sortKe
         params.sort_direction = sortDir;
     }
 
-    const { data } = await axios.get('/clients/search', { params });
+    // Adiciona filtros apenas se houver valores
+    const filtersToSend = Object.entries(filters).reduce((acc, [key, value]) => {
+        if (value) acc[key] = value;
+        return acc;
+    }, {});
+
+    if (Object.keys(filtersToSend).length > 0) {
+        params.filters = filtersToSend;
+    }
+
+    const { data } = await axios.get('/vehicles/search', { params });
     // Ajuste para o formato do backend Laravel
-    const clients = data.data.clients;
+    const vehicles = data.data.vehicles;
     return {
-        items: clients.data,
-        total: clients.total,
-        page: clients.current_page,
-        perPage: clients.per_page,
+        items: vehicles.data,
+        total: vehicles.total,
+        page: vehicles.current_page,
+        perPage: vehicles.per_page,
     };
 }
 
 /**
- * Cria um novo cliente no backend.
- * @param {Object} clientData
+ * Cria um novo veículo no backend.
+ * @param {Object} vehicleData
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function createClient(clientData) {
+export async function createVehicle(vehicleData) {
     try {
-        const { data } = await axios.post('/clients', clientData);
+        const { data } = await axios.post('/vehicles', vehicleData);
         return { success: true, data };
     } catch (error) {
         return { success: false, error };
@@ -49,14 +59,14 @@ export async function createClient(clientData) {
 }
 
 /**
- * Atualiza um cliente existente no backend.
+ * Atualiza um veículo existente no backend.
  * @param {number|string} id
- * @param {Object} clientData
+ * @param {Object} vehicleData
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function updateClient(id, clientData) {
+export async function updateVehicle(id, vehicleData) {
     try {
-        const { data } = await axios.put(`/clients/${id}`, clientData);
+        const { data } = await axios.put(`/vehicles/${id}`, vehicleData);
         return { success: true, data };
     } catch (error) {
         return { success: false, error };
@@ -64,13 +74,13 @@ export async function updateClient(id, clientData) {
 }
 
 /**
- * Deleta um cliente no backend.
+ * Deleta um veículo no backend.
  * @param {number|string} id
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function deleteClient(id) {
+export async function deleteVehicle(id) {
     try {
-        const { data } = await axios.delete(`/clients/${id}`);
+        const { data } = await axios.delete(`/vehicles/${id}`);
         return { success: true, data };
     } catch (error) {
         return { success: false, error };

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -65,4 +66,9 @@ class Client extends Model
         'phone',
         'observations',
     ];
+
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(Vehicle::class, 'client_id', 'id');
+    }
 }

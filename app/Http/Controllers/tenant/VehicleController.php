@@ -10,149 +10,149 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FindRequest;
-use App\Http\Requests\tenant\ClientRequest;
+use App\Http\Requests\tenant\VehicleRequest;
 use Symfony\Component\HttpFoundation\Response;
-use App\Actions\Tenant\Client\CreateClientAction;
-use App\Actions\Tenant\Client\DeleteClientAction;
-use App\Actions\Tenant\Client\FindOneAction;
-use App\Actions\Tenant\Client\SearchClientAction;
-use App\Actions\Tenant\Client\UpdateClientAction;
+use App\Actions\Tenant\Vehicle\CreateVehicleAction;
+use App\Actions\Tenant\Vehicle\DeleteVehicleAction;
+use App\Actions\Tenant\Vehicle\FindOneAction;
+use App\Actions\Tenant\Vehicle\SearchVehicleAction;
+use App\Actions\Tenant\Vehicle\UpdateVehicleAction;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
-class ClientController extends Controller
+class VehicleController extends Controller
 {
     public function index(): InertiaResponse
     {
-        return Inertia::render("Tenant/Clients/Index");
+        return Inertia::render("Tenant/Vehicles/Index");
     }
 
     /**
      * @throws Throwable
      */
-    public function store(ClientRequest $request, CreateClientAction $createClientAction): JsonResponse
+    public function store(VehicleRequest $request, CreateVehicleAction $createVehicleAction): JsonResponse
     {
         try {
-            $client = $createClientAction(
-                clientDto: $request->toDto(),
+            $vehicle = $createVehicleAction(
+                vehicleDto: $request->toDto(),
             );
 
             return $this->setResponse(
-                message: Messages::CLIENT_CREATED_SUCCESS,
+                message: Messages::VEHICLE_CREATED_SUCCESS,
                 code: Response::HTTP_CREATED,
-                data: ['client' => $client],
+                data: ['vehicle' => $vehicle],
             );
         } catch (Exception $exception) {
-            Log::error(Messages::ERROR_CREATING_CLIENT, [
+            Log::error(Messages::ERROR_CREATING_VEHICLE, [
                 'error' => $exception->getMessage(),
                 'line' => $exception->getLine(),
                 'file' => $exception->getFile(),
             ]);
 
             return $this->setResponse(
-                message: Messages::ERROR_CREATING_CLIENT,
+                message: Messages::ERROR_CREATING_VEHICLE,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }
     }
 
-    public function find(FindRequest $request, SearchClientAction $searchClientAction): JsonResponse
+    public function find(FindRequest $request, SearchVehicleAction $searchVehicleAction): JsonResponse
     {
         try {
-            $clients = $searchClientAction(
+            $vehicles = $searchVehicleAction(
                 searchDto: $request->toDto(),
             );
 
             return $this->setResponse(
-                message: Messages::CLIENTS_FETCHED_SUCCESS,
+                message: Messages::VEHICLES_FETCHED_SUCCESS,
                 code: Response::HTTP_OK,
-                data: ['clients' => $clients],
+                data: ['vehicles' => $vehicles],
             );
         } catch (Exception $exception) {
-            Log::error(Messages::ERROR_FETCHING_CLIENTS, [
+            Log::error(Messages::ERROR_FETCHING_VEHICLES, [
                 'error' => $exception->getMessage(),
                 'line' => $exception->getLine(),
                 'file' => $exception->getFile(),
             ]);
 
             return $this->setResponse(
-                message: Messages::ERROR_FETCHING_CLIENTS,
+                message: Messages::ERROR_FETCHING_VEHICLES,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }
     }
 
-    public function update(ClientRequest $request, string $id, UpdateClientAction $updateClientAction): JsonResponse
+    public function update(VehicleRequest $request, string $id, UpdateVehicleAction $updateVehicleAction): JsonResponse
     {
         try {
-            $clientId =  Ulid::fromString($id);
-            $updateClientAction(
-                clientDto: $request->toDto(),
-                clientId: $clientId,
+            $vehicleId =  Ulid::fromString($id);
+            $updateVehicleAction(
+                vehicleDto: $request->toDto(),
+                vehicleId: $vehicleId,
             );
 
             return $this->setResponse(
-                message: Messages::CLIENT_UPDATED_SUCCESS,
+                message: Messages::VEHICLE_UPDATED_SUCCESS,
                 code: Response::HTTP_OK,
             );
         } catch (Exception $exception) {
-            Log::error(Messages::ERROR_UPDATING_CLIENT, [
+            Log::error(Messages::ERROR_UPDATING_VEHICLE, [
                 'error' => $exception->getMessage(),
                 'line' => $exception->getLine(),
                 'file' => $exception->getFile(),
             ]);
 
             return $this->setResponse(
-                message: Messages::ERROR_UPDATING_CLIENT,
+                message: Messages::ERROR_UPDATING_VEHICLE,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }
     }
 
-    public function delete(string $id, DeleteClientAction $deleteClientAction): JsonResponse
+    public function delete(string $id, DeleteVehicleAction $deleteVehicleAction): JsonResponse
     {
         try {
-             $clientId =  Ulid::fromString($id);
-             $deleteClientAction($clientId);
+             $vehicleId =  Ulid::fromString($id);
+             $deleteVehicleAction($vehicleId);
 
              return $this->setResponse(
-                 message: Messages::CLIENT_DELETED_SUCCESS,
+                 message: Messages::VEHICLE_DELETED_SUCCESS,
                  code: Response::HTTP_OK,
              );
         } catch (Exception $exception) {
-            Log::error(Messages::ERROR_DELETING_CLIENT, [
+            Log::error(Messages::ERROR_DELETING_VEHICLE, [
                 'error' => $exception->getMessage(),
                 'line' => $exception->getLine(),
                 'file' => $exception->getFile(),
             ]);
 
             return $this->setResponse(
-                message: Messages::ERROR_DELETING_CLIENT,
+                message: Messages::ERROR_DELETING_VEHICLE,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }
     }
 
-    public function findOne(int $id, FindOneAction $findOneAction): JsonResponse
+    public function findOne(string $id, FindOneAction $findOneAction): JsonResponse
     {
         try {
-            $clientId = Ulid::fromString($id);
-            $client = $findOneAction($clientId);
+            $vehicleId = Ulid::fromString($id);
+            $vehicle = $findOneAction($vehicleId);
 
             return $this->setResponse(
-                message: Messages::CLIENTS_FETCHED_SUCCESS,
+                message: Messages::VEHICLES_FETCHED_SUCCESS,
                 code: Response::HTTP_OK,
-                data: ['client' => $client],
+                data: ['vehicle' => $vehicle],
             );
         } catch (Exception $exception) {
-            Log::error(Messages::ERROR_FETCHING_CLIENTS, [
+            Log::error(Messages::ERROR_FETCHING_VEHICLES, [
                 'error' => $exception->getMessage(),
                 'line' => $exception->getLine(),
                 'file' => $exception->getFile(),
             ]);
 
             return $this->setResponse(
-                message: Messages::ERROR_FETCHING_CLIENTS,
+                message: Messages::ERROR_FETCHING_VEHICLES,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

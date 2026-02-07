@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use App\Dto\SearchDto;
 use Illuminate\Foundation\Http\FormRequest;
 
-class FindClientsRequest extends FormRequest
+class FindRequest extends FormRequest
 {
     public function authorize(): bool
     {

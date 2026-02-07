@@ -32,6 +32,10 @@ const tenantRoutes = {
   'tenant.clients.create': '/clients/create',
   'tenant.clients.show': (id) => `/clients/${id}`,
   'tenant.clients.edit': (id) => `/clients/${id}/edit`,
+  'tenant.vehicles.index': '/vehicles',
+  'tenant.vehicles.create': '/vehicles/create',
+  'tenant.vehicles.show': (id) => `/vehicles/${id}`,
+  'tenant.vehicles.edit': (id) => `/vehicles/${id}/edit`,
   'tenant.logout': '/logout',
 };
 
@@ -84,11 +88,12 @@ export function routeCurrent(name) {
   if (name === 'tenant.dashboard' && currentComponent === 'Tenant/Dashboard') return true;
   if (name === 'admin.clients.index' && currentComponent === 'Admin/Clients/Index') return true;
   if (name === 'tenant.clients.index' && currentComponent === 'Tenant/Clients/Index') return true;
+  if (name === 'tenant.vehicles.index' && currentComponent === 'Tenant/Vehicles/Index') return true;
 
-  // Fallback: Verifica pela URL
+  // Fallback: Verifica pela URL (exata apenas, sem startsWith para evitar múltiplas seleções)
   const currentUrl = page.url;
   const routeUrl = route(name);
-  return currentUrl === routeUrl || currentUrl.startsWith(routeUrl);
+  return currentUrl === routeUrl;
 }
 
 /**
