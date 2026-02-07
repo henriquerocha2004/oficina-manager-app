@@ -25,4 +25,9 @@ export const tenantMenu = [
         route: 'tenant.vehicles.index',
         icon: 'ki-outline ki-car',
     },
+    {
+        label: 'Serviços',
+        route: 'tenant.services.index',
+        icon: 'ki-outline ki-setting-2',
+    },
 ];

@@ -16,4 +16,7 @@ Route::middleware(['auth:tenant', 'tenant'])->group(function () {
 
     // Vehicle routes
     require __DIR__ . '/vehicle.php';
+
+    // Service routes
+    require __DIR__ . '/service.php';
 });

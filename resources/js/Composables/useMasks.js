@@ -90,12 +90,42 @@ export function useMasks() {
         return value.replace(/-/g, '').toUpperCase();
     };
 
+    /**
+     * Máscara de moeda brasileira (R$ 1.234,56)
+     * @param {string} value - Valor a ser formatado
+     * @returns {string} - Valor formatado como moeda
+     */
+    const maskCurrency = (value) => {
+        if (!value) return '';
+        let v = value.replace(/\D/g, '');
+        v = (parseInt(v) / 100).toFixed(2);
+        v = v.replace('.', ',');
+        v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+
+        return 'R$ ' + v;
+    };
+
+    /**
+     * Remove a máscara de moeda e retorna um número float
+     * @param {string} value - Valor mascarado (R$ 1.234,56)
+     * @returns {number} - Número decimal (1234.56)
+     */
+    const unmaskCurrency = (value) => {
+        if (!value) return 0;
+        let v = value.replace(/R\$\s?/g, '').replace(/\./g, '');
+        v = v.replace(',', '.');
+
+        return parseFloat(v) || 0;
+    };
+
     return {
         maskCEP,
         maskDocument,
         maskPhone,
         licensePlateMask,
         unmaskLicensePlate,
+        maskCurrency,
+        unmaskCurrency,
         unmask,
         getDocMaxLength,
         getPhoneMaxLength

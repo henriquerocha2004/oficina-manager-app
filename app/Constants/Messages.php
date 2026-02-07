@@ -25,4 +25,12 @@ class Messages
     public const string ERROR_UPDATING_VEHICLE = 'An error occurred while updating the vehicle.';
     public const string VEHICLE_DELETED_SUCCESS = 'Vehicle deleted successfully.';
     public const string ERROR_DELETING_VEHICLE = 'An error occurred while deleting the vehicle.';
+    public const string SERVICE_CREATED_SUCCESS = 'Service created successfully.';
+    public const string ERROR_CREATING_SERVICE = 'An error occurred while creating the service.';
+    public const string SERVICES_FETCHED_SUCCESS = 'Services fetched successfully.';
+    public const string ERROR_FETCHING_SERVICES = 'Failed to fetch services.';
+    public const string SERVICE_UPDATED_SUCCESS = 'Service updated successfully.';
+    public const string ERROR_UPDATING_SERVICE = 'An error occurred while updating the service.';
+    public const string SERVICE_DELETED_SUCCESS = 'Service deleted successfully.';
+    public const string ERROR_DELETING_SERVICE = 'An error occurred while deleting the service.';
 }
