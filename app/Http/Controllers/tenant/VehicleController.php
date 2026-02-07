@@ -9,7 +9,7 @@ use Symfony\Component\Uid\Ulid;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\FindClientsRequest;
+use App\Http\Requests\FindRequest;
 use App\Http\Requests\tenant\VehicleRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Actions\Tenant\Vehicle\CreateVehicleAction;
@@ -56,7 +56,7 @@ class VehicleController extends Controller
         }
     }
 
-    public function find(FindClientsRequest $request, SearchVehicleAction $searchVehicleAction): JsonResponse
+    public function find(FindRequest $request, SearchVehicleAction $searchVehicleAction): JsonResponse
     {
         try {
             $vehicles = $searchVehicleAction(

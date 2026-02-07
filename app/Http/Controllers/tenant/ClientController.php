@@ -9,7 +9,7 @@ use Symfony\Component\Uid\Ulid;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\FindClientsRequest;
+use App\Http\Requests\FindRequest;
 use App\Http\Requests\tenant\ClientRequest;
 use Symfony\Component\HttpFoundation\Response;
 use App\Actions\Tenant\Client\CreateClientAction;
@@ -56,7 +56,7 @@ class ClientController extends Controller
         }
     }
 
-    public function find(FindClientsRequest $request, SearchClientAction $searchClientAction): JsonResponse
+    public function find(FindRequest $request, SearchClientAction $searchClientAction): JsonResponse
     {
         try {
             $clients = $searchClientAction(

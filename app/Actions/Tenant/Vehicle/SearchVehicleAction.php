@@ -13,8 +13,10 @@ class SearchVehicleAction
 
     public function __invoke(SearchDto $searchDto): LengthAwarePaginator
     {
+        $query = Vehicle::query()->with('client:id,name');
+        
         return $this->applySearchAndFilters(
-            query: Vehicle::query(),
+            query: $query,
             searchDTO: $searchDto,
             searchableColumns: ['license_plate', 'brand', 'model', 'vin'],
         );
