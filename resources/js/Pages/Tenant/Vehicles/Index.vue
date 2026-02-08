@@ -20,7 +20,7 @@
             <button class="kt-btn kt-btn-primary" @click="onNew">Novo Veículo</button>
           </div>
         </template>
-        
+
         <!-- Filtros -->
         <template #filters>
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -28,7 +28,7 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Tipo de Veículo
-              </label>    
+              </label>
               <select
                 v-model="filters.vehicle_type"
                 class="kt-input w-full pr-10"
@@ -154,13 +154,13 @@
 import { ref, onMounted, watch } from 'vue';
 import DataGrid from '../../../Shared/Components/DataGrid.vue';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
-import { fetchVehicles, createVehicle, updateVehicle, deleteVehicle } from '../../../services/vehicleService';
-import { fetchClients } from '../../../services/clientService';
+import { fetchVehicles, createVehicle, updateVehicle, deleteVehicle } from '@/services/vehicleService.js';
+import { fetchClients } from '@/services/clientService.js';
 import DrawerVeiculo from '../../../Shared/Components/DrawerVeiculo.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
-import { useMasks } from '../../../Composables/useMasks.js';
-import { useToast } from '../../../Shared/composables/useToast.js';
-import { useVehicleFilters } from '../../../Composables/useVehicleFilters.js';
+import { useMasks } from '@/Composables/useMasks.js';
+import { useToast } from '@/Shared/composables/useToast.js';
+import { useVehicleFilters } from '@/Composables/useVehicleFilters.js';
 
 const toast = useToast();
 

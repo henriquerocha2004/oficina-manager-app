@@ -1,9 +1,9 @@
 <?php
 
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 // Protected tenant routes
 Route::middleware(['auth:tenant', 'tenant'])->group(function () {
@@ -12,11 +12,14 @@ Route::middleware(['auth:tenant', 'tenant'])->group(function () {
     })->name('tenant.dashboard');
 
     // Client routes
-    require __DIR__ . '/client.php';
+    require __DIR__.'/client.php';
 
     // Vehicle routes
-    require __DIR__ . '/vehicle.php';
+    require __DIR__.'/vehicle.php';
 
     // Service routes
-    require __DIR__ . '/service.php';
+    require __DIR__.'/service.php';
+
+    // Supplier routes
+    require __DIR__.'/supplier.php';
 });

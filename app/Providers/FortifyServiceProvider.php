@@ -18,21 +18,16 @@ use Laravel\Fortify\Contracts\PasswordResetResponse;
 use Laravel\Fortify\Fortify;
 use App\Actions\Fortify\AttemptToAuthenticate;
 use App\Actions\Fortify\PrepareAuthenticatedSession;
-use Laravel\Fortify\Features;
+use Symfony\Component\HttpFoundation\Response;
 
 class FortifyServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        // Register custom Inertia responses for Fortify
         $this->app->singleton(LoginResponse::class, function () {
             return new class implements LoginResponse {
-                public function toResponse($request)
+                public function toResponse($request): Response
                 {
-                    // Redireciona para dashboard baseado no contexto
                     $home = $request->is('admin/*') || $request->is('admin') ? '/admin/dashboard' : '/dashboard';
                     return Inertia::location($home);
                 }
@@ -41,9 +36,8 @@ class FortifyServiceProvider extends ServiceProvider
 
         $this->app->singleton(LogoutResponse::class, function () {
             return new class implements LogoutResponse {
-                public function toResponse($request)
+                public function toResponse($request): Response
                 {
-                    // Redireciona para login baseado no guard
                     $loginUrl = $request->is('admin/*') ? '/admin' : '/';
                     return Inertia::location($loginUrl);
                 }
@@ -52,9 +46,8 @@ class FortifyServiceProvider extends ServiceProvider
 
         $this->app->singleton(PasswordResetResponse::class, function () {
             return new class implements PasswordResetResponse {
-                public function toResponse($request)
+                public function toResponse($request): Response
                 {
-                    // Redireciona para login após reset de senha
                     $loginUrl = $request->is('admin/*') ? '/admin' : '/';
                     return Inertia::location($loginUrl);
                 }
@@ -73,7 +66,6 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
 
-        // Desabilitar views padrão do Fortify (usaremos Inertia)
         Fortify::loginView(function () {
             abort(404);
         });
@@ -97,7 +89,6 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
         });
 
-        // Customizar o pipeline de autenticação do Fortify para usar nosso guard dinâmico
         Fortify::authenticateThrough(function (Request $request) {
             return array_filter([
                 config('fortify.limiters.login') ? null : function ($request, $next) {

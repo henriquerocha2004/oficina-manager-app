@@ -131,7 +131,7 @@ use Illuminate\Support\Facades\Log;
 - **Exceptions**: Descriptive + `Exception` → `ClientAlreadyExistsException`, `ClientNotFoundException`
 - **Methods**: camelCase → `findOne()`, `toDto()`, `setResponse()`
 - **Variables**: camelCase → `$clientDto`, `$searchDto`
-- **Test methods**: camelCase → `testCreatesClientWhenNotExists()`
+- **Test methods**: camelCase (REQUIRED) → `testCreatesClientWhenNotExists()`, `testReturnsValidationError()`, `testDeletesSupplierWhenFound()`
 
 #### Type Hints & Documentation
 
@@ -314,7 +314,7 @@ public function store(StoreUserRequest $request)
 - Follow **FIRST principles** in automated tests
 - Follow **Object Calisthenics** principles
 - Use try/catch in controller methods to handle exceptions and return appropriate HTTP responses
-- Test method names in camelCase
+- **Test method names MUST be in camelCase** (NOT snake_case) → `testCreatesClientWhenNotExists()`, `testReturnsValidationError()`
 - Use AAA pattern (Arrange, Act, Assert) when writing tests
 
 ### Frontend (Vue.js)
@@ -480,9 +480,10 @@ export async function updateClient(id, clientData) {
 
 - Unit tests: Test individual classes (Actions, Models, DTOs) in isolation
 - Feature tests: Test HTTP endpoints and integration
-- Use descriptive test method names: `testCreatesClientWhenNotExists`
+- **Test method names MUST be in camelCase** (NOT snake_case): `testCreatesClientWhenNotExists()`, `testReturnsValidationError()`
 - Assert database state with `assertDatabaseHas()`
 - Test exception cases with `expectException()`
+- Follow AAA pattern (Arrange, Act, Assert)
 
 ### Vue/JavaScript Tests
 
