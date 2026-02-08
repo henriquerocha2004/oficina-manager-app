@@ -28,18 +28,22 @@ const adminRoutes = {
 // Mapa de rotas Tenant
 const tenantRoutes = {
   'tenant.dashboard': '/dashboard',
-  'tenant.clients.index': '/clients',
-  'tenant.clients.create': '/clients/create',
-  'tenant.clients.show': (id) => `/clients/${id}`,
-  'tenant.clients.edit': (id) => `/clients/${id}/edit`,
-  'tenant.vehicles.index': '/vehicles',
-  'tenant.vehicles.create': '/vehicles/create',
-  'tenant.vehicles.show': (id) => `/vehicles/${id}`,
-  'tenant.vehicles.edit': (id) => `/vehicles/${id}/edit`,
-  'tenant.services.index': '/services',
-  'tenant.services.create': '/services/create',
-  'tenant.services.show': (id) => `/services/${id}`,
-  'tenant.services.edit': (id) => `/services/${id}/edit`,
+  'clients.index': '/clients',
+  'clients.create': '/clients/create',
+  'clients.show': (id) => `/clients/${id}`,
+  'clients.edit': (id) => `/clients/${id}/edit`,
+  'vehicles.index': '/vehicles',
+  'vehicles.create': '/vehicles/create',
+  'vehicles.show': (id) => `/vehicles/${id}`,
+  'vehicles.edit': (id) => `/vehicles/${id}/edit`,
+  'services.index': '/services',
+  'services.create': '/services/create',
+  'services.show': (id) => `/services/${id}`,
+  'services.edit': (id) => `/services/${id}/edit`,
+  'suppliers.index': '/suppliers',
+  'suppliers.create': '/suppliers/create',
+  'suppliers.show': (id) => `/suppliers/${id}`,
+  'suppliers.edit': (id) => `/suppliers/${id}/edit`,
   'tenant.logout': '/logout',
 };
 
@@ -91,9 +95,10 @@ export function routeCurrent(name) {
   if (name === 'admin.dashboard' && currentComponent === 'Admin/Dashboard') return true;
   if (name === 'tenant.dashboard' && currentComponent === 'Tenant/Dashboard') return true;
   if (name === 'admin.clients.index' && currentComponent === 'Admin/Clients/Index') return true;
-  if (name === 'tenant.clients.index' && currentComponent === 'Tenant/Clients/Index') return true;
-  if (name === 'tenant.vehicles.index' && currentComponent === 'Tenant/Vehicles/Index') return true;
-  if (name === 'tenant.services.index' && currentComponent === 'Tenant/Services/Index') return true;
+  if (name === 'clients.index' && currentComponent === 'Tenant/Clients/Index') return true;
+  if (name === 'vehicles.index' && currentComponent === 'Tenant/Vehicles/Index') return true;
+  if (name === 'services.index' && currentComponent === 'Tenant/Services/Index') return true;
+  if (name === 'suppliers.index' && currentComponent === 'Tenant/Suppliers/Index') return true;
 
   // Fallback: Verifica pela URL (exata apenas, sem startsWith para evitar múltiplas seleções)
   const currentUrl = page.url;

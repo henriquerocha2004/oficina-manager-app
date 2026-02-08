@@ -17,17 +17,22 @@ export const tenantMenu = [
     },
     {
         label: 'Clientes',
-        route: 'tenant.clients.index',
+        route: 'clients.index',
         icon: 'ki-outline ki-profile-circle',
     },
     {
         label: 'Veículos',
-        route: 'tenant.vehicles.index',
+        route: 'vehicles.index',
         icon: 'ki-outline ki-car',
     },
     {
         label: 'Serviços',
-        route: 'tenant.services.index',
+        route: 'services.index',
         icon: 'ki-outline ki-setting-2',
+    },
+    {
+        label: 'Fornecedores',
+        route: 'suppliers.index',
+        icon: 'ki-outline ki-delivery',
     },
 ];

@@ -7,7 +7,15 @@ import { useToast } from '@/Shared/composables/useToast';
 // Mock the services
 vi.mock('@/services/serviceService');
 vi.mock('@/Shared/composables/useToast');
-vi.mock('@/Composables/useServiceFilters');
+vi.mock('@/Composables/useServiceFilters', () => ({
+    useServiceFilters: () => ({
+        filters: { category: undefined },
+        saveToStorage: vi.fn(),
+        loadFromStorage: vi.fn(),
+        clearFilters: vi.fn(),
+        activeFiltersCount: 0,
+    }),
+}));
 
 // Mock Inertia
 vi.mock('@inertiajs/vue3', () => ({
