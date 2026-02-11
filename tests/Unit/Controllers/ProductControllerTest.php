@@ -2,18 +2,28 @@
 
 namespace Tests\Unit\Controllers;
 
+use App\Actions\Tenant\Product\CreateProductAction;
+use App\Actions\Tenant\Product\DeleteProductAction;
+use App\Actions\Tenant\Product\FindOneProductAction;
+use App\Actions\Tenant\Product\UpdateProductAction;
 use App\Dto\ProductDto;
 use App\Http\Controllers\tenant\ProductController;
+use App\Http\Requests\tenant\ProductRequest;
 use App\Models\Tenant\Product;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Mockery\MockInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
+use Throwable;
 
 class ProductControllerTest extends TestCase
 {
     use MockeryPHPUnitIntegration;
 
+    /**
+     * @throws Throwable
+     */
     public function testStoreReturnsCreatedResponse(): void
     {
         $data = [
@@ -25,14 +35,16 @@ class ProductControllerTest extends TestCase
 
         $productDto = ProductDto::fromArray($data);
 
-        $requestMock = Mockery::mock('App\\Http\\Requests\\tenant\\ProductRequest');
+        /** @var ProductRequest&MockInterface $requestMock */
+        $requestMock = Mockery::mock(ProductRequest::class);
         $requestMock->shouldReceive('toDto')->andReturn($productDto);
 
         $createdProduct = new Product;
         $createdProduct->id = '01HQWXYZ1234567890ABCDEFGH';
         $createdProduct->name = 'Test Product';
 
-        $createAction = Mockery::mock('App\\Actions\\Tenant\\Product\\CreateProductAction');
+        /** @var CreateProductAction&MockInterface $createAction */
+        $createAction = Mockery::mock(CreateProductAction::class);
         $createAction->shouldReceive('__invoke')->andReturn($createdProduct);
 
         $controller = new ProductController;
@@ -56,10 +68,12 @@ class ProductControllerTest extends TestCase
 
         $productDto = ProductDto::fromArray($data);
 
-        $requestMock = Mockery::mock('App\\Http\\Requests\\tenant\\ProductRequest');
+        /** @var ProductRequest&MockInterface $requestMock */
+        $requestMock = Mockery::mock(ProductRequest::class);
         $requestMock->shouldReceive('toDto')->andReturn($productDto);
 
-        $updateAction = Mockery::mock('App\\Actions\\Tenant\\Product\\UpdateProductAction');
+        /** @var UpdateProductAction&MockInterface $updateAction */
+        $updateAction = Mockery::mock(UpdateProductAction::class);
         $updateAction->shouldReceive('__invoke')->andReturnNull();
 
         $controller = new ProductController;
@@ -71,7 +85,8 @@ class ProductControllerTest extends TestCase
 
     public function testDeleteReturnsOkResponse(): void
     {
-        $deleteAction = Mockery::mock('App\\Actions\\Tenant\\Product\\DeleteProductAction');
+        /** @var DeleteProductAction&MockInterface $deleteAction */
+        $deleteAction = Mockery::mock(DeleteProductAction::class);
         $deleteAction->shouldReceive('__invoke')->andReturnNull();
 
         $controller = new ProductController;
@@ -87,7 +102,8 @@ class ProductControllerTest extends TestCase
         $product->id = '01HQWXYZ1234567890ABCDEFGH';
         $product->name = 'Specific Product';
 
-        $findOneAction = Mockery::mock('App\\Actions\\Tenant\\Product\\FindOneProductAction');
+        /** @var FindOneProductAction&MockInterface $findOneAction */
+        $findOneAction = Mockery::mock(FindOneProductAction::class);
         $findOneAction->shouldReceive('__invoke')->andReturn($product);
 
         $controller = new ProductController;

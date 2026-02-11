@@ -2,14 +2,20 @@
 
 namespace Tests\Unit\Controllers;
 
-use Tests\TestCase;
+use App\Actions\Tenant\Service\CreateServiceAction;
+use App\Actions\Tenant\Service\DeleteServiceAction;
+use App\Actions\Tenant\Service\FindOneServiceAction;
+use App\Actions\Tenant\Service\UpdateServiceAction;
+use App\Dto\ServiceDto;
+use App\Http\Controllers\tenant\ServiceController;
+use App\Http\Requests\tenant\ServiceRequest;
+use App\Models\Tenant\Service;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use App\Http\Controllers\tenant\ServiceController;
-use App\Dto\ServiceDto;
-use App\Models\Tenant\Service;
+use Mockery\MockInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Uid\Ulid;
+use Tests\TestCase;
 
 class ServiceControllerTest extends TestCase
 {
@@ -28,15 +34,17 @@ class ServiceControllerTest extends TestCase
 
         $serviceDto = ServiceDto::fromArray($data);
 
-        $requestMock = Mockery::mock('App\\Http\\Requests\\tenant\\ServiceRequest');
+        /** @var ServiceRequest&MockInterface $requestMock */
+        $requestMock = Mockery::mock(ServiceRequest::class);
         $requestMock->shouldReceive('toDto')->andReturn($serviceDto);
 
-        $createdService = new Service();
+        $createdService = new Service;
 
-        $createAction = Mockery::mock('App\\Actions\\Tenant\\Service\\CreateServiceAction');
+        /** @var CreateServiceAction&MockInterface $createAction */
+        $createAction = Mockery::mock(CreateServiceAction::class);
         $createAction->shouldReceive('__invoke')->andReturn($createdService);
 
-        $controller = new ServiceController();
+        $controller = new ServiceController;
 
         $response = $controller->store($requestMock, $createAction);
 
@@ -56,13 +64,15 @@ class ServiceControllerTest extends TestCase
 
         $serviceDto = ServiceDto::fromArray($data);
 
-        $requestMock = Mockery::mock('App\\Http\\Requests\\tenant\\ServiceRequest');
+        /** @var ServiceRequest&MockInterface $requestMock */
+        $requestMock = Mockery::mock(ServiceRequest::class);
         $requestMock->shouldReceive('toDto')->andReturn($serviceDto);
 
-        $updateAction = Mockery::mock('App\\Actions\\Tenant\\Service\\UpdateServiceAction');
+        /** @var UpdateServiceAction&MockInterface $updateAction */
+        $updateAction = Mockery::mock(UpdateServiceAction::class);
         $updateAction->shouldReceive('__invoke')->andReturnNull();
 
-        $controller = new ServiceController();
+        $controller = new ServiceController;
         $serviceId = (string) Ulid::generate();
 
         $response = $controller->update($requestMock, $serviceId, $updateAction);
@@ -72,10 +82,11 @@ class ServiceControllerTest extends TestCase
 
     public function testDeleteReturnsSuccessResponse(): void
     {
-        $deleteAction = Mockery::mock('App\\Actions\\Tenant\\Service\\DeleteServiceAction');
+        /** @var DeleteServiceAction&MockInterface $deleteAction */
+        $deleteAction = Mockery::mock(DeleteServiceAction::class);
         $deleteAction->shouldReceive('__invoke')->andReturnNull();
 
-        $controller = new ServiceController();
+        $controller = new ServiceController;
         $serviceId = (string) Ulid::generate();
 
         $response = $controller->delete($serviceId, $deleteAction);
@@ -85,12 +96,13 @@ class ServiceControllerTest extends TestCase
 
     public function testFindOneReturnsServiceSuccessfully(): void
     {
-        $service = new Service();
+        $service = new Service;
 
-        $findOneAction = Mockery::mock('App\\Actions\\Tenant\\Service\\FindOneServiceAction');
+        /** @var FindOneServiceAction&MockInterface $findOneAction */
+        $findOneAction = Mockery::mock(FindOneServiceAction::class);
         $findOneAction->shouldReceive('__invoke')->andReturn($service);
 
-        $controller = new ServiceController();
+        $controller = new ServiceController;
         $serviceId = (string) Ulid::generate();
 
         $response = $controller->findOne($serviceId, $findOneAction);

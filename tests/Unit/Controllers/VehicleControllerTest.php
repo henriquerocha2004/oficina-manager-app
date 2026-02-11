@@ -2,13 +2,16 @@
 
 namespace Tests\Unit\Controllers;
 
-use Mockery;
-use Tests\TestCase;
+use App\Actions\Tenant\Vehicle\CreateVehicleAction;
 use App\Dto\VehicleDto;
-use App\Models\Tenant\Vehicle;
-use Symfony\Component\HttpFoundation\Response;
 use App\Http\Controllers\tenant\VehicleController;
+use App\Http\Requests\tenant\VehicleRequest;
+use App\Models\Tenant\Vehicle;
+use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+use Mockery\MockInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Tests\TestCase;
 
 class VehicleControllerTest extends TestCase
 {
@@ -26,15 +29,17 @@ class VehicleControllerTest extends TestCase
 
         $vehicleDto = VehicleDto::fromArray($data);
 
-        $requestMock = Mockery::mock('App\\Http\\Requests\\tenant\\VehicleRequest');
+        /** @var VehicleRequest&MockInterface $requestMock */
+        $requestMock = Mockery::mock(VehicleRequest::class);
         $requestMock->shouldReceive('toDto')->andReturn($vehicleDto);
 
-        $createdVehicle = new Vehicle();
+        $createdVehicle = new Vehicle;
 
-        $createAction = Mockery::mock('App\\Actions\\Tenant\\Vehicle\\CreateVehicleAction');
+        /** @var CreateVehicleAction&MockInterface $createAction */
+        $createAction = Mockery::mock(CreateVehicleAction::class);
         $createAction->shouldReceive('__invoke')->andReturn($createdVehicle);
 
-        $controller = new VehicleController();
+        $controller = new VehicleController;
 
         $response = $controller->store($requestMock, $createAction);
 

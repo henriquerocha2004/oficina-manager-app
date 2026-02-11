@@ -2,12 +2,16 @@
 
 namespace Tests\Unit\Controllers;
 
-use Tests\TestCase;
+use App\Actions\Tenant\Client\CreateClientAction;
+use App\Dto\ClientDto;
+use App\Http\Controllers\tenant\ClientController;
+use App\Http\Requests\tenant\ClientRequest;
+use App\Models\Tenant\Client;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
-use App\Http\Controllers\tenant\ClientController;
-use App\Dto\ClientDto;
+use Mockery\MockInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Tests\TestCase;
 
 class ClientControllerTest extends TestCase
 {
@@ -24,15 +28,17 @@ class ClientControllerTest extends TestCase
 
         $clientDto = ClientDto::fromArray($data);
 
-        $requestMock = Mockery::mock('App\\Http\\Requests\\tenant\\ClientRequest');
+        /** @var ClientRequest&MockInterface $requestMock */
+        $requestMock = Mockery::mock(ClientRequest::class);
         $requestMock->shouldReceive('toDto')->andReturn($clientDto);
 
-        $createdClient = new \App\Models\Tenant\Client();
+        $createdClient = new Client;
 
-        $createAction = Mockery::mock('App\\Actions\\Tenant\\Client\\CreateClientAction');
+        /** @var CreateClientAction&MockInterface $createAction */
+        $createAction = Mockery::mock(CreateClientAction::class);
         $createAction->shouldReceive('__invoke')->andReturn($createdClient);
 
-        $controller = new ClientController();
+        $controller = new ClientController;
 
         $response = $controller->store($requestMock, $createAction);
 
