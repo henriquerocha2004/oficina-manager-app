@@ -77,4 +77,20 @@ class Messages
     public const string SUPPLIER_DELETED_SUCCESS = 'Supplier deleted successfully.';
 
     public const string ERROR_DELETING_SUPPLIER = 'An error occurred while deleting the supplier.';
+
+    public const string PRODUCT_CREATED_SUCCESS = 'Product created successfully.';
+
+    public const string ERROR_CREATING_PRODUCT = 'An error occurred while creating the product.';
+
+    public const string PRODUCTS_FETCHED_SUCCESS = 'Products fetched successfully.';
+
+    public const string ERROR_FETCHING_PRODUCTS = 'Failed to fetch products.';
+
+    public const string PRODUCT_UPDATED_SUCCESS = 'Product updated successfully.';
+
+    public const string ERROR_UPDATING_PRODUCT = 'An error occurred while updating the product.';
+
+    public const string PRODUCT_DELETED_SUCCESS = 'Product deleted successfully.';
+
+    public const string ERROR_DELETING_PRODUCT = 'An error occurred while deleting the product.';
 }

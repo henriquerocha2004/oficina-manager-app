@@ -22,4 +22,7 @@ Route::middleware(['auth:tenant', 'tenant'])->group(function () {
 
     // Supplier routes
     require __DIR__.'/supplier.php';
+
+    // Product routes
+    require __DIR__.'/product.php';
 });
