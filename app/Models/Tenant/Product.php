@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -143,5 +144,19 @@ class Product extends Model
             self::UNIT_METER,
             self::UNIT_BOX,
         ];
+    }
+
+    public function suppliers(): BelongsToMany
+    {
+        return $this->belongsToMany(Supplier::class, 'product_supplier')
+            ->withPivot([
+                'supplier_sku',
+                'cost_price',
+                'lead_time_days',
+                'min_order_quantity',
+                'is_preferred',
+                'notes',
+            ])
+            ->withTimestamps();
     }
 }

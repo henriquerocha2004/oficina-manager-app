@@ -156,6 +156,7 @@ public function __construct(
 - Use Services for orchestration with constructor dependency injection
 - Use Dtos for data transfer between layers
 - Use Traits where appropriate
+- When writing operations involving multiple tables in a database, use Transactions
 
 **Action Example (simple CRUD):**
 ```php

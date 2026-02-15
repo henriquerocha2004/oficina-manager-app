@@ -10,4 +10,9 @@ Route::group(['prefix' => 'products', 'as' => 'products.'], function () {
     Route::get('/{id}', [ProductController::class, 'findOne'])->name('findOne');
     Route::put('/{id}', [ProductController::class, 'update'])->name('update');
     Route::delete('/{id}', [ProductController::class, 'delete'])->name('delete');
+
+    // Product-Supplier relationship routes
+    Route::post('/{id}/suppliers', [ProductController::class, 'attachSupplier'])->name('attachSupplier');
+    Route::put('/{productId}/suppliers/{supplierId}', [ProductController::class, 'updateSupplier'])->name('updateSupplier');
+    Route::delete('/{productId}/suppliers/{supplierId}', [ProductController::class, 'detachSupplier'])->name('detachSupplier');
 });

@@ -93,4 +93,16 @@ class Messages
     public const string PRODUCT_DELETED_SUCCESS = 'Product deleted successfully.';
 
     public const string ERROR_DELETING_PRODUCT = 'An error occurred while deleting the product.';
+
+    public const string PRODUCT_SUPPLIER_ATTACHED_SUCCESS = 'Supplier attached to product successfully.';
+
+    public const string ERROR_ATTACHING_SUPPLIER_TO_PRODUCT = 'An error occurred while attaching supplier to product.';
+
+    public const string PRODUCT_SUPPLIER_UPDATED_SUCCESS = 'Product supplier updated successfully.';
+
+    public const string ERROR_UPDATING_PRODUCT_SUPPLIER = 'An error occurred while updating product supplier.';
+
+    public const string PRODUCT_SUPPLIER_DETACHED_SUCCESS = 'Supplier detached from product successfully.';
+
+    public const string ERROR_DETACHING_SUPPLIER_FROM_PRODUCT = 'An error occurred while detaching supplier from product.';
 }

@@ -13,7 +13,11 @@ class FindOneProductAction
     public function __invoke(Ulid $id): Product
     {
         $idStr = ulid_db($id);
-        $product = Product::query()->find($idStr);
+        $product = Product::query()
+            ->with(['suppliers' => function ($query) {
+                $query->where('is_active', true);
+            }])
+            ->find($idStr);
 
         if ($product === null) {
             throw new ProductNotFoundException;
