@@ -35,4 +35,9 @@ export const tenantMenu = [
         route: 'suppliers.index',
         icon: 'ki-outline ki-delivery',
     },
+    {
+        label: 'Produtos',
+        route: 'products.index',
+        icon: 'ki-outline ki-package',
+    },
 ];
