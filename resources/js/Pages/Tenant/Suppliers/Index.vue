@@ -113,7 +113,7 @@ import StatsContainer from '@/Shared/Components/StatsContainer.vue';
 import StatsCard from '@/Shared/Components/StatsCard.vue';
 import ExportButton from '@/Shared/Components/ExportButton.vue';
 import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
-import { fetchSuppliers, createSupplier, updateSupplier, deleteSupplier } from '@/services/supplierService.js';
+import { fetchSuppliers, fetchSupplierStats, createSupplier, updateSupplier, deleteSupplier } from '@/services/supplierService.js';
 import DrawerFornecedor from '../../../Shared/Components/DrawerFornecedor.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
 import { useToast } from '@/Shared/composables/useToast.js';
@@ -139,10 +139,11 @@ const drawerOpen = ref(false);
 const drawerEdit = ref(false);
 const drawerSupplier = ref(null);
 const confirmModal = ref(null);
+const statsFromApi = ref(null);
 
 const breadcrumbs = [ { label: 'Fornecedores' } ];
 
-const { stats } = useStats(items, 'suppliers');
+const { stats } = useStats(items, 'suppliers', statsFromApi);
 
 const filteredItems = computed(() => {
     let result = items.value;
@@ -178,12 +179,20 @@ const load = async () => {
   total.value = res.total;
 };
 
+const loadStats = async () => {
+    const result = await fetchSupplierStats();
+    if (result.success) {
+        statsFromApi.value = result.data;
+    }
+};
+
 onMounted(() => {
     const saved = loadFromStorage();
     if (saved.state) filters.state = saved.state;
     if (saved.city) filters.city = saved.city;
     if (saved.status) filters.status = saved.status;
     load();
+    loadStats();
 });
 
 watch(() => filters.state, () => saveToStorage());

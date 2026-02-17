@@ -5,6 +5,7 @@ namespace App\Http\Controllers\tenant;
 use App\Actions\Tenant\Supplier\CreateSupplierAction;
 use App\Actions\Tenant\Supplier\DeleteSupplierAction;
 use App\Actions\Tenant\Supplier\FindOneSupplierAction;
+use App\Actions\Tenant\Supplier\GetSupplierStatsAction;
 use App\Actions\Tenant\Supplier\SearchSupplierAction;
 use App\Actions\Tenant\Supplier\UpdateSupplierAction;
 use App\Constants\Messages;
@@ -169,6 +170,30 @@ class SupplierController extends Controller
 
             return $this->setResponse(
                 message: Messages::ERROR_FETCHING_SUPPLIERS,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    public function stats(GetSupplierStatsAction $getSupplierStatsAction): JsonResponse
+    {
+        try {
+            $stats = $getSupplierStatsAction();
+
+            return $this->setResponse(
+                message: Messages::SUPPLIER_STATS_FETCHED_SUCCESS,
+                code: Response::HTTP_OK,
+                data: ['stats' => $stats],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_FETCHING_SUPPLIER_STATS, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: Messages::ERROR_FETCHING_SUPPLIER_STATS,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

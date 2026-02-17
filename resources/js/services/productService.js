@@ -136,3 +136,16 @@ export async function detachSupplier(productId, supplierId) {
         return { success: false, error };
     }
 }
+
+/**
+ * Busca estatísticas de produtos do endpoint backend.
+ * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
+ */
+export async function fetchProductStats() {
+    try {
+        const { data } = await axios.get('/products/stats');
+        return { success: true, data: data.data.stats };
+    } catch (error) {
+        return { success: false, error };
+    }
+}

@@ -2,29 +2,30 @@
 
 namespace App\Http\Controllers\tenant;
 
-use Exception;
-use Throwable;
-use App\Constants\Messages;
-use Symfony\Component\Uid\Ulid;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\FindRequest;
-use App\Http\Requests\tenant\ClientRequest;
-use Symfony\Component\HttpFoundation\Response;
 use App\Actions\Tenant\Client\CreateClientAction;
 use App\Actions\Tenant\Client\DeleteClientAction;
 use App\Actions\Tenant\Client\FindOneAction;
+use App\Actions\Tenant\Client\GetClientStatsAction;
 use App\Actions\Tenant\Client\SearchClientAction;
 use App\Actions\Tenant\Client\UpdateClientAction;
+use App\Constants\Messages;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\FindRequest;
+use App\Http\Requests\tenant\ClientRequest;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Uid\Ulid;
+use Throwable;
 
 class ClientController extends Controller
 {
     public function index(): InertiaResponse
     {
-        return Inertia::render("Tenant/Clients/Index");
+        return Inertia::render('Tenant/Clients/Index');
     }
 
     /**
@@ -85,7 +86,7 @@ class ClientController extends Controller
     public function update(ClientRequest $request, string $id, UpdateClientAction $updateClientAction): JsonResponse
     {
         try {
-            $clientId =  Ulid::fromString($id);
+            $clientId = Ulid::fromString($id);
             $updateClientAction(
                 clientDto: $request->toDto(),
                 clientId: $clientId,
@@ -112,13 +113,13 @@ class ClientController extends Controller
     public function delete(string $id, DeleteClientAction $deleteClientAction): JsonResponse
     {
         try {
-             $clientId =  Ulid::fromString($id);
-             $deleteClientAction($clientId);
+            $clientId = Ulid::fromString($id);
+            $deleteClientAction($clientId);
 
-             return $this->setResponse(
-                 message: Messages::CLIENT_DELETED_SUCCESS,
-                 code: Response::HTTP_OK,
-             );
+            return $this->setResponse(
+                message: Messages::CLIENT_DELETED_SUCCESS,
+                code: Response::HTTP_OK,
+            );
         } catch (Exception $exception) {
             Log::error(Messages::ERROR_DELETING_CLIENT, [
                 'error' => $exception->getMessage(),
@@ -153,6 +154,30 @@ class ClientController extends Controller
 
             return $this->setResponse(
                 message: Messages::ERROR_FETCHING_CLIENTS,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    public function stats(GetClientStatsAction $getClientStatsAction): JsonResponse
+    {
+        try {
+            $stats = $getClientStatsAction();
+
+            return $this->setResponse(
+                message: Messages::CLIENT_STATS_FETCHED_SUCCESS,
+                code: Response::HTTP_OK,
+                data: ['stats' => $stats],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_FETCHING_CLIENT_STATS, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: Messages::ERROR_FETCHING_CLIENT_STATS,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

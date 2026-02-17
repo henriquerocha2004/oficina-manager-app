@@ -94,3 +94,16 @@ export async function deleteService(id) {
         return { success: false, error };
     }
 }
+
+/**
+ * Busca estatísticas de serviços do backend.
+ * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
+ */
+export async function fetchServiceStats() {
+    try {
+        const { data } = await axios.get('/services/stats');
+        return { success: true, data: data.data.stats };
+    } catch (error) {
+        return { success: false, error };
+    }
+}

@@ -2,29 +2,30 @@
 
 namespace App\Http\Controllers\tenant;
 
-use Exception;
-use Throwable;
-use App\Constants\Messages;
-use Symfony\Component\Uid\Ulid;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\FindRequest;
-use App\Http\Requests\tenant\VehicleRequest;
-use Symfony\Component\HttpFoundation\Response;
 use App\Actions\Tenant\Vehicle\CreateVehicleAction;
 use App\Actions\Tenant\Vehicle\DeleteVehicleAction;
 use App\Actions\Tenant\Vehicle\FindOneAction;
+use App\Actions\Tenant\Vehicle\GetVehicleStatsAction;
 use App\Actions\Tenant\Vehicle\SearchVehicleAction;
 use App\Actions\Tenant\Vehicle\UpdateVehicleAction;
+use App\Constants\Messages;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\FindRequest;
+use App\Http\Requests\tenant\VehicleRequest;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Uid\Ulid;
+use Throwable;
 
 class VehicleController extends Controller
 {
     public function index(): InertiaResponse
     {
-        return Inertia::render("Tenant/Vehicles/Index");
+        return Inertia::render('Tenant/Vehicles/Index');
     }
 
     /**
@@ -85,7 +86,7 @@ class VehicleController extends Controller
     public function update(VehicleRequest $request, string $id, UpdateVehicleAction $updateVehicleAction): JsonResponse
     {
         try {
-            $vehicleId =  Ulid::fromString($id);
+            $vehicleId = Ulid::fromString($id);
             $updateVehicleAction(
                 vehicleDto: $request->toDto(),
                 vehicleId: $vehicleId,
@@ -112,13 +113,13 @@ class VehicleController extends Controller
     public function delete(string $id, DeleteVehicleAction $deleteVehicleAction): JsonResponse
     {
         try {
-             $vehicleId =  Ulid::fromString($id);
-             $deleteVehicleAction($vehicleId);
+            $vehicleId = Ulid::fromString($id);
+            $deleteVehicleAction($vehicleId);
 
-             return $this->setResponse(
-                 message: Messages::VEHICLE_DELETED_SUCCESS,
-                 code: Response::HTTP_OK,
-             );
+            return $this->setResponse(
+                message: Messages::VEHICLE_DELETED_SUCCESS,
+                code: Response::HTTP_OK,
+            );
         } catch (Exception $exception) {
             Log::error(Messages::ERROR_DELETING_VEHICLE, [
                 'error' => $exception->getMessage(),
@@ -153,6 +154,30 @@ class VehicleController extends Controller
 
             return $this->setResponse(
                 message: Messages::ERROR_FETCHING_VEHICLES,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    public function stats(GetVehicleStatsAction $getVehicleStatsAction): JsonResponse
+    {
+        try {
+            $stats = $getVehicleStatsAction();
+
+            return $this->setResponse(
+                message: Messages::VEHICLE_STATS_FETCHED_SUCCESS,
+                code: Response::HTTP_OK,
+                data: ['stats' => $stats],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_FETCHING_VEHICLE_STATS, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: Messages::ERROR_FETCHING_VEHICLE_STATS,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

@@ -1,15 +1,34 @@
 import { computed } from 'vue';
 
 /**
- * Composable para calcular estatísticas das telas de gerenciamento.
- * Recebe os dados e o tipo de tela, retorna array de stats cards.
+ * Composable para estatísticas das telas de gerenciamento.
+ * Agora suporta tanto dados da API quanto cálculo local (para backward compatibility).
  *
- * @param {Array} data - Array de dados da tela
+ * @param {Array} data - Array de dados da tela (para cálculo local)
  * @param {String} type - Tipo: 'products', 'clients', 'suppliers', 'services', 'vehicles'
+ * @param {Object} statsFromApi - Stats vindas da API (opcional)
  * @returns {Object} { stats }
  */
-export function useStats(data, type) {
+export function useStats(data, type, statsFromApi = null) {
     const stats = computed(() => {
+        if (statsFromApi?.value) {
+            switch (type) {
+                case 'clients':
+                    return formatClientStats(statsFromApi.value);
+                case 'suppliers':
+                    return formatSupplierStats(statsFromApi.value);
+                case 'products':
+                    return formatProductStats(statsFromApi.value);
+                case 'services':
+                    return formatServiceStats(statsFromApi.value);
+                case 'vehicles':
+                    return formatVehicleStats(statsFromApi.value);
+                default:
+                    break;
+            }
+        }
+
+        // Fallback para cálculo local (outras features ainda não migradas)
         if (!data.value || data.value.length === 0) {
             return getEmptyStats(type);
         }
@@ -34,57 +53,239 @@ export function useStats(data, type) {
 }
 
 /**
- * Calcula estatísticas para Produtos.
+ * Formata estatísticas de clientes recebidas da API para o formato dos StatsCards.
+ * @param {Object} stats - Dados de estatísticas vindos da API
+ * @returns {Array} Array de objetos formatados para StatsCard
  */
-function calculateProductStats(products) {
-    const total = products.length;
-    const active = products.filter(p => p.is_active).length;
-    const categories = [...new Set(products.map(p => p.category))];
-    const totalValue = products.reduce((sum, p) => sum + (parseFloat(p.unit_price) || 0), 0);
+export function formatClientStats(stats) {
+    return [
+        {
+            icon: 'user',
+            title: 'Total de Clientes',
+            value: stats.total || 0,
+            subtitle: stats.last_90_days > 0
+                ? `${stats.last_90_days} novos nos últimos 90 dias`
+                : 'Nenhum cliente novo nos últimos 90 dias',
+            trend: stats.last_90_days > 0 ? `+${stats.last_90_days}` : '',
+            color: 'orange',
+        },
+        {
+            icon: 'calendar',
+            title: 'Novos nos Últimos 90 Dias',
+            value: stats.last_90_days || 0,
+            subtitle: stats.growth > 0
+                ? `+${stats.growth} comparado aos 90 dias anteriores`
+                : `${stats.growth} comparado aos 90 dias anteriores`,
+            trend: stats.growth_percentage > 0 ? `+${stats.growth_percentage}%` : '',
+            color: 'green',
+        },
+        {
+            icon: 'geolocation',
+            title: 'Top Cidade',
+            value: stats.top_city || 'N/A',
+            subtitle: `${stats.top_city_percentage}% dos clientes`,
+            trend: '',
+            color: 'blue',
+        },
+        {
+            icon: 'chart-simple',
+            title: 'Crescimento',
+            value: `${stats.growth || 0}`,
+            subtitle: 'Últimos 90 dias vs anteriores',
+            trend: stats.growth_percentage > 0 ? `+${stats.growth_percentage}%` : '',
+            color: 'green',
+        },
+    ];
+}
 
-    // Mock: produtos criados este mês
-    const thisMonth = products.filter(p => {
-        if (!p.created_at) return false;
-        const created = new Date(p.created_at);
-        const now = new Date();
-        return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
-    }).length;
+/**
+ * Formata estatísticas de fornecedores recebidas da API para o formato dos StatsCards.
+ * @param {Object} stats - Dados de estatísticas vindos da API
+ * @returns {Array} Array de objetos formatados para StatsCard
+ */
+export function formatSupplierStats(stats) {
+    return [
+        {
+            icon: 'shop',
+            title: 'Total de Fornecedores',
+            value: stats.total || 0,
+            subtitle: stats.last_90_days > 0
+                ? `${stats.last_90_days} novos nos últimos 90 dias`
+                : 'Nenhum fornecedor novo nos últimos 90 dias',
+            trend: stats.last_90_days > 0 ? `+${stats.last_90_days}` : '',
+            color: 'orange',
+        },
+        {
+            icon: 'check-circle',
+            title: 'Fornecedores Ativos',
+            value: stats.active_suppliers || 0,
+            subtitle: `${stats.active_percentage}% do total`,
+            trend: '',
+            color: 'green',
+        },
+        {
+            icon: 'geolocation',
+            title: 'Top Estado',
+            value: stats.top_state || 'N/A',
+            subtitle: stats.top_state
+                ? `${stats.top_state_percentage}% dos fornecedores`
+                : 'Nenhum estado cadastrado',
+            trend: '',
+            color: 'blue',
+        },
+        {
+            icon: 'calendar',
+            title: 'Novos nos Últimos 90 Dias',
+            value: stats.last_90_days || 0,
+            subtitle: stats.growth > 0
+                ? `+${stats.growth} comparado aos 90 dias anteriores`
+                : `${stats.growth} comparado aos 90 dias anteriores`,
+            trend: stats.growth_percentage > 0 ? `+${stats.growth_percentage}%` : '',
+            color: 'green',
+        },
+    ];
+}
 
+/**
+ * Formata estatísticas de produtos recebidas da API para o formato dos StatsCards.
+ * @param {Object} stats - Dados de estatísticas vindos da API
+ * @returns {Array} Array de objetos formatados para StatsCard
+ */
+export function formatProductStats(stats) {
     return [
         {
             icon: 'package',
             title: 'Total de Produtos',
-            value: total,
-            subtitle: thisMonth > 0 ? `${thisMonth} adicionados este mês` : 'Nenhum produto novo este mês',
-            trend: thisMonth > 0 ? `+${thisMonth}` : '',
+            value: stats.total || 0,
+            subtitle: stats.last_90_days > 0
+                ? `${stats.last_90_days} novos nos últimos 90 dias`
+                : 'Nenhum produto novo nos últimos 90 dias',
+            trend: stats.last_90_days > 0 ? `+${stats.last_90_days}` : '',
             color: 'orange',
         },
         {
             icon: 'dollar',
             title: 'Valor Total em Estoque',
-            value: `R$ ${totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            value: `R$ ${parseFloat(stats.total_value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
             subtitle: 'Baseado no preço unitário',
             trend: '',
             color: 'green',
         },
         {
+            icon: 'check-circle',
+            title: 'Produtos Ativos',
+            value: `${stats.active_percentage || 0}%`,
+            subtitle: `${stats.active_products || 0} de ${stats.total || 0} produtos`,
+            trend: '',
+            color: 'green',
+        },
+        {
             icon: 'category',
-            title: 'Categorias',
-            value: categories.length,
-            subtitle: 'Categorias cadastradas',
+            title: 'Top Categoria',
+            value: stats.top_category || 'N/A',
+            subtitle: stats.top_category
+                ? `${stats.top_category_percentage}% dos produtos`
+                : 'Nenhuma categoria cadastrada',
+            trend: '',
+            color: 'blue',
+        },
+    ];
+}
+
+/**
+ * Formata estatísticas de serviços recebidas da API para o formato dos StatsCards.
+ * @param {Object} stats - Dados de estatísticas vindos da API
+ * @returns {Array} Array de objetos formatados para StatsCard
+ */
+export function formatServiceStats(stats) {
+    return [
+        {
+            icon: 'wrench',
+            title: 'Total de Serviços',
+            value: stats.total || 0,
+            subtitle: stats.last_90_days > 0
+                ? `${stats.last_90_days} novos nos últimos 90 dias`
+                : 'Nenhum serviço novo nos últimos 90 dias',
+            trend: stats.last_90_days > 0 ? `+${stats.last_90_days}` : '',
+            color: 'orange',
+        },
+        {
+            icon: 'check-circle',
+            title: 'Serviços Ativos',
+            value: stats.active_services || 0,
+            subtitle: `${Math.round((stats.active_services / (stats.total || 1)) * 100)}% do total`,
+            trend: '',
+            color: 'green',
+        },
+        {
+            icon: 'dollar',
+            title: 'Valor Médio',
+            value: `R$ ${parseFloat(stats.average_price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            subtitle: 'Preço base médio dos serviços',
+            trend: '',
+            color: 'green',
+        },
+        {
+            icon: 'calendar',
+            title: 'Novos nos Últimos 90 Dias',
+            value: stats.last_90_days || 0,
+            subtitle: stats.growth > 0
+                ? `+${stats.growth} comparado aos 90 dias anteriores`
+                : `${stats.growth} comparado aos 90 dias anteriores`,
+            trend: stats.growth_percentage > 0 ? `+${stats.growth_percentage}%` : '',
+            color: 'blue',
+        },
+    ];
+}
+
+/**
+ * Formata estatísticas de veículos recebidas da API para o formato dos StatsCards.
+ * @param {Object} stats - Dados de estatísticas vindos da API
+ * @returns {Array} Array de objetos formatados para StatsCard
+ */
+export function formatVehicleStats(stats) {
+    return [
+        {
+            icon: 'car',
+            title: 'Total de Veículos',
+            value: stats.total || 0,
+            subtitle: stats.last_90_days > 0
+                ? `${stats.last_90_days} novos nos últimos 90 dias`
+                : 'Nenhum veículo novo nos últimos 90 dias',
+            trend: stats.last_90_days > 0 ? `+${stats.last_90_days}` : '',
+            color: 'orange',
+        },
+        {
+            icon: 'calendar',
+            title: 'Novos nos Últimos 90 Dias',
+            value: stats.last_90_days || 0,
+            subtitle: stats.growth > 0
+                ? `+${stats.growth} comparado aos 90 dias anteriores`
+                : `${stats.growth} comparado aos 90 dias anteriores`,
+            trend: stats.growth_percentage > 0 ? `+${stats.growth_percentage}%` : '',
+            color: 'green',
+        },
+        {
+            icon: 'award',
+            title: 'Top Marca',
+            value: stats.top_brand || 'N/A',
+            subtitle: stats.top_brand
+                ? `${stats.top_brand_percentage}% dos veículos`
+                : 'Nenhuma marca cadastrada',
             trend: '',
             color: 'blue',
         },
         {
-            icon: 'check-circle',
-            title: 'Produtos Ativos',
-            value: `${((active / total) * 100).toFixed(0)}%`,
-            subtitle: `${active} de ${total} produtos`,
-            trend: '',
+            icon: 'chart-simple',
+            title: 'Crescimento',
+            value: `${stats.growth || 0}`,
+            subtitle: 'Últimos 90 dias vs anteriores',
+            trend: stats.growth_percentage > 0 ? `+${stats.growth_percentage}%` : '',
             color: 'green',
         },
     ];
 }
+
 
 /**
  * Calcula estatísticas para Clientes.

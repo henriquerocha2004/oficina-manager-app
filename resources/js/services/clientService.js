@@ -76,3 +76,16 @@ export async function deleteClient(id) {
         return { success: false, error };
     }
 }
+
+/**
+ * Busca estatísticas de clientes do backend.
+ * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
+ */
+export async function fetchClientStats() {
+    try {
+        const { data } = await axios.get('/clients/stats');
+        return { success: true, data: data.data.stats };
+    } catch (error) {
+        return { success: false, error };
+    }
+}

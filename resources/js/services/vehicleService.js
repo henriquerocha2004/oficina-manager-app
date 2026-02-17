@@ -86,3 +86,16 @@ export async function deleteVehicle(id) {
         return { success: false, error };
     }
 }
+
+/**
+ * Busca estatísticas de veículos do backend.
+ * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
+ */
+export async function fetchVehicleStats() {
+    try {
+        const { data } = await axios.get('/vehicles/stats');
+        return { success: true, data: data.data.stats };
+    } catch (error) {
+        return { success: false, error };
+    }
+}

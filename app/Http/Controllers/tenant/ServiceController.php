@@ -5,6 +5,7 @@ namespace App\Http\Controllers\tenant;
 use App\Actions\Tenant\Service\CreateServiceAction;
 use App\Actions\Tenant\Service\DeleteServiceAction;
 use App\Actions\Tenant\Service\FindOneServiceAction;
+use App\Actions\Tenant\Service\GetServiceStatsAction;
 use App\Actions\Tenant\Service\SearchServiceAction;
 use App\Actions\Tenant\Service\UpdateServiceAction;
 use App\Constants\Messages;
@@ -149,6 +150,30 @@ class ServiceController extends Controller
 
             return $this->setResponse(
                 message: Messages::ERROR_FETCHING_SERVICES,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    public function stats(GetServiceStatsAction $getServiceStatsAction): JsonResponse
+    {
+        try {
+            $stats = $getServiceStatsAction();
+
+            return $this->setResponse(
+                message: Messages::SERVICE_STATS_FETCHED_SUCCESS,
+                code: Response::HTTP_OK,
+                data: ['stats' => $stats],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_FETCHING_SERVICE_STATS, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: Messages::ERROR_FETCHING_SERVICE_STATS,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

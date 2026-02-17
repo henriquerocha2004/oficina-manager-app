@@ -149,7 +149,7 @@ import StatsContainer from '@/Shared/Components/StatsContainer.vue';
 import StatsCard from '@/Shared/Components/StatsCard.vue';
 import ExportButton from '@/Shared/Components/ExportButton.vue';
 import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
-import { fetchVehicles, createVehicle, updateVehicle, deleteVehicle } from '@/services/vehicleService.js';
+import { fetchVehicles, createVehicle, updateVehicle, deleteVehicle, fetchVehicleStats } from '@/services/vehicleService.js';
 import { fetchClients } from '@/services/clientService.js';
 import DrawerVeiculo from '../../../Shared/Components/DrawerVeiculo.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
@@ -174,12 +174,13 @@ const drawerEdit = ref(false);
 const drawerVehicle = ref(null);
 const confirmModal = ref(null);
 const loading = ref(false);
+const statsFromApi = ref(null);
 
 // Filtros
 const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useVehicleFilters();
 const clientSearch = ref('');
 
-const { stats } = useStats(items, 'vehicles');
+const { stats } = useStats(items, 'vehicles', statsFromApi);
 const showClientDropdown = ref(false);
 const filteredClients = ref([]);
 const loadingClients = ref(false);
@@ -188,6 +189,15 @@ const debounceTimer = ref(null);
 const breadcrumbs = [{ label: 'Veículos' }];
 
 const { unmaskLicensePlate } = useMasks();
+
+const loadStats = async () => {
+  const result = await fetchVehicleStats();
+  if (result.success) {
+    statsFromApi.value = result.data;
+  } else {
+    toast.error('Erro ao carregar estatísticas.');
+  }
+};
 
 const load = async () => {
   loading.value = true;
@@ -294,6 +304,7 @@ onMounted(() => {
   if (filters.clientName) {
     clientSearch.value = filters.clientName;
   }
+  loadStats();
   load();
 });
 

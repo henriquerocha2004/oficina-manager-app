@@ -76,3 +76,16 @@ export async function deleteSupplier(id) {
         return { success: false, error };
     }
 }
+
+/**
+ * Busca estatísticas de fornecedores do endpoint backend.
+ * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
+ */
+export async function fetchSupplierStats() {
+    try {
+        const { data } = await axios.get('/suppliers/stats');
+        return { success: true, data: data.data.stats };
+    } catch (error) {
+        return { success: false, error };
+    }
+}

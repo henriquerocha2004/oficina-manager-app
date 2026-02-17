@@ -57,7 +57,7 @@
                 class="kt-btn kt-btn-sm kt-btn-ghost flex-1"
                 @click="emit('edit', supplier)"
             >
-                <i class="ki-filled ki-pencil"></i>
+                <i class="ki-filled ki-pencil text-gray-600 dark:text-gray-400"></i>
                 Editar
             </button>
             <button
@@ -65,7 +65,7 @@
                 class="kt-btn kt-btn-sm kt-btn-light-danger"
                 @click="emit('remove', supplier.id)"
             >
-                <i class="ki-filled ki-trash"></i>
+                <i class="ki-filled ki-trash text-red-600 dark:text-red-400"></i>
                 Remover
             </button>
         </div>

@@ -147,7 +147,7 @@ import StatsContainer from '@/Shared/Components/StatsContainer.vue';
 import StatsCard from '@/Shared/Components/StatsCard.vue';
 import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
 import ExportButton from '@/Shared/Components/ExportButton.vue';
-import { fetchProducts, createProduct, updateProduct, deleteProduct, fetchProduct } from '@/services/productService.js';
+import { fetchProducts, fetchProductStats, createProduct, updateProduct, deleteProduct, fetchProduct } from '@/services/productService.js';
 import DrawerProduto from '../../../Shared/Components/DrawerProduto.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
 import { useMasks } from '@/Composables/useMasks.js';
@@ -170,13 +170,14 @@ const drawerOpen = ref(false);
 const drawerEdit = ref(false);
 const drawerProduct = ref(null);
 const confirmModal = ref(null);
+const statsFromApi = ref(null);
 
 const breadcrumbs = [ { label: 'Produtos' } ];
 
 const { maskCurrency } = useMasks();
 const { exportToCSV } = useExportCSV();
 const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useProductFilters();
-const { stats } = useStats(items, 'products');
+const { stats } = useStats(items, 'products', statsFromApi);
 const filteredItems = computed(() => {
     let result = items.value;
     if (filters.category) {
@@ -213,6 +214,13 @@ const load = async () => {
   total.value = res.total;
 };
 
+const loadStats = async () => {
+    const result = await fetchProductStats();
+    if (result.success) {
+        statsFromApi.value = result.data;
+    }
+};
+
 onMounted(() => {
     const saved = loadFromStorage();
     if (saved.category) filters.category = saved.category;
@@ -220,6 +228,7 @@ onMounted(() => {
     if (saved.priceMin) filters.priceMin = saved.priceMin;
     if (saved.priceMax) filters.priceMax = saved.priceMax;
     load();
+    loadStats();
 });
 
 watch(() => filters.category, () => saveToStorage());

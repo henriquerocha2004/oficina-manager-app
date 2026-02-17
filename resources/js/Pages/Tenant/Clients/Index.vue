@@ -109,7 +109,7 @@ import TenantLayout from '@/Layouts/TenantLayout.vue';
 import StatsContainer from '@/Shared/Components/StatsContainer.vue';
 import StatsCard from '@/Shared/Components/StatsCard.vue';
 import ExportButton from '@/Shared/Components/ExportButton.vue';
-import { fetchClients, createClient, updateClient, deleteClient } from '../../../services/clientService';
+import { fetchClients, createClient, updateClient, deleteClient, fetchClientStats } from '@/services/clientService.js';
 import DrawerCliente from '../../../Shared/Components/DrawerCliente.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
 import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
@@ -139,7 +139,9 @@ const breadcrumbs = [ { label: 'Clientes' } ];
 const { unmask } = useMasks();
 const { exportToCSV } = useExportCSV();
 const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useClientFilters();
-const { stats } = useStats(items, 'clients');
+
+const statsFromApi = ref(null);
+const { stats } = useStats(items, 'clients', statsFromApi);
 
 const filteredItems = computed(() => {
     let result = items.value;
@@ -180,11 +182,22 @@ const load = async () => {
   total.value = res.total;
 };
 
+const loadStats = async () => {
+    const { success, data, error } = await fetchClientStats();
+    if (success) {
+        statsFromApi.value = data;
+    } else {
+        console.error('Erro ao carregar estatísticas:', error);
+        statsFromApi.value = null;
+    }
+};
+
 onMounted(() => {
     const saved = loadFromStorage();
     if (saved.state) filters.state = saved.state;
     if (saved.city) filters.city = saved.city;
     if (saved.type) filters.type = saved.type;
+    loadStats();
     load();
 });
 

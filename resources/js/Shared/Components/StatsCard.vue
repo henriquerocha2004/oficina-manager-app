@@ -149,6 +149,86 @@ const trendIcon = computed(() => {
     white-space: nowrap;
 }
 
+.stats-card__icon--orange {
+    background-color: rgba(251, 146, 60, 0.1);
+    color: rgb(251, 146, 60);
+}
+
+.dark .stats-card__icon--orange {
+    background-color: rgba(251, 146, 60, 0.2);
+    color: rgb(251, 146, 60);
+}
+
+.stats-card__icon--green {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: rgb(34, 197, 94);
+}
+
+.dark .stats-card__icon--green {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: rgb(34, 197, 94);
+}
+
+.stats-card__icon--blue {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: rgb(59, 130, 246);
+}
+
+.dark .stats-card__icon--blue {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: rgb(59, 130, 246);
+}
+
+.stats-card__icon--red {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+.dark .stats-card__icon--red {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: rgb(239, 68, 68);
+}
+
+.stats-card__icon--purple {
+    background-color: rgba(168, 85, 247, 0.1);
+    color: rgb(168, 85, 247);
+}
+
+.dark .stats-card__icon--purple {
+    background-color: rgba(168, 85, 247, 0.2);
+    color: rgb(168, 85, 247);
+}
+
+.stats-card__trend--positive {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: rgb(34, 197, 94);
+}
+
+.dark .stats-card__trend--positive {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: rgb(34, 197, 94);
+}
+
+.stats-card__trend--negative {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+.dark .stats-card__trend--negative {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: rgb(239, 68, 68);
+}
+
+.stats-card__trend--neutral {
+    background-color: rgba(156, 163, 175, 0.1);
+    color: rgb(156, 163, 175);
+}
+
+.dark .stats-card__trend--neutral {
+    background-color: rgba(156, 163, 175, 0.2);
+    color: rgb(156, 163, 175);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
     .stats-card {

@@ -7,6 +7,7 @@ use App\Actions\Tenant\Product\CreateProductAction;
 use App\Actions\Tenant\Product\DeleteProductAction;
 use App\Actions\Tenant\Product\DetachSupplierFromProductAction;
 use App\Actions\Tenant\Product\FindOneProductAction;
+use App\Actions\Tenant\Product\GetProductStatsAction;
 use App\Actions\Tenant\Product\SearchProductAction;
 use App\Actions\Tenant\Product\UpdateProductAction;
 use App\Actions\Tenant\Product\UpdateProductSupplierAction;
@@ -282,6 +283,30 @@ class ProductController extends Controller
 
             return $this->setResponse(
                 message: Messages::ERROR_DETACHING_SUPPLIER_FROM_PRODUCT,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    public function stats(GetProductStatsAction $getProductStatsAction): JsonResponse
+    {
+        try {
+            $stats = $getProductStatsAction();
+
+            return $this->setResponse(
+                message: Messages::PRODUCT_STATS_FETCHED_SUCCESS,
+                code: Response::HTTP_OK,
+                data: ['stats' => $stats],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_FETCHING_PRODUCT_STATS, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: Messages::ERROR_FETCHING_PRODUCT_STATS,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

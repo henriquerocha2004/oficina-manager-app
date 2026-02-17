@@ -30,6 +30,10 @@ class Messages
 
     public const string ERROR_DELETING_CLIENT = 'An error occurred while deleting the client.';
 
+    public const string CLIENT_STATS_FETCHED_SUCCESS = 'Client statistics fetched successfully.';
+
+    public const string ERROR_FETCHING_CLIENT_STATS = 'Failed to fetch client statistics.';
+
     public const string VEHICLE_CREATED_SUCCESS = 'Vehicle created successfully.';
 
     public const string ERROR_CREATING_VEHICLE = 'An error occurred while creating the vehicle.';
@@ -45,6 +49,10 @@ class Messages
     public const string VEHICLE_DELETED_SUCCESS = 'Vehicle deleted successfully.';
 
     public const string ERROR_DELETING_VEHICLE = 'An error occurred while deleting the vehicle.';
+
+    public const string VEHICLE_STATS_FETCHED_SUCCESS = 'Vehicle statistics fetched successfully.';
+
+    public const string ERROR_FETCHING_VEHICLE_STATS = 'Failed to fetch vehicle statistics.';
 
     public const string SERVICE_CREATED_SUCCESS = 'Service created successfully.';
 
@@ -62,6 +70,10 @@ class Messages
 
     public const string ERROR_DELETING_SERVICE = 'An error occurred while deleting the service.';
 
+    public const string SERVICE_STATS_FETCHED_SUCCESS = 'Service statistics fetched successfully.';
+
+    public const string ERROR_FETCHING_SERVICE_STATS = 'Failed to fetch service statistics.';
+
     public const string SUPPLIER_CREATED_SUCCESS = 'Supplier created successfully.';
 
     public const string ERROR_CREATING_SUPPLIER = 'An error occurred while creating the supplier.';
@@ -78,6 +90,10 @@ class Messages
 
     public const string ERROR_DELETING_SUPPLIER = 'An error occurred while deleting the supplier.';
 
+    public const string SUPPLIER_STATS_FETCHED_SUCCESS = 'Supplier statistics fetched successfully.';
+
+    public const string ERROR_FETCHING_SUPPLIER_STATS = 'Failed to fetch supplier statistics.';
+
     public const string PRODUCT_CREATED_SUCCESS = 'Product created successfully.';
 
     public const string ERROR_CREATING_PRODUCT = 'An error occurred while creating the product.';
@@ -93,6 +109,10 @@ class Messages
     public const string PRODUCT_DELETED_SUCCESS = 'Product deleted successfully.';
 
     public const string ERROR_DELETING_PRODUCT = 'An error occurred while deleting the product.';
+
+    public const string PRODUCT_STATS_FETCHED_SUCCESS = 'Product statistics fetched successfully.';
+
+    public const string ERROR_FETCHING_PRODUCT_STATS = 'Failed to fetch product statistics.';
 
     public const string PRODUCT_SUPPLIER_ATTACHED_SUCCESS = 'Supplier attached to product successfully.';
 

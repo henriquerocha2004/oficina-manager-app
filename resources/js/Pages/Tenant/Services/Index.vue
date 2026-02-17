@@ -108,7 +108,7 @@ import StatsContainer from '@/Shared/Components/StatsContainer.vue';
 import StatsCard from '@/Shared/Components/StatsCard.vue';
 import ExportButton from '@/Shared/Components/ExportButton.vue';
 import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
-import { fetchServices, createService, updateService, deleteService } from '@/services/serviceService.js';
+import { fetchServices, createService, updateService, deleteService, fetchServiceStats } from '@/services/serviceService.js';
 import DrawerServico from '../../../Shared/Components/DrawerServico.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
 import { useToast } from '@/Shared/composables/useToast.js';
@@ -132,10 +132,11 @@ const drawerEdit = ref(false);
 const drawerService = ref(null);
 const confirmModal = ref(null);
 const loading = ref(false);
+const statsFromApi = ref(null);
 
 const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useServiceFilters();
 const categories = serviceCategories;
-const { stats } = useStats(items, 'services');
+const { stats } = useStats(items, 'services', statsFromApi);
 
 const breadcrumbs = [{ label: 'Serviços' }];
 const formatCurrency = (value) => {
@@ -144,6 +145,15 @@ const formatCurrency = (value) => {
     style: 'currency',
     currency: 'BRL',
   }).format(value);
+};
+
+const loadStats = async () => {
+  const result = await fetchServiceStats();
+  if (result.success) {
+    statsFromApi.value = result.data;
+  } else {
+    toast.error('Erro ao carregar estatísticas.');
+  }
 };
 
 const load = async () => {
@@ -205,6 +215,7 @@ watch(
 
 onMounted(() => {
   Object.assign(filters, loadFromStorage());
+  loadStats();
   load();
 });
 
