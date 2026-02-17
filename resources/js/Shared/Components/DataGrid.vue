@@ -1,32 +1,30 @@
 <template>
   <div>
     <div class="card bg-white dark:bg-card border border-border rounded-lg">
-      <div class="card-header flex items-center justify-between gap-4 px-6 py-5 border-b border-neutral-300 dark:border-white/20">
-        <div>
-          <slot name="title">
-            <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Clientes</h2>
-          </slot>
-          <slot name="subtitle"></slot>
-        </div>
-        <div class="flex items-center gap-3">
-          <div v-if="searchable" class="kt-input max-w-sm">
+      <div class="card-header px-6 py-5 border-b border-neutral-300 dark:border-white/20">
+        <!-- Linha única: Busca + Filtros + Ações -->
+        <div class="flex flex-wrap items-center gap-3 mb-0">
+          <!-- Busca -->
+          <div v-if="searchable" class="relative" style="width: 280px !important; min-width: 280px !important; max-width: 280px !important; flex: 0 0 auto !important;">
+            <i class="ki-outline ki-magnifier absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-500 dark:text-gray-400 z-10 pointer-events-none"></i>
             <input
               v-model="localSearch"
               @input="onSearchInput"
               :placeholder="searchPlaceholder"
-              class="kt-input-ghost"
+              class="kt-input w-full !pl-10"
             />
-            <button v-if="localSearch" @click="clearSearch" class="kt-btn kt-btn-icon kt-btn-ghost" title="Limpar">
-              ✕
-            </button>
           </div>
-          <slot name="actions"></slot>
-        </div>
-      </div>
 
-      <!-- Slot para filtros -->
-      <div v-if="$slots.filters" class="px-6 py-4 border-b border-neutral-300 dark:border-white/20">
-        <slot name="filters"></slot>
+          <!-- Slot para Filtros (agora será o FilterDropdown) -->
+          <div v-if="$slots.filters">
+            <slot name="filters"></slot>
+          </div>
+
+          <!-- Botões de Ação -->
+          <div v-if="$slots.actions" class="flex items-center gap-3 ml-auto">
+            <slot name="actions"></slot>
+          </div>
+        </div>
       </div>
 
       <div class="p-3 overflow-x-auto">
@@ -174,5 +172,16 @@ function clearSearch() { localSearch.value = ''; emit('search', ''); }
 .dark .page.active {
   background: #222;
   color: #fff;
+}
+
+/* Input de busca com altura maior */
+.kt-input input.kt-input-ghost {
+  min-height: 42px;
+  padding: 0.625rem 0.875rem;
+}
+
+/* Container do input de busca */
+.search-input-container {
+  position: relative !important;
 }
 </style>

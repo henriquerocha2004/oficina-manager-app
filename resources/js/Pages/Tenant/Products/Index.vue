@@ -1,22 +1,96 @@
 <template>
   <TenantLayout title="Produtos" :breadcrumbs="breadcrumbs">
     <div class="kt-container-fixed w-full py-4 px-2">
+      <StatsContainer>
+        <StatsCard
+          v-for="(stat, index) in stats"
+          :key="index"
+          :icon="stat.icon"
+          :title="stat.title"
+          :value="stat.value"
+          :subtitle="stat.subtitle"
+          :trend="stat.trend"
+          :color="stat.color"
+        />
+      </StatsContainer>
+
       <DataGrid
         :columns="columns"
-        :items="items"
-        :total="total"
+        :items="filteredItems"
+        :total="filteredTotal"
         :page="page"
         :perPage="perPage"
         @update:page="onPage"
         @sort="onSort"
         @search="onSearch"
       >
-        <template #title>
-          <h1 class="text-lg font-semibold dark:text-white">Produtos</h1>
-          <p class="text-sm text-secondary-foreground">Lista de produtos cadastrados</p>
+        <template #filters>
+          <FilterDropdown
+            :activeCount="activeFiltersCount"
+            @clear="clearAllFilters"
+          >
+            <div class="filter-item">
+              <label class="filter-label">Categoria</label>
+              <select
+                v-model="filters.category"
+                class="kt-select"
+                @change="applyFilters"
+              >
+                <option value="">Todas</option>
+                <option
+                  v-for="cat in productCategories"
+                  :key="cat.value"
+                  :value="cat.value"
+                >
+                  {{ cat.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">Status</label>
+              <select
+                v-model="filters.status"
+                class="kt-select"
+                @change="applyFilters"
+              >
+                <option value="all">Todos</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">Preço Mín</label>
+              <input
+                v-model.number="filters.priceMin"
+                type="number"
+                placeholder="0,00"
+                class="kt-input"
+                min="0"
+                step="0.01"
+                @input="applyFilters"
+              />
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">Preço Máx</label>
+              <input
+                v-model.number="filters.priceMax"
+                type="number"
+                placeholder="9999,99"
+                class="kt-input"
+                min="0"
+                step="0.01"
+                @input="applyFilters"
+              />
+            </div>
+          </FilterDropdown>
         </template>
+
         <template #actions>
           <div class="flex items-center gap-2">
+            <ExportButton @export="handleExport" />
             <button class="kt-btn kt-btn-primary" @click="onNew">Novo Produto</button>
           </div>
         </template>
@@ -66,15 +140,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import DataGrid from '../../../Shared/Components/DataGrid.vue';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
+import StatsContainer from '@/Shared/Components/StatsContainer.vue';
+import StatsCard from '@/Shared/Components/StatsCard.vue';
+import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
+import ExportButton from '@/Shared/Components/ExportButton.vue';
 import { fetchProducts, createProduct, updateProduct, deleteProduct, fetchProduct } from '@/services/productService.js';
 import DrawerProduto from '../../../Shared/Components/DrawerProduto.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
 import { useMasks } from '@/Composables/useMasks.js';
 import { useToast } from '@/Shared/composables/useToast.js';
-import { getCategoryLabel, getUnitLabel } from '@/Data/productData';
+import { useStats } from '@/Composables/useStats.js';
+import { useExportCSV } from '@/Composables/useExportCSV.js';
+import { useProductFilters } from '@/Composables/useProductFilters.js';
+import { getCategoryLabel, getUnitLabel, productCategories } from '@/Data/productData';
 
 const toast = useToast();
 
@@ -93,6 +174,32 @@ const confirmModal = ref(null);
 const breadcrumbs = [ { label: 'Produtos' } ];
 
 const { maskCurrency } = useMasks();
+const { exportToCSV } = useExportCSV();
+const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useProductFilters();
+const { stats } = useStats(items, 'products');
+const filteredItems = computed(() => {
+    let result = items.value;
+    if (filters.category) {
+        result = result.filter(item => item.category === filters.category);
+    }
+
+    if (filters.status && filters.status !== 'all') {
+        const isActive = filters.status === 'active';
+        result = result.filter(item => item.is_active === isActive);
+    }
+
+    if (filters.priceMin) {
+        result = result.filter(item => parseFloat(item.unit_price) >= parseFloat(filters.priceMin));
+    }
+
+    if (filters.priceMax) {
+        result = result.filter(item => parseFloat(item.unit_price) <= parseFloat(filters.priceMax));
+    }
+
+    return result;
+});
+
+const filteredTotal = computed(() => filteredItems.value.length);
 
 const load = async () => {
   const res = await fetchProducts({
@@ -106,7 +213,50 @@ const load = async () => {
   total.value = res.total;
 };
 
-onMounted(load);
+onMounted(() => {
+    const saved = loadFromStorage();
+    if (saved.category) filters.category = saved.category;
+    if (saved.status) filters.status = saved.status;
+    if (saved.priceMin) filters.priceMin = saved.priceMin;
+    if (saved.priceMax) filters.priceMax = saved.priceMax;
+    load();
+});
+
+watch(() => filters.category, () => saveToStorage());
+watch(() => filters.status, () => saveToStorage());
+watch(() => filters.priceMin, () => saveToStorage());
+watch(() => filters.priceMax, () => saveToStorage());
+
+function applyFilters() {
+    page.value = 1;
+}
+
+function clearAllFilters() {
+    clearFilters();
+    page.value = 1;
+}
+
+function handleExport() {
+    const columns = [
+        { key: 'name', label: 'Nome' },
+        { key: 'category', label: 'Categoria' },
+        { key: 'unit', label: 'Unidade' },
+        { key: 'unit_price', label: 'Preço Unitário' },
+        { key: 'suggested_price', label: 'Preço Sugerido' },
+        { key: 'is_active', label: 'Status' },
+    ];
+
+    const dataToExport = filteredItems.value.map(item => ({
+        ...item,
+        category: getCategoryLabel(item.category),
+        unit: getUnitLabel(item.unit),
+        unit_price: formatCurrency(item.unit_price),
+        suggested_price: item.suggested_price ? formatCurrency(item.suggested_price) : '',
+        is_active: item.is_active ? 'Ativo' : 'Inativo',
+    }));
+
+    exportToCSV(dataToExport, columns, 'produtos');
+}
 
 function onPage(p) { page.value = p; load(); }
 function onSearch(q) { search.value = q; page.value = 1; load(); }
@@ -124,15 +274,15 @@ function onNew() {
 }
 
 async function onEdit(id) {
-  // Busca o produto completo com fornecedores
   const result = await fetchProduct(id);
   if (result.success && result.data && result.data.data) {
     drawerEdit.value = true;
     drawerProduct.value = result.data.data.product;
     drawerOpen.value = true;
-  } else {
-    toast.error('Erro ao buscar produto: ' + (result.error?.response?.data?.message || result.error?.message || 'Erro desconhecido'));
+    return;
   }
+
+  toast.error('Erro ao buscar produto: ' + (result.error?.response?.data?.message || result.error?.message || 'Erro desconhecido'));
 }
 
 function onDrawerClose() {
@@ -140,29 +290,22 @@ function onDrawerClose() {
 }
 
 async function onDrawerSubmit(data) {
-  // Create or update
   const result = drawerEdit.value
     ? await updateProduct(drawerProduct.value.id, data)
     : await createProduct(data);
 
   if (!result.success) {
-    // Error toast
     toast.error('Erro ao ' + (drawerEdit.value ? 'atualizar' : 'criar') + ' produto: ' + (result.error.response?.data?.message || result.error.message));
     return;
   }
 
-  // Success toast
   toast.success('Produto ' + (drawerEdit.value ? 'atualizado' : 'criado') + ' com sucesso!');
-
-  // Reload grid
   await load();
 
-  // Close drawer
   drawerOpen.value = false;
 }
 
 async function onSupplierUpdated() {
-  // Recarrega o produto atual para atualizar a lista de fornecedores
   if (drawerProduct.value && drawerProduct.value.id) {
     const result = await fetchProduct(drawerProduct.value.id);
     if (result.success && result.data && result.data.data) {
@@ -188,7 +331,6 @@ function onDelete(id) {
   });
 }
 
-// Columns definition
 const columns = [
   { key: 'name', label: 'Nome', sortable: true },
   { key: 'category', label: 'Categoria', sortable: true },
@@ -201,16 +343,6 @@ const columns = [
 </script>
 
 <style>
-@media (max-width: 640px) {
-  html, body {
-    font-size: 1.1rem !important;
-    zoom: 1 !important;
-  }
-}
-</style>
-
-<style>
-/* Container ocupa toda largura no mobile */
 .kt-container-fixed {
   box-sizing: border-box;
   width: 100%;
@@ -224,12 +356,33 @@ const columns = [
   .kt-container-fixed { max-width: 768px; }
 }
 @media (min-width: 1024px) {
-  .kt-container-fixed { max-width: 1100px; }
+  .kt-container-fixed { max-width: 1400px; }
+}
+@media (min-width: 1280px) {
+  .kt-container-fixed { max-width: 1600px; }
 }
 @media (max-width: 640px) {
   html, body {
     font-size: 1.1rem !important;
     zoom: 1 !important;
   }
+}
+</style>
+
+<style scoped>
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.dark .filter-label {
+    color: #cbd5e1;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div id="sidebar_header" class="sidebar-header px-5 py-4 border-b border-gray-800">
+  <div id="sidebar_header" class="sidebar-header px-5 py-4 border-b border-border">
     <!-- Logo e Brand -->
     <div class="flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">

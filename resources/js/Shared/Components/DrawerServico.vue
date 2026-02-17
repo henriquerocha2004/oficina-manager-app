@@ -30,7 +30,7 @@
 
             <!-- Categoria -->
             <FormField name="category" label="Categoria" v-slot="{ field, errors }">
-              <select v-bind="field" class="kt-input w-full">
+              <select v-bind="field" class="kt-select w-full">
                 <option value="">Selecione uma categoria</option>
                 <option v-for="cat in categories" :key="cat.value" :value="cat.value">
                   {{ cat.label }}

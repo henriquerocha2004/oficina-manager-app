@@ -1,22 +1,81 @@
 <template>
   <TenantLayout title="Clientes" :breadcrumbs="breadcrumbs">
     <div class="kt-container-fixed w-full py-4 px-2">
+      <StatsContainer>
+        <StatsCard
+          v-for="(stat, index) in stats"
+          :key="index"
+          :icon="stat.icon"
+          :title="stat.title"
+          :value="stat.value"
+          :subtitle="stat.subtitle"
+          :trend="stat.trend"
+          :color="stat.color"
+        />
+      </StatsContainer>
+
       <DataGrid
         :columns="columns"
-        :items="items"
-        :total="total"
+        :items="filteredItems"
+        :total="filteredTotal"
         :page="page"
         :perPage="perPage"
         @update:page="onPage"
         @sort="onSort"
         @search="onSearch"
       >
-        <template #title>
-          <h1 class="text-lg font-semibold dark:text-white">Clientes</h1>
-          <p class="text-sm text-secondary-foreground">Lista de clientes cadastrados</p>
+        <template #filters>
+          <FilterDropdown
+            :activeCount="activeFiltersCount"
+            @clear="clearAllFilters"
+          >
+            <div class="filter-item">
+              <label class="filter-label">Estado</label>
+              <select
+                v-model="filters.state"
+                class="kt-select"
+                @change="applyFilters"
+              >
+                <option value="">Todos</option>
+                <option
+                  v-for="state in brazilianStates"
+                  :key="state.value"
+                  :value="state.value"
+                >
+                  {{ state.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">Cidade</label>
+              <input
+                v-model="filters.city"
+                type="text"
+                placeholder="Digite a cidade"
+                class="kt-input"
+                @input="applyFilters"
+              />
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">Tipo</label>
+              <select
+                v-model="filters.type"
+                class="kt-select"
+                @change="applyFilters"
+              >
+                <option value="all">Todos</option>
+                <option value="pf">Pessoa Física</option>
+                <option value="pj">Pessoa Jurídica</option>
+              </select>
+            </div>
+          </FilterDropdown>
         </template>
+
         <template #actions>
           <div class="flex items-center gap-2">
+            <ExportButton @export="handleExport" />
             <button class="kt-btn kt-btn-primary" @click="onNew">Novo Cliente</button>
           </div>
         </template>
@@ -44,14 +103,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import DataGrid from '../../../Shared/Components/DataGrid.vue';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
+import StatsContainer from '@/Shared/Components/StatsContainer.vue';
+import StatsCard from '@/Shared/Components/StatsCard.vue';
+import ExportButton from '@/Shared/Components/ExportButton.vue';
 import { fetchClients, createClient, updateClient, deleteClient } from '../../../services/clientService';
 import DrawerCliente from '../../../Shared/Components/DrawerCliente.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
-import { useMasks } from '../../../Composables/useMasks.js';
-import { useToast } from '../../../Shared/composables/useToast.js';
+import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
+import { useMasks } from '@/Composables/useMasks.js';
+import { useToast } from '@/Shared/composables/useToast.js';
+import { useStats } from '@/Composables/useStats.js';
+import { useExportCSV } from '@/Composables/useExportCSV.js';
+import { useClientFilters } from '@/Composables/useClientFilters.js';
+import { brazilianStates } from '@/Data/brazilianStates.js';
 
 const toast = useToast();
 
@@ -67,11 +134,39 @@ const drawerEdit = ref(false);
 const drawerClient = ref(null);
 const confirmModal = ref(null);
 
-// Removido acesso global
-
 const breadcrumbs = [ { label: 'Clientes' } ];
 
 const { unmask } = useMasks();
+const { exportToCSV } = useExportCSV();
+const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useClientFilters();
+const { stats } = useStats(items, 'clients');
+
+const filteredItems = computed(() => {
+    let result = items.value;
+    if (filters.state) {
+        result = result.filter(item => item.state === filters.state);
+    }
+
+    if (filters.city) {
+        result = result.filter(item =>
+            item.city && item.city.toLowerCase().includes(filters.city.toLowerCase())
+        );
+    }
+
+    if (filters.type && filters.type !== 'all') {
+        if (filters.type === 'pf') {
+            result = result.filter(item => item.document_number && item.document_number.length === 11);
+        }
+
+        if (filters.type === 'pj') {
+            result = result.filter(item => item.document_number && item.document_number.length === 14);
+        }
+    }
+
+    return result;
+});
+
+const filteredTotal = computed(() => filteredItems.value.length);
 
 const load = async () => {
   const res = await fetchClients({
@@ -85,7 +180,40 @@ const load = async () => {
   total.value = res.total;
 };
 
-onMounted(load);
+onMounted(() => {
+    const saved = loadFromStorage();
+    if (saved.state) filters.state = saved.state;
+    if (saved.city) filters.city = saved.city;
+    if (saved.type) filters.type = saved.type;
+    load();
+});
+
+watch(() => filters.state, () => saveToStorage());
+watch(() => filters.city, () => saveToStorage());
+watch(() => filters.type, () => saveToStorage());
+
+function applyFilters() {
+    page.value = 1;
+}
+
+function clearAllFilters() {
+    clearFilters();
+    page.value = 1;
+}
+
+function handleExport() {
+    const columns = [
+        { key: 'name', label: 'Nome' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Telefone' },
+        { key: 'document_number', label: 'CPF/CNPJ' },
+        { key: 'city', label: 'Cidade' },
+        { key: 'state', label: 'Estado' },
+        { key: 'zip_code', label: 'CEP' },
+    ];
+
+    exportToCSV(filteredItems.value, columns, 'clientes');
+}
 
 function onPage(p) { page.value = p; load(); }
 function onSearch(q) { search.value = q; page.value = 1; load(); }
@@ -123,14 +251,11 @@ async function onDrawerSubmit(data) {
     ? await updateClient(drawerClient.value.id, unmaskedData)
     : await createClient(unmaskedData);
   if (!result.success) {
-    // Error toast
     toast.error('Erro ao ' + (drawerEdit.value ? 'atualizar' : 'criar') + ' cliente: ' + (result.error.response?.data?.message || result.error.message));
     return;
   }
-  // Success toast
   toast.success('Cliente ' + (drawerEdit.value ? 'atualizado' : 'criado') + ' com sucesso!');
-  // Reload grid
-  load();
+  await load();
   // Close drawer
   drawerOpen.value = false;
 }
@@ -147,12 +272,11 @@ function onDelete(id) {
         return;
       }
       toast.success('Cliente deletado com sucesso!');
-      load();
+      await load();
     }
   });
 }
 
-// Columns definition: last column uses isHtml + slotHtml to render action buttons with onclick -> global handlers
 const columns = [
   { key: 'name', label: 'Nome', sortable: true },
   { key: 'email', label: 'Email', sortable: true },
@@ -162,18 +286,8 @@ const columns = [
 ];
 
 </script>
-<style>
-@media (max-width: 640px) {
-  html, body {
-    font-size: 1.1rem !important;
-    zoom: 1 !important;
-  }
-}
-</style>
 
 <style>
-/* Container ocupa toda largura no mobile */
-/* Container ocupa toda largura no mobile */
 .kt-container-fixed {
   box-sizing: border-box;
   width: 100%;
@@ -187,12 +301,34 @@ const columns = [
   .kt-container-fixed { max-width: 768px; }
 }
 @media (min-width: 1024px) {
-  .kt-container-fixed { max-width: 1100px; }
+  .kt-container-fixed { max-width: 1400px; }
+}
+@media (min-width: 1280px) {
+  .kt-container-fixed { max-width: 1600px; }
 }
 @media (max-width: 640px) {
   html, body {
     font-size: 1.1rem !important;
     zoom: 1 !important;
   }
+}
+</style>
+
+<style scoped>
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Dark mode */
+.dark .filter-label {
+    color: #cbd5e1;
 }
 </style>

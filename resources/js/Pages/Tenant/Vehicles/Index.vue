@@ -1,6 +1,19 @@
 <template>
   <TenantLayout title="Veículos" :breadcrumbs="breadcrumbs">
     <div class="kt-container-fixed w-full py-4 px-2">
+      <StatsContainer>
+        <StatsCard
+          v-for="(stat, index) in stats"
+          :key="index"
+          :icon="stat.icon"
+          :title="stat.title"
+          :value="stat.value"
+          :subtitle="stat.subtitle"
+          :trend="stat.trend"
+          :color="stat.color"
+        />
+      </StatsContainer>
+
       <DataGrid
         :columns="columns"
         :items="items"
@@ -11,27 +24,25 @@
         @sort="onSort"
         @search="onSearch"
       >
-        <template #title>
-          <h1 class="text-lg font-semibold dark:text-white">Veículos</h1>
-          <p class="text-sm text-secondary-foreground">Lista de veículos cadastrados</p>
-        </template>
         <template #actions>
           <div class="flex items-center gap-2">
+            <ExportButton @export="handleExport" />
             <button class="kt-btn kt-btn-primary" @click="onNew">Novo Veículo</button>
           </div>
         </template>
 
-        <!-- Filtros -->
         <template #filters>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <!-- Filtro Tipo de Veículo -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FilterDropdown
+            :activeCount="activeFiltersCount"
+            @clear="onClearFilters"
+          >
+            <div class="filter-item">
+              <label class="filter-label">
                 Tipo de Veículo
               </label>
               <select
                 v-model="filters.vehicle_type"
-                class="kt-input w-full pr-10"
+                class="kt-select"
               >
                 <option value="">Todos</option>
                 <option value="car">Carro</option>
@@ -39,15 +50,14 @@
               </select>
             </div>
 
-            <!-- Filtro Cliente (Autocomplete) -->
-            <div class="relative">
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div class="filter-item relative">
+              <label class="filter-label">
                 Cliente
               </label>
               <input
                 v-model="clientSearch"
                 type="text"
-                class="kt-input w-full"
+                class="kt-input"
                 placeholder="Buscar cliente..."
                 @input="onClientSearchInput"
                 @focus="showClientDropdown = true"
@@ -57,7 +67,6 @@
                 v-if="showClientDropdown && (loadingClients || filteredClients.length > 0)"
                 class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto"
               >
-                <!-- Skeleton loading -->
                 <template v-if="loadingClients">
                   <div
                     v-for="i in 3"
@@ -68,7 +77,6 @@
                     <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                   </div>
                 </template>
-                <!-- Lista de clientes -->
                 <template v-else>
                   <div
                     v-for="client in filteredClients"
@@ -84,24 +92,7 @@
                 </template>
               </div>
             </div>
-
-            <!-- Botão Limpar Filtros -->
-            <div class="flex items-center gap-2">
-              <button
-                v-if="activeFiltersCount > 0"
-                class="kt-btn kt-btn-ghost"
-                @click="onClearFilters"
-              >
-                Limpar Filtros
-              </button>
-              <span
-                v-if="activeFiltersCount > 0"
-                class="inline-flex items-center justify-center px-2 py-1 text-xs font-semibold rounded bg-primary/20 text-primary"
-              >
-                {{ activeFiltersCount }}
-              </span>
-            </div>
-          </div>
+          </FilterDropdown>
         </template>
         <template #cell-vehicle_type="{ row }">
           <div class="flex items-center gap-2">
@@ -154,6 +145,10 @@
 import { ref, onMounted, watch } from 'vue';
 import DataGrid from '../../../Shared/Components/DataGrid.vue';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
+import StatsContainer from '@/Shared/Components/StatsContainer.vue';
+import StatsCard from '@/Shared/Components/StatsCard.vue';
+import ExportButton from '@/Shared/Components/ExportButton.vue';
+import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
 import { fetchVehicles, createVehicle, updateVehicle, deleteVehicle } from '@/services/vehicleService.js';
 import { fetchClients } from '@/services/clientService.js';
 import DrawerVeiculo from '../../../Shared/Components/DrawerVeiculo.vue';
@@ -161,8 +156,11 @@ import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
 import { useMasks } from '@/Composables/useMasks.js';
 import { useToast } from '@/Shared/composables/useToast.js';
 import { useVehicleFilters } from '@/Composables/useVehicleFilters.js';
+import { useStats } from '@/Composables/useStats.js';
+import { useExportCSV } from '@/Composables/useExportCSV.js';
 
 const toast = useToast();
+const { exportToCSV } = useExportCSV();
 
 const page = ref(1);
 const perPage = ref(6);
@@ -180,6 +178,8 @@ const loading = ref(false);
 // Filtros
 const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useVehicleFilters();
 const clientSearch = ref('');
+
+const { stats } = useStats(items, 'vehicles');
 const showClientDropdown = ref(false);
 const filteredClients = ref([]);
 const loadingClients = ref(false);
@@ -210,7 +210,6 @@ const load = async () => {
   }
 };
 
-// Autocomplete de clientes com debounce
 async function onClientSearchInput() {
   if (debounceTimer.value) {
     clearTimeout(debounceTimer.value);
@@ -260,7 +259,27 @@ function onClearFilters() {
   load();
 }
 
-// Watchers para salvar filtros e recarregar
+function handleExport() {
+    const columns = [
+        { key: 'brand', label: 'Marca' },
+        { key: 'model', label: 'Modelo' },
+        { key: 'year', label: 'Ano' },
+        { key: 'color', label: 'Cor' },
+        { key: 'license_plate', label: 'Placa' },
+        { key: 'vehicle_type', label: 'Tipo' },
+        { key: 'client_name', label: 'Cliente' },
+    ];
+
+    // Exporta os dados
+    const dataToExport = items.value.map(item => ({
+        ...item,
+        vehicle_type: item.vehicle_type === 'car' ? 'Carro' : 'Moto',
+        client_name: item.client?.name || '-',
+    }));
+
+    exportToCSV(dataToExport, columns, 'veiculos');
+}
+
 watch(
   [() => filters.vehicle_type, () => filters.client_id],
   () => {
@@ -316,30 +335,23 @@ function onDrawerClose() {
 }
 
 async function onDrawerSubmit(data) {
-  // Unmask the data
   const unmaskedData = {
     ...data,
     license_plate: unmaskLicensePlate(data.license_plate),
   };
 
-  // Create or update
   const result = drawerEdit.value
     ? await updateVehicle(drawerVehicle.value.id, unmaskedData)
     : await createVehicle(unmaskedData);
 
   if (!result.success) {
-    // Error toast
     toast.error('Erro ao ' + (drawerEdit.value ? 'atualizar' : 'criar') + ' veículo: ' + (result.error.response?.data?.message || result.error.message));
     return;
   }
 
-  // Success toast
   toast.success('Veículo ' + (drawerEdit.value ? 'atualizado' : 'criado') + ' com sucesso!');
 
-  // Reload grid
-  load();
-
-  // Close drawer
+  await load();
   drawerOpen.value = false;
 }
 
@@ -355,12 +367,11 @@ function onDelete(id) {
         return;
       }
       toast.success('Veículo deletado com sucesso!');
-      load();
+      await load();
     }
   });
 }
 
-// Columns definition
 const columns = [
   { key: 'vehicle_type', label: 'Tipo', sortable: false },
   { key: 'license_plate', label: 'Placa', sortable: true },
@@ -396,12 +407,33 @@ const columns = [
   .kt-container-fixed { max-width: 768px; }
 }
 @media (min-width: 1024px) {
-  .kt-container-fixed { max-width: 1100px; }
+  .kt-container-fixed { max-width: 1400px; }
+}
+@media (min-width: 1280px) {
+  .kt-container-fixed { max-width: 1600px; }
 }
 @media (max-width: 640px) {
   html, body {
     font-size: 1.1rem !important;
     zoom: 1 !important;
   }
+}
+</style>
+
+<style scoped>
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.dark .filter-label {
+    color: #cbd5e1;
 }
 </style>

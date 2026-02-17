@@ -130,7 +130,7 @@
 
             <!-- Combustível -->
             <FormField name="fuel" label="Combustível" v-slot="{ field, errors }">
-              <select v-bind="field" class="kt-input w-full">
+              <select v-bind="field" class="kt-select w-full">
                 <option value="">Selecione</option>
                 <option value="alcohol">Álcool</option>
                 <option value="gasoline">Gasolina</option>
@@ -141,7 +141,7 @@
 
             <!-- Transmissão -->
             <FormField name="transmission" label="Transmissão" v-slot="{ field, errors }">
-              <select v-bind="field" class="kt-input w-full">
+              <select v-bind="field" class="kt-select w-full">
                 <option value="">Selecione</option>
                 <option value="manual">Manual</option>
                 <option value="automatic">Automática</option>

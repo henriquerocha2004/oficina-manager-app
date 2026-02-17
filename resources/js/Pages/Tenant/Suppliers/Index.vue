@@ -1,22 +1,81 @@
 <template>
   <TenantLayout title="Fornecedores" :breadcrumbs="breadcrumbs">
     <div class="kt-container-fixed w-full py-4 px-2">
+      <StatsContainer>
+        <StatsCard
+          v-for="(stat, index) in stats"
+          :key="index"
+          :icon="stat.icon"
+          :title="stat.title"
+          :value="stat.value"
+          :subtitle="stat.subtitle"
+          :trend="stat.trend"
+          :color="stat.color"
+        />
+      </StatsContainer>
+
       <DataGrid
         :columns="columns"
-        :items="items"
-        :total="total"
+        :items="filteredItems"
+        :total="filteredTotal"
         :page="page"
         :perPage="perPage"
         @update:page="onPage"
         @sort="onSort"
         @search="onSearch"
       >
-        <template #title>
-          <h1 class="text-lg font-semibold dark:text-white">Fornecedores</h1>
-          <p class="text-sm text-secondary-foreground">Lista de fornecedores cadastrados</p>
+        <template #filters>
+          <FilterDropdown
+            :activeCount="activeFiltersCount"
+            @clear="clearAllFilters"
+          >
+            <div class="filter-item">
+              <label class="filter-label">Estado</label>
+              <select
+                v-model="filters.state"
+                class="kt-select"
+                @change="applyFilters"
+              >
+                <option value="">Todos</option>
+                <option
+                  v-for="state in brazilianStates"
+                  :key="state.value"
+                  :value="state.value"
+                >
+                  {{ state.label }}
+                </option>
+              </select>
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">Cidade</label>
+              <input
+                v-model="filters.city"
+                type="text"
+                placeholder="Digite a cidade"
+                class="kt-input"
+                @input="applyFilters"
+              />
+            </div>
+
+            <div class="filter-item">
+              <label class="filter-label">Status</label>
+              <select
+                v-model="filters.status"
+                class="kt-select"
+                @change="applyFilters"
+              >
+                <option value="all">Todos</option>
+                <option value="active">Ativos</option>
+                <option value="inactive">Inativos</option>
+              </select>
+            </div>
+          </FilterDropdown>
         </template>
+
         <template #actions>
           <div class="flex items-center gap-2">
+            <ExportButton @export="handleExport" />
             <button class="kt-btn kt-btn-primary" @click="onNew">Novo Fornecedor</button>
           </div>
         </template>
@@ -47,17 +106,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import DataGrid from '../../../Shared/Components/DataGrid.vue';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
-import { fetchSuppliers, createSupplier, updateSupplier, deleteSupplier } from '../../../services/supplierService';
+import StatsContainer from '@/Shared/Components/StatsContainer.vue';
+import StatsCard from '@/Shared/Components/StatsCard.vue';
+import ExportButton from '@/Shared/Components/ExportButton.vue';
+import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
+import { fetchSuppliers, createSupplier, updateSupplier, deleteSupplier } from '@/services/supplierService.js';
 import DrawerFornecedor from '../../../Shared/Components/DrawerFornecedor.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
-import { useToast } from '../../../Shared/composables/useToast.js';
-import { useMasks } from '../../../Composables/useMasks.js';
+import { useToast } from '@/Shared/composables/useToast.js';
+import { useMasks } from '@/Composables/useMasks.js';
+import { useStats } from '@/Composables/useStats.js';
+import { useExportCSV } from '@/Composables/useExportCSV.js';
+import { useSupplierFilters } from '@/Composables/useSupplierFilters.js';
+import { brazilianStates } from '@/Data/brazilianStates.js';
 
 const toast = useToast();
 const { maskDocument } = useMasks();
+const { exportToCSV } = useExportCSV();
+const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useSupplierFilters();
 
 const page = ref(1);
 const perPage = ref(6);
@@ -73,6 +142,30 @@ const confirmModal = ref(null);
 
 const breadcrumbs = [ { label: 'Fornecedores' } ];
 
+const { stats } = useStats(items, 'suppliers');
+
+const filteredItems = computed(() => {
+    let result = items.value;
+    if (filters.state) {
+        result = result.filter(item => item.state === filters.state);
+    }
+
+    if (filters.city) {
+        result = result.filter(item =>
+            item.city && item.city.toLowerCase().includes(filters.city.toLowerCase())
+        );
+    }
+
+    if (filters.status && filters.status !== 'all') {
+        const isActive = filters.status === 'active';
+        result = result.filter(item => item.is_active === isActive);
+    }
+
+    return result;
+});
+
+const filteredTotal = computed(() => filteredItems.value.length);
+
 const load = async () => {
   const res = await fetchSuppliers({
     page: page.value,
@@ -85,7 +178,48 @@ const load = async () => {
   total.value = res.total;
 };
 
-onMounted(load);
+onMounted(() => {
+    const saved = loadFromStorage();
+    if (saved.state) filters.state = saved.state;
+    if (saved.city) filters.city = saved.city;
+    if (saved.status) filters.status = saved.status;
+    load();
+});
+
+watch(() => filters.state, () => saveToStorage());
+watch(() => filters.city, () => saveToStorage());
+watch(() => filters.status, () => saveToStorage());
+
+function applyFilters() {
+    page.value = 1;
+}
+
+function clearAllFilters() {
+    clearFilters();
+    page.value = 1;
+}
+
+function handleExport() {
+    const columns = [
+        { key: 'name', label: 'Razão Social' },
+        { key: 'trade_name', label: 'Nome Fantasia' },
+        { key: 'document_number', label: 'CNPJ' },
+        { key: 'contact_person', label: 'Contato' },
+        { key: 'phone', label: 'Telefone' },
+        { key: 'email', label: 'Email' },
+        { key: 'city', label: 'Cidade' },
+        { key: 'state', label: 'UF' },
+        { key: 'is_active', label: 'Status' },
+    ];
+
+    const dataToExport = filteredItems.value.map(item => ({
+        ...item,
+        document_number: formatCNPJ(item.document_number),
+        is_active: item.is_active ? 'Ativo' : 'Inativo',
+    }));
+
+    exportToCSV(dataToExport, columns, 'fornecedores');
+}
 
 function onPage(p) { page.value = p; load(); }
 function onSearch(q) { search.value = q; page.value = 1; load(); }
@@ -135,7 +269,7 @@ function onDelete(id) {
         return;
       }
       toast.success('Fornecedor deletado com sucesso!');
-      load();
+      await load();
     }
   });
 }
@@ -156,17 +290,8 @@ const columns = [
 ];
 
 </script>
-<style>
-@media (max-width: 640px) {
-  html, body {
-    font-size: 1.1rem !important;
-    zoom: 1 !important;
-  }
-}
-</style>
 
 <style>
-/* Container ocupa toda largura no mobile */
 .kt-container-fixed {
   box-sizing: border-box;
   width: 100%;
@@ -190,5 +315,23 @@ const columns = [
     font-size: 1.1rem !important;
     zoom: 1 !important;
   }
+}
+</style>
+
+<style scoped>
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.dark .filter-label {
+    color: #cbd5e1;
 }
 </style>

@@ -1,12 +1,12 @@
 <template>
   <div
     id="sidebar_footer"
-    class="sidebar-footer px-4 py-3 border-t border-gray-800 min-h-[56px] flex items-center bg-transparent"
+    class="sidebar-footer px-4 py-3 border-t border-border min-h-14 flex items-center bg-transparent"
   >
     <div class="flex items-center w-full justify-between">
       <!-- Avatar à esquerda -->
       <div class="relative">
-        <button @click="toggleDropdown" class="inline-flex items-center justify-center overflow-hidden w-10 h-10 rounded-full bg-gray-700 focus:outline-none">
+        <button @click="toggleDropdown" class="inline-flex items-center justify-center overflow-hidden w-6 h-6 rounded-full bg-gray-700 focus:outline-none">
           <img
             :src="user?.avatar || blankAvatar"
             :alt="user?.name"
@@ -155,21 +155,3 @@ onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside);
 });
 </script>
-
-<style scoped>
-/* Transição suave para o dropdown do avatar */
-.dropdown-fade-slide-enter-active,
-.dropdown-fade-slide-leave-active {
-  transition: opacity 0.25s cubic-bezier(0.4,0,0.2,1), transform 0.25s cubic-bezier(0.4,0,0.2,1);
-}
-.dropdown-fade-slide-enter-from,
-.dropdown-fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(16px);
-}
-.dropdown-fade-slide-enter-to,
-.dropdown-fade-slide-leave-from {
-  opacity: 1;
-  transform: translateY(0);
-}
-</style>

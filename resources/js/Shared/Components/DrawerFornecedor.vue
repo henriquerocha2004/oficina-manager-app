@@ -147,7 +147,7 @@
 
               <!-- Estado -->
               <FormField name="state" label="Estado" v-slot="{ field, errors }">
-                <select v-bind="field" class="kt-input w-full">
+                <select v-bind="field" class="kt-select w-full">
                   <option value="">Selecione</option>
                   <option v-for="s in brazilianStates" :key="s.code" :value="s.code">{{ s.name }}</option>
                 </select>

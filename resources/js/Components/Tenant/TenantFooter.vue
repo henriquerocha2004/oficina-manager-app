@@ -1,11 +1,11 @@
 <template>
-  <footer class="fixed bottom-0 left-0 w-full z-30 border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 font-sans">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-4 px-5 py-3 min-h-[56px]">
+  <footer class="fixed bottom-0 left-0 w-full z-30 border-t border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 font-sans">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4 px-5 py-3 min-h-14">
       <div class="text-xs text-muted-foreground">
         {{ currentYear }} &copy; {{ appName }}
       </div>
       <div class="flex items-center gap-4 md:justify-end w-full md:w-auto">
-        <a 
+        <a
           v-for="link in links"
           :key="link.label"
           :href="link.url"

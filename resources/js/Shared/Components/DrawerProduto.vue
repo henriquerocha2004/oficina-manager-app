@@ -17,7 +17,6 @@
             </button>
           </div>
 
-          <!-- Tabs (só mostra aba Fornecedores se isEdit) -->
           <div v-if="isEdit" class="kt-tabs kt-tabs-line px-5 border-b border-border" data-kt-tabs="true">
             <button 
               class="kt-tab-toggle py-3 active" 
@@ -33,381 +32,56 @@
             </button>
           </div>
 
-          <!-- Tab Content Container -->
           <div class="flex-1 overflow-y-auto">
-            <!-- Tab Content: Dados do Produto -->
             <div 
               id="tab_product_data" 
-              class="h-full"
+              class="h-full p-5"
             >
-              <form
-                class="flex flex-col gap-4 p-5"
-                @submit.prevent="submitProductHandler"
-              >
-                <FormField name="name" label="Nome" v-slot="{ field, errors }">
-                  <input v-bind="field" class="kt-input w-full" placeholder="Nome do produto" />
-                  <FormError :errors="errors" />
-                </FormField>
-
-                <FormField name="description" label="Descrição" v-slot="{ field, errors }">
-                  <textarea
-                    v-bind="field"
-                    class="kt-input w-full h-24"
-                    rows="3"
-                    placeholder="Descrição do produto (opcional)"
-                  />
-                  <FormError :errors="errors" />
-                </FormField>
-
-                <FormField name="category" label="Categoria" v-slot="{ field, errors }">
-                  <select v-bind="field" class="kt-input w-full">
-                    <option value="">Selecione</option>
-                    <option v-for="cat in productCategories" :key="cat.value" :value="cat.value">
-                      {{ cat.label }}
-                    </option>
-                  </select>
-                  <FormError :errors="errors" />
-                </FormField>
-
-                <FormField name="unit" label="Unidade" v-slot="{ field, errors }">
-                  <select v-bind="field" class="kt-input w-full">
-                    <option value="">Selecione</option>
-                    <option v-for="unit in productUnits" :key="unit.value" :value="unit.value">
-                      {{ unit.label }}
-                    </option>
-                  </select>
-                  <FormError :errors="errors" />
-                </FormField>
-
-                <FormField name="unit_price" label="Preço Unitário" v-slot="{ field, errors }">
-                  <input
-                    :value="field.value"
-                    class="kt-input w-full"
-                    placeholder="R$ 0,00"
-                    @input="applyMask('unit_price', maskCurrency, $event)"
-                  />
-                  <FormError :errors="errors" />
-                </FormField>
-
-                <FormField name="suggested_price" label="Preço Sugerido" v-slot="{ field, errors }">
-                  <input
-                    :value="field.value"
-                    class="kt-input w-full"
-                    placeholder="R$ 0,00 (opcional)"
-                    @input="applyMask('suggested_price', maskCurrency, $event)"
-                  />
-                  <FormError :errors="errors" />
-                </FormField>
-
-                <FormField name="is_active" label="Status" v-slot="{ field, errors }">
-                  <label class="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      :checked="field.value"
-                      @change="setFieldValue('is_active', $event.target.checked)"
-                      class="kt-checkbox"
-                    />
-                    <span class="text-sm text-gray-900 dark:text-gray-100">Produto ativo</span>
-                  </label>
-                  <FormError :errors="errors" />
-                </FormField>
-
-                <div class="flex justify-end gap-2 mt-4">
-                  <button type="button" class="kt-btn kt-btn-ghost" @click="$emit('close')">
-                    Cancelar
-                  </button>
-                  <button type="submit" class="kt-btn kt-btn-primary">
-                    Salvar Produto
-                  </button>
-                </div>
-              </form>
+              <ProductForm
+                :set-field-value="setFieldValue"
+                @cancel="$emit('close')"
+                @submit="submitProductHandler"
+                @price-input="applyMask"
+              />
             </div>
 
-            <!-- Tab Content: Fornecedores (só se isEdit) -->
             <div 
               v-if="isEdit"
               id="tab_product_suppliers" 
-              class="hidden h-full"
+              class="hidden h-full p-5"
             >
-              <div class="p-5">
-              <!-- Listagem de fornecedores -->
-              <div v-if="supplierFormMode === 'list'">
-                <div class="flex justify-between items-center mb-4">
-                  <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">
-                    Fornecedores Vinculados
-                  </h3>
-                  <button 
-                    type="button"
-                    class="kt-btn kt-btn-sm kt-btn-primary" 
-                    @click="onAddSupplier"
-                  >
-                    <i class="ki-filled ki-plus"></i>
-                    Adicionar Fornecedor
-                  </button>
-                </div>
+              <ProductSuppliersList
+                v-if="supplierFormMode === 'list'"
+                :suppliers="productSuppliers"
+                :format-currency="formatCurrency"
+                @add="onAddSupplier"
+                @edit="onEditSupplier"
+                @remove="onRemoveSupplier"
+              />
 
-                <div v-if="productSuppliers.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
-                  Nenhum fornecedor vinculado
-                </div>
-
-                <!-- Cards de fornecedores -->
-                <div v-else class="grid gap-4">
-                  <div
-                    v-for="supplier in productSuppliers"
-                    :key="supplier.id"
-                    class="relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
-                  >
-                    <!-- Badge Preferencial (canto superior direito) -->
-                    <div
-                      v-if="supplier.pivot.is_preferred"
-                      class="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded"
-                    >
-                      <i class="ki-filled ki-check-circle text-sm"></i>
-                      Preferencial
-                    </div>
-
-                    <!-- Nome do Fornecedor -->
-                    <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 pr-24">
-                      {{ supplier.name }}
-                    </h4>
-
-                    <!-- Informações em Grid -->
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">
-                      <!-- Preço de Custo -->
-                      <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Preço de Custo</p>
-                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {{ formatCurrency(supplier.pivot.cost_price) }}
-                        </p>
-                      </div>
-
-                      <!-- Prazo de Entrega -->
-                      <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Prazo de Entrega</p>
-                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {{ supplier.pivot.lead_time_days ? `${supplier.pivot.lead_time_days} dias` : '-' }}
-                        </p>
-                      </div>
-
-                      <!-- SKU -->
-                      <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">SKU do Fornecedor</p>
-                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {{ supplier.pivot.supplier_sku || '-' }}
-                        </p>
-                      </div>
-
-                      <!-- Quantidade Mínima -->
-                      <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Qtd. Mínima</p>
-                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {{ supplier.pivot.min_order_quantity || '-' }}
-                        </p>
-                      </div>
-                    </div>
-
-                    <!-- Observações (se houver) -->
-                    <div v-if="supplier.pivot.notes" class="mb-3">
-                      <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Observações</p>
-                      <p class="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
-                        {{ supplier.pivot.notes }}
-                      </p>
-                    </div>
-
-                    <!-- Ações -->
-                    <div class="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                      <button
-                        type="button"
-                        class="kt-btn kt-btn-sm kt-btn-ghost flex-1"
-                        @click="onEditSupplier(supplier)"
-                      >
-                        <i class="ki-filled ki-pencil"></i>
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        class="kt-btn kt-btn-sm kt-btn-light-danger"
-                        @click="onRemoveSupplier(supplier.id)"
-                      >
-                        <i class="ki-filled ki-trash"></i>
-                        Remover
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Formulário de adicionar/editar fornecedor -->
-              <div v-if="supplierFormMode === 'add' || supplierFormMode === 'edit'">
-                <div class="mb-4">
-                  <h3 class="text-md font-semibold text-gray-900 dark:text-gray-100">
-                    {{ supplierFormMode === 'add' ? 'Adicionar Fornecedor' : 'Editar Fornecedor' }}
-                  </h3>
-                </div>
-
-                <form 
-                  @submit.prevent="submitSupplierHandler" 
-                  class="flex flex-col gap-4"
-                >
-                  <div class="relative">
-                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Fornecedor <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                      v-model="supplierSearch"
-                      type="text"
-                      class="kt-input w-full"
-                      :class="{ 'border-red-500': supplierFormErrors.supplier_id }"
-                      placeholder="Buscar fornecedor..."
-                      :disabled="supplierFormMode === 'edit'"
-                      @input="onSupplierSearchInput"
-                      @focus="showSupplierDropdown = true"
-                      @blur="onSupplierBlur"
-                    />
-                    <div
-                      v-if="showSupplierDropdown && !selectedSupplier && (loadingSuppliers || filteredSuppliers.length > 0)"
-                      class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto"
-                    >
-                      <!-- Skeleton loading -->
-                      <template v-if="loadingSuppliers">
-                        <div
-                          v-for="i in 3"
-                          :key="'skeleton-' + i"
-                          class="px-4 py-3 animate-pulse"
-                        >
-                          <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-                          <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                        </div>
-                      </template>
-                      <!-- Lista de fornecedores -->
-                      <template v-else>
-                        <div
-                          v-for="supplier in filteredSuppliers"
-                          :key="supplier.id"
-                          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                          @mousedown.prevent="selectSupplier(supplier)"
-                        >
-                          <div class="font-medium text-gray-900 dark:text-gray-100">{{ supplier.name }}</div>
-                          <div class="text-sm text-gray-500 dark:text-gray-400">
-                            {{ supplier.document_number || supplier.email }}
-                          </div>
-                        </div>
-                      </template>
-                    </div>
-                    <p v-if="supplierFormErrors.supplier_id" class="text-sm text-red-500 mt-1">
-                      {{ supplierFormErrors.supplier_id }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      SKU do Fornecedor
-                    </label>
-                    <input
-                      v-model="supplierSku"
-                      type="text"
-                      maxlength="50"
-                      class="kt-input w-full"
-                      :class="{ 'border-red-500': supplierFormErrors.supplier_sku }"
-                      placeholder="Código do produto no fornecedor"
-                    />
-                    <p v-if="supplierFormErrors.supplier_sku" class="text-sm text-red-500 mt-1">
-                      {{ supplierFormErrors.supplier_sku }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Preço de Custo <span class="text-red-500">*</span>
-                    </label>
-                    <input
-                      :value="supplierCostPrice"
-                      class="kt-input w-full"
-                      :class="{ 'border-red-500': supplierFormErrors.cost_price }"
-                      placeholder="R$ 0,00"
-                      @input="onSupplierCostPriceInput"
-                    />
-                    <p v-if="supplierFormErrors.cost_price" class="text-sm text-red-500 mt-1">
-                      {{ supplierFormErrors.cost_price }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Prazo de Entrega (dias)
-                    </label>
-                    <input
-                      v-model="supplierLeadTimeDays"
-                      type="number"
-                      min="1"
-                      class="kt-input w-full"
-                      :class="{ 'border-red-500': supplierFormErrors.lead_time_days }"
-                      placeholder="Ex: 7"
-                    />
-                    <p v-if="supplierFormErrors.lead_time_days" class="text-sm text-red-500 mt-1">
-                      {{ supplierFormErrors.lead_time_days }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Quantidade Mínima de Pedido
-                    </label>
-                    <input
-                      v-model="supplierMinOrderQuantity"
-                      type="number"
-                      min="1"
-                      class="kt-input w-full"
-                      :class="{ 'border-red-500': supplierFormErrors.min_order_quantity }"
-                      placeholder="Ex: 10"
-                    />
-                    <p v-if="supplierFormErrors.min_order_quantity" class="text-sm text-red-500 mt-1">
-                      {{ supplierFormErrors.min_order_quantity }}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        v-model="supplierIsPreferred"
-                        class="kt-checkbox"
-                      />
-                      <span class="text-sm text-gray-900 dark:text-gray-100">Fornecedor preferencial</span>
-                    </label>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Marque se este é o fornecedor preferencial para este produto
-                    </p>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Observações
-                    </label>
-                    <textarea
-                      v-model="supplierNotes"
-                      class="kt-input w-full h-24"
-                      :class="{ 'border-red-500': supplierFormErrors.notes }"
-                      maxlength="2000"
-                      rows="3"
-                      placeholder="Informações adicionais sobre este fornecedor..."
-                    />
-                    <p v-if="supplierFormErrors.notes" class="text-sm text-red-500 mt-1">
-                      {{ supplierFormErrors.notes }}
-                    </p>
-                  </div>
-
-                  <div class="flex justify-end gap-2 mt-4">
-                    <button type="button" class="kt-btn kt-btn-ghost" @click="onCancelSupplierForm">
-                      Cancelar
-                    </button>
-                    <button type="submit" class="kt-btn kt-btn-primary">
-                      {{ supplierFormMode === 'add' ? 'Adicionar' : 'Salvar' }}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
+              <ProductSupplierForm
+                v-if="supplierFormMode === 'add' || supplierFormMode === 'edit'"
+                :mode="supplierFormMode"
+                :form-values="supplierFormState"
+                :form-errors="supplierFormErrors"
+                :supplier-search="supplierSearch"
+                :selected-supplier="selectedSupplier"
+                :filtered-suppliers="filteredSuppliers"
+                :loading-suppliers="loadingSuppliers"
+                :show-dropdown="showSupplierDropdown"
+                @submit="submitSupplierHandler"
+                @cancel="onCancelSupplierForm"
+                @search-input="onSupplierSearchInput"
+                @focus-supplier="showSupplierDropdown = true"
+                @blur-supplier="onSupplierBlur"
+                @select-supplier="selectSupplier"
+                @update:supplier-sku="supplierSku = $event"
+                @update:cost-price="onSupplierCostPriceInput"
+                @update:lead-time-days="supplierLeadTimeDays = $event"
+                @update:min-order-quantity="supplierMinOrderQuantity = $event"
+                @update:is-preferred="supplierIsPreferred = $event"
+                @update:notes="supplierNotes = $event"
+              />
             </div>
           </div>
         </div>
@@ -418,12 +92,12 @@
 
 <script setup>
 import { useForm } from 'vee-validate';
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import * as yup from 'yup';
-import FormField from './FormField.vue';
-import FormError from './FormError.vue';
+import ProductForm from './Product/ProductForm.vue';
+import ProductSuppliersList from './Product/ProductSuppliersList.vue';
+import ProductSupplierForm from './Product/ProductSupplierForm.vue';
 import { useMasks } from '@/Composables/useMasks';
-import { productCategories, productUnits } from '@/Data/productData';
 import { fetchSuppliers } from '@/services/supplierService';
 import { attachSupplier, updateProductSupplier, detachSupplier } from '@/services/productService';
 import { useToast } from '@/Shared/composables/useToast';
@@ -439,9 +113,6 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'submit', 'supplier-updated']);
 
-/* ---------------------------
- * Initialize KTUI Tabs
- * --------------------------- */
 const initializeTabs = () => {
   if (props.isEdit) {
     nextTick(() => {
@@ -459,9 +130,6 @@ watch(() => props.open, (isOpen) => {
   }
 });
 
-/* ---------------------------
- * Validation schema
- * --------------------------- */
 const schema = yup.object({
   name: yup.string().required('Nome é obrigatório'),
   description: yup.string().nullable(),
@@ -472,9 +140,6 @@ const schema = yup.object({
   is_active: yup.boolean(),
 });
 
-/* ---------------------------
- * Form controller
- * --------------------------- */
 const {
   handleSubmit,
   setValues,
@@ -503,9 +168,6 @@ const {
   }),
 });
 
-/* ---------------------------
- * Apply mask helper
- * --------------------------- */
 const applyMask = (fieldName, maskFn, event) => {
   const rawValue = event.target.value;
   const maskedValue = maskFn(rawValue);
@@ -515,9 +177,6 @@ const applyMask = (fieldName, maskFn, event) => {
   });
 };
 
-/* ---------------------------
- * Sync edit / create
- * --------------------------- */
 watch(
   () => props.product,
   (val) => {
@@ -534,9 +193,6 @@ watch(
   }
 );
 
-/* ---------------------------
- * Submit product
- * --------------------------- */
 const submitProductHandler = handleSubmit((values) => {
   const unmaskedData = {
     ...values,
@@ -546,10 +202,7 @@ const submitProductHandler = handleSubmit((values) => {
   emit('submit', unmaskedData);
 });
 
-/* ---------------------------
- * Supplier management
- * --------------------------- */
-const supplierFormMode = ref('list'); // 'list', 'add', 'edit'
+const supplierFormMode = ref('list');
 const productSuppliers = ref([]);
 const availableSuppliers = ref([]);
 const editingSupplierId = ref(null);
@@ -561,7 +214,6 @@ const supplierFormValues = ref({
   lead_time_days: '',
 });
 
-// Autocomplete de fornecedores
 const supplierSearch = ref('');
 const showSupplierDropdown = ref(false);
 const filteredSuppliers = ref([]);
@@ -576,20 +228,32 @@ const supplierIsPreferred = ref(false);
 const supplierNotes = ref('');
 const supplierFormErrors = ref({});
 
+const supplierFormState = computed(() => ({
+  supplier_id: supplierFormValues.value.supplier_id,
+  supplier_sku: supplierSku.value,
+  cost_price: supplierCostPrice.value,
+  lead_time_days: supplierLeadTimeDays.value,
+  min_order_quantity: supplierMinOrderQuantity.value,
+  is_preferred: supplierIsPreferred.value,
+  notes: supplierNotes.value,
+}));
+
 const applySupplierMask = (fieldName, maskFn, event) => {
   const rawValue = event.target.value;
   const maskedValue = maskFn(rawValue);
   event.target.value = maskedValue;
 };
 
-const onSupplierCostPriceInput = (event) => {
-  const rawValue = event.target.value;
+const onSupplierCostPriceInput = (eventOrValue) => {
+  const rawValue = typeof eventOrValue === 'string' ? eventOrValue : eventOrValue.target.value;
   const maskedValue = maskCurrency(rawValue);
   supplierCostPrice.value = maskedValue;
   supplierFormValues.value.cost_price = maskedValue;
-  nextTick(() => {
-    event.target.value = maskedValue;
-  });
+  if (typeof eventOrValue !== 'string') {
+    nextTick(() => {
+      eventOrValue.target.value = maskedValue;
+    });
+  }
 };
 
 const loadProductSuppliers = () => {
@@ -604,7 +268,11 @@ const loadAvailableSuppliers = async () => {
 };
 
 // Autocomplete de fornecedores com debounce
-async function onSupplierSearchInput() {
+async function onSupplierSearchInput(value) {
+  if (typeof value === 'string') {
+    supplierSearch.value = value;
+  }
+  
   if (debounceTimer.value) {
     clearTimeout(debounceTimer.value);
   }
@@ -711,7 +379,6 @@ const onCancelSupplierForm = () => {
 };
 
 const submitSupplierHandler = async () => {
-  // Validação manual
   supplierFormErrors.value = {};
   
   if (!supplierFormValues.value.supplier_id) {
@@ -738,7 +405,6 @@ const submitSupplierHandler = async () => {
     supplierFormErrors.value.notes = 'Observações devem ter no máximo 2000 caracteres';
   }
   
-  // Se houver erros, não submete
   if (Object.keys(supplierFormErrors.value).length > 0) {
     return;
   }
@@ -774,7 +440,6 @@ const submitSupplierHandler = async () => {
 
   toast.success('Fornecedor ' + (supplierFormMode.value === 'add' ? 'adicionado' : 'atualizado') + ' com sucesso!');
   
-  // Atualiza a lista de fornecedores
   if (result.data && result.data.data && result.data.data.product) {
     productSuppliers.value = result.data.data.product.suppliers || [];
   }
@@ -797,7 +462,6 @@ const onRemoveSupplier = async (supplierId) => {
 
   toast.success('Fornecedor removido com sucesso!');
   
-  // Atualiza a lista de fornecedores
   if (result.data && result.data.data && result.data.data.product) {
     productSuppliers.value = result.data.data.product.suppliers || [];
   }

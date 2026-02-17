@@ -1,6 +1,19 @@
 <template>
   <TenantLayout title="Serviços" :breadcrumbs="breadcrumbs">
     <div class="kt-container-fixed w-full py-4 px-2">
+      <StatsContainer>
+        <StatsCard
+          v-for="(stat, index) in stats"
+          :key="index"
+          :icon="stat.icon"
+          :title="stat.title"
+          :value="stat.value"
+          :subtitle="stat.subtitle"
+          :trend="stat.trend"
+          :color="stat.color"
+        />
+      </StatsContainer>
+
       <DataGrid
         :columns="columns"
         :items="items"
@@ -11,28 +24,25 @@
         @sort="onSort"
         @search="onSearch"
       >
-        <template #title>
-          <h1 class="text-lg font-semibold dark:text-white">Serviços</h1>
-          <p class="text-sm text-secondary-foreground">Lista de serviços cadastrados</p>
-        </template>
-        
         <template #actions>
           <div class="flex items-center gap-2">
+            <ExportButton @export="handleExport" />
             <button class="kt-btn kt-btn-primary" @click="onNew">Novo Serviço</button>
           </div>
         </template>
-        
-        <!-- Filtros -->
+
         <template #filters>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <!-- Filtro Categoria -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FilterDropdown
+            :activeCount="activeFiltersCount"
+            @clear="onClearFilters"
+          >
+            <div class="filter-item">
+              <label class="filter-label">
                 Categoria
-              </label>    
+              </label>
               <select
                 v-model="filters.category"
-                class="kt-input w-full pr-10"
+                class="kt-select"
               >
                 <option value="">Todas</option>
                 <option v-for="cat in categories" :key="cat.value" :value="cat.value">
@@ -40,27 +50,9 @@
                 </option>
               </select>
             </div>
-
-            <!-- Botão Limpar Filtros -->
-            <div class="flex items-center gap-2">
-              <button
-                v-if="activeFiltersCount > 0"
-                class="kt-btn kt-btn-ghost"
-                @click="onClearFilters"
-              >
-                Limpar Filtros
-              </button>
-              <span
-                v-if="activeFiltersCount > 0"
-                class="inline-flex items-center justify-center px-2 py-1 text-xs font-semibold rounded bg-primary/20 text-primary"
-              >
-                {{ activeFiltersCount }}
-              </span>
-            </div>
-          </div>
+          </FilterDropdown>
         </template>
 
-        <!-- Custom cells -->
         <template #cell-category="{ row }">
           <span>{{ getCategoryLabel(row.category) }}</span>
         </template>
@@ -74,9 +66,9 @@
         </template>
 
         <template #cell-is_active="{ row }">
-          <span 
-            :class="row.is_active 
-              ? 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+          <span
+            :class="row.is_active
+              ? 'px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
               : 'px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'"
           >
             {{ row.is_active ? 'Ativo' : 'Inativo' }}
@@ -96,7 +88,7 @@
       </DataGrid>
     </div>
   </TenantLayout>
-  
+
   <DrawerServico
     :open="drawerOpen"
     :isEdit="drawerEdit"
@@ -104,7 +96,7 @@
     @close="onDrawerClose"
     @submit="onDrawerSubmit"
   />
-  
+
   <ConfirmModal ref="confirmModal" />
 </template>
 
@@ -112,14 +104,21 @@
 import { ref, onMounted, watch } from 'vue';
 import DataGrid from '../../../Shared/Components/DataGrid.vue';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
-import { fetchServices, createService, updateService, deleteService } from '../../../services/serviceService';
+import StatsContainer from '@/Shared/Components/StatsContainer.vue';
+import StatsCard from '@/Shared/Components/StatsCard.vue';
+import ExportButton from '@/Shared/Components/ExportButton.vue';
+import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
+import { fetchServices, createService, updateService, deleteService } from '@/services/serviceService.js';
 import DrawerServico from '../../../Shared/Components/DrawerServico.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
-import { useToast } from '../../../Shared/composables/useToast.js';
-import { useServiceFilters } from '../../../Composables/useServiceFilters.js';
-import { serviceCategories, getCategoryLabel } from '../../../Data/serviceCategories.js';
+import { useToast } from '@/Shared/composables/useToast.js';
+import { useServiceFilters } from '@/Composables/useServiceFilters.js';
+import { useStats } from '@/Composables/useStats.js';
+import { useExportCSV } from '@/Composables/useExportCSV.js';
+import { serviceCategories, getCategoryLabel } from '@/Data/serviceCategories.js';
 
 const toast = useToast();
+const { exportToCSV } = useExportCSV();
 
 const page = ref(1);
 const perPage = ref(6);
@@ -134,15 +133,11 @@ const drawerService = ref(null);
 const confirmModal = ref(null);
 const loading = ref(false);
 
-// Filtros
 const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useServiceFilters();
 const categories = serviceCategories;
+const { stats } = useStats(items, 'services');
 
 const breadcrumbs = [{ label: 'Serviços' }];
-
-/**
- * Formata número como moeda brasileira
- */
 const formatCurrency = (value) => {
   if (!value) return 'R$ 0,00';
   return new Intl.NumberFormat('pt-BR', {
@@ -179,7 +174,26 @@ function onClearFilters() {
   load();
 }
 
-// Watchers para salvar filtros e recarregar
+function handleExport() {
+    const columns = [
+        { key: 'name', label: 'Nome' },
+        { key: 'category', label: 'Categoria' },
+        { key: 'base_price', label: 'Preço Base' },
+        { key: 'estimated_time', label: 'Tempo Estimado (min)' },
+        { key: 'description', label: 'Descrição' },
+        { key: 'is_active', label: 'Status' },
+    ];
+
+    const dataToExport = items.value.map(item => ({
+        ...item,
+        category: getCategoryLabel(item.category),
+        base_price: formatCurrency(item.base_price),
+        is_active: item.is_active ? 'Ativo' : 'Inativo',
+    }));
+
+    exportToCSV(dataToExport, columns, 'servicos');
+}
+
 watch(
   () => filters.category,
   () => {
@@ -232,24 +246,18 @@ function onDrawerClose() {
 }
 
 async function onDrawerSubmit(data) {
-  // Create or update
   const result = drawerEdit.value
     ? await updateService(drawerService.value.id, data)
     : await createService(data);
 
   if (!result.success) {
-    // Error toast
     toast.error('Erro ao ' + (drawerEdit.value ? 'atualizar' : 'criar') + ' serviço: ' + (result.error.response?.data?.message || result.error.message));
     return;
   }
 
-  // Success toast
   toast.success('Serviço ' + (drawerEdit.value ? 'atualizado' : 'criado') + ' com sucesso!');
 
-  // Reload grid
-  load();
-
-  // Close drawer
+  await load();
   drawerOpen.value = false;
 }
 
@@ -270,7 +278,6 @@ function onDelete(id) {
   });
 }
 
-// Columns definition
 const columns = [
   { key: 'name', label: 'Nome', sortable: true },
   { key: 'category', label: 'Categoria', sortable: true },
@@ -282,16 +289,6 @@ const columns = [
 </script>
 
 <style>
-@media (max-width: 640px) {
-  html, body {
-    font-size: 1.1rem !important;
-    zoom: 1 !important;
-  }
-}
-</style>
-
-<style>
-/* Container ocupa toda largura no mobile */
 .kt-container-fixed {
   box-sizing: border-box;
   width: 100%;
@@ -305,12 +302,33 @@ const columns = [
   .kt-container-fixed { max-width: 768px; }
 }
 @media (min-width: 1024px) {
-  .kt-container-fixed { max-width: 1100px; }
+  .kt-container-fixed { max-width: 1400px; }
+}
+@media (min-width: 1280px) {
+  .kt-container-fixed { max-width: 1600px; }
 }
 @media (max-width: 640px) {
   html, body {
     font-size: 1.1rem !important;
     zoom: 1 !important;
   }
+}
+</style>
+
+<style scoped>
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.filter-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+.dark .filter-label {
+    color: #cbd5e1;
 }
 </style>

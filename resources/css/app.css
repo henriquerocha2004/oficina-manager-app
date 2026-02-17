@@ -124,3 +124,14 @@
     background-color: var(--color-destructive) !important;
     color: var(--color-destructive-foreground) !important;
 }
+
+/* Ajuste de padding para selects - afasta ícone da borda direita */
+select.kt-input {
+    padding-right: 2.5rem !important;
+}
+
+/* Ajuste de altura para input de busca no DataGrid */
+.kt-input input.kt-input-ghost {
+    min-height: 42px;
+    padding: 0.625rem 0.875rem;
+}

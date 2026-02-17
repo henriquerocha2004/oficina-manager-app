@@ -33,7 +33,7 @@
             </FormField>
 
             <FormField name="document_number" label="CPF/CNPJ" v-slot="{ field, errors }">
-              <input 
+              <input
                 v-bind="field"
                 class="kt-input w-full"
                 placeholder="CPF ou CNPJ"
@@ -44,7 +44,7 @@
             </FormField>
 
             <FormField name="phone" label="Telefone" v-slot="{ field, errors }">
-              <input 
+              <input
                 v-bind="field"
                 class="kt-input w-full"
                 placeholder="Telefone"
@@ -78,7 +78,7 @@
               </FormField>
 
               <FormField name="state" label="Estado" v-slot="{ field, errors }">
-                <select v-bind="field" class="kt-input w-full">
+                <select v-bind="field" class="kt-select w-full">
                   <option value="">Selecione</option>
                   <option v-for="s in brazilianStates" :key="s.code" :value="s.code">{{ s.name }}</option>
                 </select>
@@ -112,7 +112,7 @@
 </template>
 
 <script setup>
-import { useForm, Form } from 'vee-validate';
+import { useForm } from 'vee-validate';
 import { computed, watch } from 'vue';
 import * as yup from 'yup';
 import FormField from './FormField.vue';
@@ -121,7 +121,7 @@ import { fetchAddressByCep } from '@/Composables/useCep';
 import { useMasks } from '@/Composables/useMasks';
 import brazilianStates from '@/Data/brasilianStates';
 
-const { maskCEP, maskDocument, unmask, getDocMaxLength, getPhoneMaxLength, maskPhone } = useMasks();
+const { maskCEP, maskDocument, getDocMaxLength, getPhoneMaxLength, maskPhone } = useMasks();
 const props = defineProps({
   open: Boolean,
   isEdit: Boolean,
@@ -145,9 +145,6 @@ const applyMask = (fieldName, maskFn, event) => {
   setFieldValue(fieldName, maskedValue);
 };
 
-/* ---------------------------
- * Validation schema
- * --------------------------- */
 const schema = yup.object({
   name: yup.string().required('Nome é obrigatório'),
   email: yup.string().email('Email inválido').required('Email é obrigatório'),
@@ -160,9 +157,6 @@ const schema = yup.object({
   observations: yup.string().nullable(),
 });
 
-/* ---------------------------
- * Form controller
- * --------------------------- */
 const {
   handleSubmit,
   setValues,
@@ -184,9 +178,6 @@ const {
   }),
 });
 
-/* ---------------------------
- * Sync edit / create
- * --------------------------- */
 watch(
   () => props.client,
   (val) => {
@@ -203,24 +194,17 @@ watch(() => values.zip_code, async (val) => {
   await onCepBlur(cleanCep);
 });
 
-/* ---------------------------
- * CEP lookup
- * --------------------------- */
 async function onCepBlur(value) {
   if (!value) return;
 
   const addr = await fetchAddressByCep(value);
   if (!addr) return;
-  console.log('Endereço encontrado:', addr);
   if (addr.zip_code) setFieldValue('zip_code', values.zip_code);
   if (addr.street) setFieldValue('street', addr.street);
   if (addr.city) setFieldValue('city', addr.city);
   if (addr.state) setFieldValue('state', addr.state);
 }
 
-/* ---------------------------
- * Submit (clean & safe)
- * --------------------------- */
 const submitHandler = handleSubmit((values) => {
   console.log('Submitting client:', values);
   emit('submit', values);
@@ -228,29 +212,15 @@ const submitHandler = handleSubmit((values) => {
 </script>
 
 <style scoped>
-.drawer-enter-active,
-.drawer-leave-active {
-  transition: opacity 0.3s ease;
-}
 
 .drawer-enter-active > div,
 .drawer-leave-active > div {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.drawer-enter-from,
-.drawer-leave-to {
-  opacity: 0;
-}
-
 .drawer-enter-from > div,
 .drawer-leave-to > div {
   transform: translateX(100%);
-}
-
-.drawer-enter-to,
-.drawer-leave-from {
-  opacity: 1;
 }
 
 .drawer-enter-to > div,
