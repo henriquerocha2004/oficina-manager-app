@@ -317,6 +317,9 @@ public function store(StoreUserRequest $request)
 - Use try/catch in controller methods to handle exceptions and return appropriate HTTP responses
 - **Test method names MUST be in camelCase** (NOT snake_case) → `testCreatesClientWhenNotExists()`, `testReturnsValidationError()`
 - Use AAA pattern (Arrange, Act, Assert) when writing tests
+- **SEMPRE use camelCase para nomes de métodos de teste**                                                                                                                                                                                                                █  
+- **NUNCA use snake_case (com underscores)**                                                                                                                                                                                        MCP                                  █
+- Prefixo obrigatório: `test`
 
 ### Frontend (Vue.js)
 
@@ -364,7 +367,7 @@ export async function fetchClients(params) {
 #### Component Style
 
 - Use `<script setup>` composition API
-- Destructure reactive refs: `const { unmask } = useMasks()`
+- Destructure reactive refs: `const {  unmask } = useMasks()`
 - Define reactive state with `ref()`, not `reactive()`
 - Use `onMounted()` for initialization
 - Keep template expressions simple

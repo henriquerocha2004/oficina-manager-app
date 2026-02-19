@@ -1,0 +1,9 @@
+{
+    "provider": "ollama",
+    "model": "qwen-dev:latest",
+    "base_url": "http://localhost:11434",
+    "parameters": {
+        "temperature": 0.2,
+        "num_ctx": 8192
+    }
+}

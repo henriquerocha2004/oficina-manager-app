@@ -125,4 +125,10 @@ class Messages
     public const string PRODUCT_SUPPLIER_DETACHED_SUCCESS = 'Supplier detached from product successfully.';
 
     public const string ERROR_DETACHING_SUPPLIER_FROM_PRODUCT = 'An error occurred while detaching supplier from product.';
+
+    public const string STOCK_MOVEMENT_SUCCESS = 'Stock movement recorded successfully.';
+
+    public const string ERROR_STOCK_MOVEMENT = 'An error occurred while recording stock movement.';
+
+    public const string INSUFFICIENT_STOCK = 'Insufficient stock for this operation.';
 }

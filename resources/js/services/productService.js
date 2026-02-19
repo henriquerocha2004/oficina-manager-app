@@ -149,3 +149,18 @@ export async function fetchProductStats() {
         return { success: false, error };
     }
 }
+
+/**
+ * Movimenta estoque de um produto (entrada ou saída).
+ * @param {number|string} productId
+ * @param {Object} movementData - { movement_type, quantity, reason, notes }
+ * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
+ */
+export async function moveStock(productId, movementData) {
+    try {
+        const { data } = await axios.post(`/stock/move/${productId}`, movementData);
+        return { success: true, data };
+    } catch (error) {
+        return { success: false, error };
+    }
+}

@@ -117,6 +117,12 @@
         </template>
         <template #cell-actions="{ row }">
           <div class="text-end flex gap-2 justify-end">
+            <button class="kt-btn kt-btn-sm kt-btn-ghost" @click="onView(row.id)" title="Visualizar">
+              <i class="ki-filled ki-eye text-gray-800 dark:text-gray-200"></i>
+            </button>
+            <button class="kt-btn kt-btn-sm kt-btn-ghost" @click="onAdjustStock(row.id)" title="Ajustar Estoque">
+              <i class="ki-filled ki-package text-gray-800 dark:text-gray-200"></i>
+            </button>
             <button class="kt-btn kt-btn-sm kt-btn-ghost" @click="onEdit(row.id)" title="Editar">
               <i class="ki-filled ki-pencil text-gray-800 dark:text-gray-200"></i>
             </button>
@@ -136,6 +142,17 @@
     @submit="onDrawerSubmit"
     @supplier-updated="onSupplierUpdated"
   />
+  <DrawerVisualizarProduto
+    :open="drawerViewOpen"
+    :product="drawerViewProduct"
+    @close="onDrawerViewClose"
+  />
+  <DrawerAjusteEstoque
+    :open="drawerStockOpen"
+    :product="drawerStockProduct"
+    @close="onDrawerStockClose"
+    @submit="onStockAdjustSubmit"
+  />
   <ConfirmModal ref="confirmModal" />
 </template>
 
@@ -147,8 +164,10 @@ import StatsContainer from '@/Shared/Components/StatsContainer.vue';
 import StatsCard from '@/Shared/Components/StatsCard.vue';
 import FilterDropdown from '@/Shared/Components/FilterDropdown.vue';
 import ExportButton from '@/Shared/Components/ExportButton.vue';
-import { fetchProducts, fetchProductStats, createProduct, updateProduct, deleteProduct, fetchProduct } from '@/services/productService.js';
+import { fetchProducts, fetchProductStats, createProduct, updateProduct, deleteProduct, fetchProduct, moveStock } from '@/services/productService.js';
 import DrawerProduto from '../../../Shared/Components/DrawerProduto.vue';
+import DrawerVisualizarProduto from '../../../Shared/Components/DrawerVisualizarProduto.vue';
+import DrawerAjusteEstoque from '../../../Shared/Components/DrawerAjusteEstoque.vue';
 import ConfirmModal from '../../../Shared/Components/ConfirmModal.vue';
 import { useMasks } from '@/Composables/useMasks.js';
 import { useToast } from '@/Shared/composables/useToast.js';
@@ -169,6 +188,10 @@ const sortDir = ref('asc');
 const drawerOpen = ref(false);
 const drawerEdit = ref(false);
 const drawerProduct = ref(null);
+const drawerViewOpen = ref(false);
+const drawerViewProduct = ref(null);
+const drawerStockOpen = ref(false);
+const drawerStockProduct = ref(null);
 const confirmModal = ref(null);
 const statsFromApi = ref(null);
 
@@ -338,6 +361,53 @@ function onDelete(id) {
       await load();
     }
   });
+}
+
+async function onView(id) {
+  const result = await fetchProduct(id);
+  if (result.success && result.data && result.data.data) {
+    drawerViewProduct.value = result.data.data.product;
+    drawerViewOpen.value = true;
+    return;
+  }
+
+  toast.error('Erro ao buscar produto: ' + (result.error?.response?.data?.message || result.error?.message || 'Erro desconhecido'));
+}
+
+function onDrawerViewClose() {
+  drawerViewOpen.value = false;
+  drawerViewProduct.value = null;
+}
+
+async function onAdjustStock(id) {
+  const result = await fetchProduct(id);
+  if (result.success && result.data && result.data.data) {
+    drawerStockProduct.value = result.data.data.product;
+    drawerStockOpen.value = true;
+    return;
+  }
+
+  toast.error('Erro ao buscar produto: ' + (result.error?.response?.data?.message || result.error?.message || 'Erro desconhecido'));
+}
+
+function onDrawerStockClose() {
+  drawerStockOpen.value = false;
+  drawerStockProduct.value = null;
+}
+
+async function onStockAdjustSubmit(data) {
+  const result = await moveStock(drawerStockProduct.value.id, data);
+
+  if (!result.success) {
+    toast.error('Erro ao ajustar estoque: ' + (result.error.response?.data?.message || result.error.message));
+    return;
+  }
+
+  toast.success('Estoque ajustado com sucesso!');
+  await load();
+  await loadStats();
+  drawerStockOpen.value = false;
+  drawerStockProduct.value = null;
 }
 
 const columns = [

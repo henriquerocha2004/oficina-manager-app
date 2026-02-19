@@ -14,9 +14,14 @@ class FindOneProductAction
     {
         $idStr = ulid_db($id);
         $product = Product::query()
-            ->with(['suppliers' => function ($query) {
-                $query->where('is_active', true);
-            }])
+            ->with([
+                'suppliers' => function ($query) {
+                    $query->where('is_active', true);
+                },
+                'stockMovements' => function ($query) {
+                    $query->latest()->limit(5);
+                },
+            ])
             ->find($idStr);
 
         if ($product === null) {

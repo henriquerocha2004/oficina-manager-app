@@ -51,7 +51,7 @@
             </p>
         </div>
 
-        <div class="flex gap-2 pt-2 border-t border-border">
+        <div v-if="!readonly" class="flex gap-2 pt-2 border-t border-border">
             <button
                 type="button"
                 class="kt-btn kt-btn-sm kt-btn-ghost flex-1"
@@ -81,6 +81,10 @@ const props = defineProps({
     formatCurrency: {
         type: Function,
         required: true,
+    },
+    readonly: {
+        type: Boolean,
+        default: false,
     },
 });
 
