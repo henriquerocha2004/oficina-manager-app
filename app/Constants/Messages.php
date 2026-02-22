@@ -131,4 +131,12 @@ class Messages
     public const string ERROR_STOCK_MOVEMENT = 'An error occurred while recording stock movement.';
 
     public const string INSUFFICIENT_STOCK = 'Insufficient stock for this operation.';
+
+    public const string STOCK_MOVEMENTS_FETCHED_SUCCESS = 'Stock movements fetched successfully.';
+
+    public const string ERROR_FETCHING_STOCK_MOVEMENTS = 'Failed to fetch stock movements.';
+
+    public const string STOCK_MOVEMENT_STATS_FETCHED_SUCCESS = 'Stock movement statistics fetched successfully.';
+
+    public const string ERROR_FETCHING_STOCK_MOVEMENT_STATS = 'Failed to fetch stock movement statistics.';
 }

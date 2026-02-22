@@ -10,6 +10,7 @@ vi.mock('@/services/productService', () => ({
     updateProduct: vi.fn(),
     deleteProduct: vi.fn(),
     fetchProduct: vi.fn(),
+    fetchProductStats: vi.fn(() => Promise.resolve({ success: true, data: {} })),
 }));
 
 // Mock composables
@@ -17,6 +18,12 @@ vi.mock('@/Shared/composables/useToast.js', () => ({
     useToast: () => ({
         success: vi.fn(),
         error: vi.fn(),
+    }),
+}));
+
+vi.mock('@/Composables/useStats.js', () => ({
+    useStats: () => ({
+        stats: [],
     }),
 }));
 
@@ -62,7 +69,7 @@ const mockConfirmModal = {
 };
 
 const mockTenantLayout = {
-    template: '<div class="tenant-layout"><slot /></div>',
+    template: '<div class="tenant-layout"><h1>{{ title }}</h1><slot /></div>',
     props: ['title', 'breadcrumbs'],
 };
 

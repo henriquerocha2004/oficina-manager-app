@@ -40,4 +40,9 @@ export const tenantMenu = [
         route: 'products.index',
         icon: 'ki-outline ki-package',
     },
+    {
+        label: 'Mov. Estoque',
+        route: 'stock.movements.index',
+        icon: 'ki-outline ki-category',
+    },
 ];

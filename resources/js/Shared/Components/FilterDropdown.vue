@@ -110,20 +110,30 @@ onUnmounted(() => {
     bottom: calc(100% + 0.5rem) !important;
     top: auto !important;
     left: 0;
-    min-width: 600px;
+    right: auto;
+    min-width: 720px;
+    max-width: calc(100vw - 2rem);
     z-index: 50;
     background: #ffffff;
     border: 2px solid #ff9800;
     border-radius: 0.75rem;
     box-shadow: 0 10px 25px rgba(255, 152, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    overflow: visible;
+}
+
+@media (max-width: 1024px) {
+    .filter-panel {
+        min-width: 600px;
+    }
 }
 
 @media (max-width: 768px) {
     .filter-panel {
         min-width: auto;
-        left: -100px;
-        right: -100px;
+        width: calc(100vw - 2rem);
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
     }
 }
 
@@ -187,9 +197,17 @@ onUnmounted(() => {
 
 .filter-panel-content {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
     padding: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .filter-panel-content {
+        grid-template-columns: 1fr;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
 }
 
 .dark .kt-btn.active {
