@@ -143,4 +143,44 @@ class Messages
     public const string SERVICE_ORDER_CREATED_SUCCESS = 'Service order created successfully.';
 
     public const string ERROR_CREATING_SERVICE_ORDER = 'An error occurred while creating the service order.';
+
+    public const string SERVICE_ORDERS_FETCHED_SUCCESS = 'Service orders fetched successfully.';
+
+    public const string ERROR_FETCHING_SERVICE_ORDERS = 'Failed to fetch service orders.';
+
+    public const string SERVICE_ORDER_DELETED_SUCCESS = 'Service order deleted successfully.';
+
+    public const string ERROR_DELETING_SERVICE_ORDER = 'An error occurred while deleting the service order.';
+
+    public const string SERVICE_ORDER_STATS_FETCHED_SUCCESS = 'Service order statistics fetched successfully.';
+
+    public const string ERROR_FETCHING_SERVICE_ORDER_STATS = 'Failed to fetch service order statistics.';
+
+    public const string SERVICE_ORDER_SENT_FOR_APPROVAL = 'Service order sent for approval successfully.';
+
+    public const string SERVICE_ORDER_APPROVED = 'Service order approved successfully.';
+
+    public const string SERVICE_ORDER_STARTED = 'Service order started successfully.';
+
+    public const string SERVICE_ORDER_FINISHED = 'Service order finished successfully.';
+
+    public const string SERVICE_ORDER_CANCELLED = 'Service order cancelled successfully.';
+
+    public const string SERVICE_ORDER_DIAGNOSIS_UPDATED = 'Diagnosis updated successfully.';
+
+    public const string SERVICE_ORDER_ITEM_ADDED = 'Item added successfully.';
+
+    public const string SERVICE_ORDER_ITEM_REMOVED = 'Item removed successfully.';
+
+    public const string SERVICE_ORDER_DISCOUNT_UPDATED = 'Discount updated successfully.';
+
+    public const string ERROR_UPDATING_SERVICE_ORDER = 'An error occurred while updating the service order.';
+
+    public const string PAYMENT_REGISTERED_SUCCESS = 'Payment registered successfully.';
+
+    public const string ERROR_REGISTERING_PAYMENT = 'An error occurred while registering the payment.';
+
+    public const string PAYMENT_REFUNDED_SUCCESS = 'Payment refunded successfully.';
+
+    public const string ERROR_REFUNDING_PAYMENT = 'An error occurred while refunding the payment.';
 }

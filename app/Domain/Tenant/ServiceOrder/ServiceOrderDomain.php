@@ -25,6 +25,48 @@ readonly class ServiceOrderDomain
     /**
      * @throws Throwable
      */
+    public function create(
+        string $clientId,
+        string $vehicleId,
+        int $createdBy,
+        ?string $diagnosis = null,
+        ?string $observations = null,
+        ?int $technicianId = null,
+        float $discount = 0.0
+    ): ServiceOrder {
+        $orderNumber = $this->generateOrderNumber(Carbon::now()->year);
+
+        $serviceOrder = ServiceOrder::query()->create([
+            'order_number' => $orderNumber,
+            'client_id' => $clientId,
+            'vehicle_id' => $vehicleId,
+            'created_by' => $createdBy,
+            'technician_id' => $technicianId,
+            'status' => ServiceOrderStatusEnum::DRAFT,
+            'diagnosis' => $diagnosis,
+            'observations' => $observations,
+            'discount' => $discount,
+            'total_parts' => 0,
+            'total_services' => 0,
+            'total' => 0,
+            'paid_amount' => 0,
+            'outstanding_balance' => 0,
+        ]);
+
+        $this->logEvent(
+            serviceOrder: $serviceOrder,
+            userId: $createdBy,
+            eventType: ServiceOrderEventTypeEnum::STATUS_CHANGED,
+            description: 'Service order created',
+            metadata: ['status' => 'draft']
+        );
+
+        return $serviceOrder;
+    }
+
+    /**
+     * @throws Throwable
+     */
     public function sendForApproval(ServiceOrder $serviceOrder, int $userId): ServiceOrder
     {
         $this->ensureCanBeModified($serviceOrder);
