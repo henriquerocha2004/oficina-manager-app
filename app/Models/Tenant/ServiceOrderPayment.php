@@ -19,11 +19,15 @@ use Illuminate\Support\Carbon;
  * @property float $amount
  * @property Carbon $paid_at
  * @property string|null $notes
+ * @property Carbon|null $refunded_at
+ * @property int|null $refunded_by
+ * @property string|null $refund_reason
  * @property Carbon|null $deleted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read ServiceOrder $serviceOrder
  * @property-read User $receiver
+ * @property-read User|null $refunder
  */
 class ServiceOrderPayment extends Model
 {
@@ -43,12 +47,16 @@ class ServiceOrderPayment extends Model
         'amount',
         'paid_at',
         'notes',
+        'refunded_at',
+        'refunded_by',
+        'refund_reason',
     ];
 
     protected $casts = [
         'payment_method' => PaymentMethodEnum::class,
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
+        'refunded_at' => 'datetime',
     ];
 
     public function serviceOrder(): BelongsTo
@@ -59,5 +67,10 @@ class ServiceOrderPayment extends Model
     public function receiver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by', 'id');
+    }
+
+    public function refunder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'refunded_by', 'id');
     }
 }

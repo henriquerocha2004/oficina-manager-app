@@ -9,5 +9,6 @@ enum ServiceOrderEventTypeEnum: string
     case ITEM_REMOVED = 'item_removed';
     case DIAGNOSIS_UPDATED = 'diagnosis_updated';
     case PAYMENT_RECEIVED = 'payment_received';
+    case PAYMENT_REFUNDED = 'payment_refunded';
     case NOTE_ADDED = 'note_added';
 }

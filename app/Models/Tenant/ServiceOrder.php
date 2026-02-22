@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -27,6 +26,8 @@ use Illuminate\Support\Carbon;
  * @property float $total_services
  * @property float $discount
  * @property float $total
+ * @property float $paid_amount
+ * @property float $outstanding_balance
  * @property Carbon|null $approved_at
  * @property Carbon|null $started_at
  * @property Carbon|null $completed_at
@@ -40,7 +41,7 @@ use Illuminate\Support\Carbon;
  * @property-read User|null $technician
  * @property-read ServiceOrderItem[] $items
  * @property-read ServiceOrderEvent[] $events
- * @property-read ServiceOrderPayment|null $payment
+ * @property-read ServiceOrderPayment[] $payments
  */
 class ServiceOrder extends Model
 {
@@ -66,6 +67,8 @@ class ServiceOrder extends Model
         'total_services',
         'discount',
         'total',
+        'paid_amount',
+        'outstanding_balance',
         'approved_at',
         'started_at',
         'completed_at',
@@ -78,6 +81,8 @@ class ServiceOrder extends Model
         'total_services' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
+        'paid_amount' => 'decimal:2',
+        'outstanding_balance' => 'decimal:2',
         'approved_at' => 'datetime',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
@@ -114,8 +119,8 @@ class ServiceOrder extends Model
         return $this->hasMany(ServiceOrderEvent::class, 'service_order_id', 'id');
     }
 
-    public function payment(): HasOne
+    public function payments(): HasMany
     {
-        return $this->hasOne(ServiceOrderPayment::class, 'service_order_id', 'id');
+        return $this->hasMany(ServiceOrderPayment::class, 'service_order_id', 'id');
     }
 }

@@ -314,6 +314,7 @@ public function store(StoreUserRequest $request)
 - Follow **SOLID principles** in code design
 - Follow **FIRST principles** in automated tests
 - Follow **Object Calisthenics** principles
+- Do not use else blocks in control flow
 - Use try/catch in controller methods to handle exceptions and return appropriate HTTP responses
 - **Test method names MUST be in camelCase** (NOT snake_case) → `testCreatesClientWhenNotExists()`, `testReturnsValidationError()`
 - Use AAA pattern (Arrange, Act, Assert) when writing tests
