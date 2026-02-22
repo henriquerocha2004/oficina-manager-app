@@ -15,10 +15,10 @@ use App\Services\Tenant\ServiceOrder\PaymentService;
 use Illuminate\Support\Carbon;
 use Throwable;
 
-class ServiceOrderDomain
+readonly class ServiceOrderDomain
 {
     public function __construct(
-        private readonly PaymentService $paymentService
+        private PaymentService $paymentService
     ) {
     }
 

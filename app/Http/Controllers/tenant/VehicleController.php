@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\tenant;
 
+use App\Actions\Tenant\Vehicle\CheckVehiclePlateAction;
 use App\Actions\Tenant\Vehicle\CreateVehicleAction;
 use App\Actions\Tenant\Vehicle\DeleteVehicleAction;
 use App\Actions\Tenant\Vehicle\FindOneAction;
 use App\Actions\Tenant\Vehicle\GetVehicleStatsAction;
 use App\Actions\Tenant\Vehicle\SearchVehicleAction;
+use App\Actions\Tenant\Vehicle\TransferVehicleOwnershipAction;
 use App\Actions\Tenant\Vehicle\UpdateVehicleAction;
 use App\Constants\Messages;
 use App\Http\Controllers\Controller;
@@ -34,8 +36,11 @@ class VehicleController extends Controller
     public function store(VehicleRequest $request, CreateVehicleAction $createVehicleAction): JsonResponse
     {
         try {
+            $clientId = $request->validated('client_id');
+
             $vehicle = $createVehicleAction(
                 vehicleDto: $request->toDto(),
+                clientId: $clientId,
             );
 
             return $this->setResponse(
@@ -178,6 +183,62 @@ class VehicleController extends Controller
 
             return $this->setResponse(
                 message: Messages::ERROR_FETCHING_VEHICLE_STATS,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    public function checkPlate(CheckVehiclePlateAction $checkVehiclePlateAction): JsonResponse
+    {
+        try {
+            $licensePlate = request()->input('license_plate');
+
+            $result = $checkVehiclePlateAction($licensePlate);
+
+            return $this->setResponse(
+                message: 'Placa verificada com sucesso',
+                code: Response::HTTP_OK,
+                data: $result,
+            );
+        } catch (Exception $exception) {
+            Log::error('Erro ao verificar placa', [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: 'Erro ao verificar placa',
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    public function transferOwnership(
+        string $id,
+        TransferVehicleOwnershipAction $transferVehicleOwnershipAction
+    ): JsonResponse {
+        try {
+            $newClientId = request()->input('new_client_id');
+
+            $transferVehicleOwnershipAction(
+                vehicleId: $id,
+                newClientId: $newClientId
+            );
+
+            return $this->setResponse(
+                message: 'Propriedade transferida com sucesso',
+                code: Response::HTTP_OK,
+            );
+        } catch (Exception $exception) {
+            Log::error('Erro ao transferir propriedade', [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: 'Erro ao transferir propriedade',
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

@@ -31,7 +31,6 @@ class UpdateVehicleAction
             'transmission' => $vehicleDto->transmission,
             'mileage' => $vehicleDto->mileage,
             'cilinder_capacity' => $vehicleDto->cilinder_capacity,
-            'client_id' => $vehicleDto->client_id,
             'vehicle_type' => $vehicleDto->vehicle_type,
             'observations' => $vehicleDto->observations,
         ]);

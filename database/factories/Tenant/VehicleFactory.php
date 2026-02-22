@@ -2,10 +2,9 @@
 
 namespace Database\Factories\Tenant;
 
-use Illuminate\Support\Str;
 use App\Models\Tenant\Vehicle;
-use App\Models\Tenant\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 class VehicleFactory extends Factory
 {
@@ -21,13 +20,13 @@ class VehicleFactory extends Factory
         $useMercosul = $faker->boolean(50);
         if ($useMercosul) {
             // Mercosul format: ABC1D23
-            $licensePlate = strtoupper($faker->lexify('???')) . 
-                           $faker->numberBetween(0, 9) . 
-                           strtoupper($faker->randomLetter()) . 
+            $licensePlate = strtoupper($faker->lexify('???')).
+                           $faker->numberBetween(0, 9).
+                           strtoupper($faker->randomLetter()).
                            $faker->numerify('##');
         } else {
             // Old format: ABC-1234
-            $licensePlate = strtoupper($faker->lexify('???')) . '-' . 
+            $licensePlate = strtoupper($faker->lexify('???')).'-'.
                            $faker->numerify('####');
         }
 
@@ -43,7 +42,6 @@ class VehicleFactory extends Factory
             'transmission' => $faker->optional()->randomElement(['manual', 'automatic']),
             'mileage' => $faker->optional()->numberBetween(0, 200000),
             'cilinder_capacity' => $vehicleType === 'motorcycle' ? $faker->optional()->randomElement(['125cc', '150cc', '160cc', '250cc', '300cc']) : null,
-            'client_id' => Client::factory(),
             'vehicle_type' => $vehicleType,
             'observations' => $faker->optional()->sentence(),
         ];

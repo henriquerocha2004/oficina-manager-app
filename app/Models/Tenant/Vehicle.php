@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -29,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Client $client
+ *
  * @method static Builder<static>|Vehicle newModelQuery()
  * @method static Builder<static>|Vehicle newQuery()
  * @method static Builder<static>|Vehicle onlyTrashed()
@@ -52,17 +54,21 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|Vehicle whereYear($value)
  * @method static Builder<static>|Vehicle withTrashed(bool $withTrashed = true)
  * @method static Builder<static>|Vehicle withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Vehicle extends Model
 {
-    use SoftDeletes;
     use HasFactory;
     use HasUlids;
+    use SoftDeletes;
 
     protected $table = 'vehicle';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     protected $fillable = [
         'id',
         'license_plate',
@@ -75,13 +81,27 @@ class Vehicle extends Model
         'transmission',
         'mileage',
         'cilinder_capacity',
-        'client_id',
         'vehicle_type',
         'observations',
     ];
 
-    public function client(): BelongsTo
+    public function clients(): BelongsToMany
     {
-        return $this->belongsTo(Client::class, 'client_id', 'id');
+        return $this->belongsToMany(
+            related: Client::class,
+            table: 'client_vehicle',
+            foreignPivotKey: 'vehicle_id',
+            relatedPivotKey: 'client_id'
+        )
+            ->using(ClientVehicle::class)
+            ->withPivot(['current_owner', 'created_at', 'updated_at'])
+            ->withTimestamps();
+    }
+
+    public function currentOwner(): HasOne
+    {
+        return $this->hasOne(ClientVehicle::class, 'vehicle_id')
+            ->where('current_owner', true)
+            ->with('client');
     }
 }

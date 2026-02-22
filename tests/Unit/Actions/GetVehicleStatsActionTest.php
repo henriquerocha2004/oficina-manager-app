@@ -42,22 +42,25 @@ class GetVehicleStatsActionTest extends TestCase
         $oneHundredEightyDaysAgo = $now->copy()->subDays(180);
 
         Vehicle::factory()->count(5)->create([
-            'client_id' => $client->id,
             'brand' => 'Toyota',
             'created_at' => $now,
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         Vehicle::factory()->count(3)->create([
-            'client_id' => $client->id,
             'brand' => 'Honda',
             'created_at' => $ninetyDaysAgo->copy()->addDay(),
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         Vehicle::factory()->count(2)->create([
-            'client_id' => $client->id,
             'brand' => 'Toyota',
             'created_at' => $oneHundredEightyDaysAgo->copy()->addDay(),
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         $action = new GetVehicleStatsAction;
 
@@ -103,14 +106,16 @@ class GetVehicleStatsActionTest extends TestCase
         $oneHundredEightyDaysAgo = $now->copy()->subDays(180);
 
         Vehicle::factory()->count(10)->create([
-            'client_id' => $client->id,
             'created_at' => $now,
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         Vehicle::factory()->count(5)->create([
-            'client_id' => $client->id,
             'created_at' => $oneHundredEightyDaysAgo->copy()->addDay(),
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         $action = new GetVehicleStatsAction;
 
@@ -130,9 +135,10 @@ class GetVehicleStatsActionTest extends TestCase
         $client = Client::factory()->create();
 
         Vehicle::factory()->count(5)->create([
-            'client_id' => $client->id,
             'created_at' => Carbon::now(),
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         $action = new GetVehicleStatsAction;
 
@@ -152,19 +158,22 @@ class GetVehicleStatsActionTest extends TestCase
         $client = Client::factory()->create();
 
         Vehicle::factory()->count(5)->create([
-            'client_id' => $client->id,
             'brand' => 'Ford',
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         Vehicle::factory()->count(3)->create([
-            'client_id' => $client->id,
             'brand' => 'Chevrolet',
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         Vehicle::factory()->count(2)->create([
-            'client_id' => $client->id,
             'brand' => 'Volkswagen',
-        ]);
+        ])->each(function ($vehicle) use ($client) {
+            $vehicle->clients()->attach($client->id, ['current_owner' => true]);
+        });
 
         $action = new GetVehicleStatsAction;
 

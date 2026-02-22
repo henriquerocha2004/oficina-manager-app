@@ -8,7 +8,9 @@ Route::group(['prefix' => 'vehicles', 'as' => 'vehicles.'], function () {
     Route::post('/', [VehicleController::class, 'store'])->name('store');
     Route::get('/search', [VehicleController::class, 'find'])->name('find');
     Route::get('/stats', [VehicleController::class, 'stats'])->name('stats');
+    Route::get('/check-plate', [VehicleController::class, 'checkPlate'])->name('check-plate');
     Route::get('/{id}', [VehicleController::class, 'findOne'])->name('findOne');
     Route::put('/{id}', [VehicleController::class, 'update'])->name('update');
+    Route::post('/{id}/transfer-ownership', [VehicleController::class, 'transferOwnership'])->name('transfer-ownership');
     Route::delete('/{id}', [VehicleController::class, 'delete'])->name('delete');
 });

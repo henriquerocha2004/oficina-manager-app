@@ -28,4 +28,7 @@ Route::middleware(['auth:tenant', 'tenant'])->group(function () {
 
     // Stock routes
     require __DIR__.'/stock.php';
+
+    // Service Order routes
+    require __DIR__.'/service_order.php';
 });

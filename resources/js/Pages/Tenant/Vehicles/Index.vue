@@ -116,7 +116,7 @@
           </div>
         </template>
         <template #cell-client="{ row }">
-          <span>{{ row.client?.name || '-' }}</span>
+          <span>{{ row.current_owner?.client?.name || '-' }}</span>
         </template>
         <template #cell-actions="{ row }">
           <div class="text-end flex gap-2 justify-end">
@@ -137,6 +137,7 @@
     :vehicle="drawerVehicle"
     @close="onDrawerClose"
     @submit="onDrawerSubmit"
+    @refresh="onRefresh"
   />
   <ConfirmModal ref="confirmModal" />
 </template>
@@ -284,7 +285,7 @@ function handleExport() {
     const dataToExport = items.value.map(item => ({
         ...item,
         vehicle_type: item.vehicle_type === 'car' ? 'Carro' : 'Moto',
-        client_name: item.client?.name || '-',
+        client_name: item.current_owner?.client?.name || '-',
     }));
 
     exportToCSV(dataToExport, columns, 'veiculos');
@@ -343,6 +344,11 @@ function onEdit(id) {
 
 function onDrawerClose() {
   drawerOpen.value = false;
+}
+
+async function onRefresh() {
+  await load();
+  await loadStats();
 }
 
 async function onDrawerSubmit(data) {

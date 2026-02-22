@@ -139,4 +139,8 @@ class Messages
     public const string STOCK_MOVEMENT_STATS_FETCHED_SUCCESS = 'Stock movement statistics fetched successfully.';
 
     public const string ERROR_FETCHING_STOCK_MOVEMENT_STATS = 'Failed to fetch stock movement statistics.';
+
+    public const string SERVICE_ORDER_CREATED_SUCCESS = 'Service order created successfully.';
+
+    public const string ERROR_CREATING_SERVICE_ORDER = 'An error occurred while creating the service order.';
 }

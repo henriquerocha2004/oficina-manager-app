@@ -99,3 +99,36 @@ export async function fetchVehicleStats() {
         return { success: false, error };
     }
 }
+
+/**
+ * Verifica se uma placa já existe no sistema.
+ * @param {string} licensePlate
+ * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
+ */
+export async function checkVehiclePlate(licensePlate) {
+    try {
+        const { data } = await axios.get('/vehicles/check-plate', {
+            params: { license_plate: licensePlate }
+        });
+        return { success: true, data: data.data };
+    } catch (error) {
+        return { success: false, error };
+    }
+}
+
+/**
+ * Transfere a propriedade de um veículo para um novo cliente.
+ * @param {string} vehicleId
+ * @param {string} newClientId
+ * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
+ */
+export async function transferVehicleOwnership(vehicleId, newClientId) {
+    try {
+        const { data } = await axios.post(`/vehicles/${vehicleId}/transfer-ownership`, {
+            new_client_id: newClientId
+        });
+        return { success: true, data };
+    } catch (error) {
+        return { success: false, error };
+    }
+}

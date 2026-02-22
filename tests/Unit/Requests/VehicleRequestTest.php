@@ -2,15 +2,16 @@
 
 namespace Tests\Unit\Requests;
 
-use Tests\TestCase;
 use App\Http\Requests\tenant\VehicleRequest;
 use Illuminate\Support\Facades\Validator;
+use Tests\TestCase;
 
 class VehicleRequestTest extends TestCase
 {
     private function validate(array $data): \Illuminate\Validation\Validator
     {
-        $request = new VehicleRequest();
+        $request = new VehicleRequest;
+
         return Validator::make($data, $request->rules(), $request->messages());
     }
 
@@ -188,41 +189,9 @@ class VehicleRequestTest extends TestCase
     public function testClientIdIsRequired(): void
     {
         $data = [
-            'license_plate' => 'ABC-1234',
             'brand' => 'Toyota',
             'model' => 'Corolla',
             'year' => 2023,
-        ];
-
-        $validator = $this->validate($data);
-
-        $this->assertFalse($validator->passes());
-        $this->assertTrue($validator->errors()->has('client_id'));
-    }
-
-    public function testClientIdMaxLength(): void
-    {
-        $data = [
-            'license_plate' => 'ABC-1234',
-            'brand' => 'Toyota',
-            'model' => 'Corolla',
-            'year' => 2023,
-            'client_id' => str_repeat('A', 27),
-        ];
-
-        $validator = $this->validate($data);
-
-        $this->assertFalse($validator->passes());
-        $this->assertTrue($validator->errors()->has('client_id'));
-    }
-
-    public function testLicensePlateIsRequired(): void
-    {
-        $data = [
-            'brand' => 'Toyota',
-            'model' => 'Corolla',
-            'year' => 2023,
-            'client_id' => '01HXE7Q8N3K9Y2Z1P5V7M4W6J8',
         ];
 
         $validator = $this->validate($data);

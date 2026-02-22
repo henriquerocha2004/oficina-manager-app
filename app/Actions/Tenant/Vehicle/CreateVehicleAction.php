@@ -3,8 +3,9 @@
 namespace App\Actions\Tenant\Vehicle;
 
 use App\Dto\VehicleDto;
-use App\Exceptions\Vehicle\VehicleAlreadyExistsException;
+use App\Models\Tenant\ClientVehicle;
 use App\Models\Tenant\Vehicle;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class CreateVehicleAction
@@ -12,14 +13,37 @@ class CreateVehicleAction
     /**
      * @throws Throwable
      */
-    public function __invoke(VehicleDto $vehicleDto): Vehicle
+    public function __invoke(VehicleDto $vehicleDto, string $clientId): Vehicle
     {
-        $vehicle = Vehicle::query()
-            ->whereLicensePlate($vehicleDto->license_plate)
-            ->first();
+        return DB::connection(config('database.connections_names.tenant'))->transaction(function () use ($vehicleDto, $clientId): Vehicle {
+            $existingVehicle = Vehicle::query()
+                ->whereLicensePlate($vehicleDto->license_plate)
+                ->first();
 
-        throw_if(!is_null($vehicle), VehicleAlreadyExistsException::class);
+            if (! is_null($existingVehicle)) {
+                ClientVehicle::query()
+                    ->where('vehicle_id', $existingVehicle->id)
+                    ->update(['current_owner' => false]);
+                ClientVehicle::query()->updateOrCreate(
+                    [
+                        'vehicle_id' => $existingVehicle->id,
+                        'client_id' => $clientId,
+                    ],
+                    ['current_owner' => true]
+                );
 
-        return Vehicle::query()->create($vehicleDto->toArray());
+                return $existingVehicle->fresh();
+            }
+
+            $vehicle = Vehicle::query()->create($vehicleDto->toArray());
+
+            ClientVehicle::query()->create([
+                'vehicle_id' => $vehicle->id,
+                'client_id' => $clientId,
+                'current_owner' => true,
+            ]);
+
+            return $vehicle->fresh();
+        });
     }
 }

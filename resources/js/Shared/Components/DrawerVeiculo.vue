@@ -56,13 +56,21 @@
 
             <!-- Placa -->
             <FormField name="license_plate" label="Placa" v-slot="{ field, errors }">
-              <input
-                v-bind="field"
-                class="kt-input w-full"
-                placeholder="ABC-1234 ou ABC-1D23"
-                maxlength="8"
-                @input="applyMask('license_plate', licensePlateMask, $event)"
-              />
+              <div class="relative">
+                <input
+                  v-bind="field"
+                  class="kt-input w-full"
+                  placeholder="ABC-1234 ou ABC-1D23"
+                  maxlength="8"
+                  @input="applyMask('license_plate', licensePlateMask, $event)"
+                />
+                <span
+                  v-if="checkingPlate"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500"
+                >
+                  Verificando...
+                </span>
+              </div>
               <FormError :errors="errors" />
             </FormField>
 
@@ -195,6 +203,9 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Modal de Confirmação de Transferência -->
+    <ConfirmModal ref="confirmModal" modal-id="transfer_ownership_modal" />
   </teleport>
 </template>
 
@@ -204,10 +215,14 @@ import { computed, watch, ref } from 'vue';
 import * as yup from 'yup';
 import FormField from './FormField.vue';
 import FormError from './FormError.vue';
+import ConfirmModal from './ConfirmModal.vue';
 import { useMasks } from '@/Composables/useMasks';
 import { fetchClients } from '@/services/clientService';
+import { checkVehiclePlate, transferVehicleOwnership } from '@/services/vehicleService';
+import { useToast } from '@/Shared/composables/useToast';
 
 const { licensePlateMask, unmaskLicensePlate } = useMasks();
+const toast = useToast();
 
 const props = defineProps({
   open: Boolean,
@@ -215,7 +230,7 @@ const props = defineProps({
   vehicle: Object,
 });
 
-const emit = defineEmits(['close', 'submit']);
+const emit = defineEmits(['close', 'submit', 'refresh']);
 
 const currentYear = new Date().getFullYear();
 
@@ -224,6 +239,16 @@ const clientSearch = ref('');
 const showClientDropdown = ref(false);
 const filteredClients = ref([]);
 const selectedClient = ref(null);
+
+// Verificação de placa
+const checkingPlate = ref(false);
+const plateExists = ref(false);
+const plateOwnerInfo = ref(null);
+const transferConfirmed = ref(false); // Armazena se usuário confirmou transferência
+let plateCheckTimeout = null;
+
+// Modal de confirmação
+const confirmModal = ref(null);
 
 const applyMask = (fieldName, maskFn, event) => {
   const rawValue = event.target.value;
@@ -325,6 +350,109 @@ function onClientBlur() {
 }
 
 /* ---------------------------
+ * Verificação de placa
+ * --------------------------- */
+async function checkPlate(licensePlate) {
+  if (!licensePlate || licensePlate.length < 7) {
+    plateExists.value = false;
+    plateOwnerInfo.value = null;
+    transferConfirmed.value = false;
+    return;
+  }
+
+  // Remove máscara para enviar ao backend
+  const cleanPlate = unmaskLicensePlate(licensePlate);
+  
+  checkingPlate.value = true;
+  const result = await checkVehiclePlate(cleanPlate);
+  checkingPlate.value = false;
+
+  if (result.success && result.data.exists) {
+    plateExists.value = true;
+    plateOwnerInfo.value = result.data;
+    
+    // Verifica se o proprietário é diferente do cliente selecionado
+    if (plateOwnerInfo.value.current_owner_id && 
+        plateOwnerInfo.value.current_owner_id !== values.client_id &&
+        selectedClient.value) {
+      
+      // Abre o modal imediatamente
+      const confirmed = await confirmModal.value.open({
+        title: 'Transferência de Propriedade',
+        message: `Esta placa já está cadastrada para o cliente "${plateOwnerInfo.value.current_owner_name}". 
+                  Deseja transferir a propriedade do veículo para "${selectedClient.value?.name}"?`
+      });
+      
+      if (confirmed) {
+        // Usuário confirmou, executa a transferência imediatamente
+        const newClientId = values.client_id || selectedClient.value?.id;
+        
+        if (!newClientId) {
+          toast.error('Erro: Cliente não foi selecionado corretamente.');
+          return;
+        }
+        
+        const transferResult = await transferVehicleOwnership(
+          plateOwnerInfo.value.vehicle_id,
+          newClientId
+        );
+        
+        if (transferResult.success) {
+          toast.success('Propriedade do veículo transferida com sucesso!');
+          // Emite evento de refresh para atualizar o grid
+          emit('refresh');
+          // Fecha o drawer
+          emit('close');
+        } else {
+          toast.error('Erro ao transferir propriedade do veículo.');
+        }
+      } else {
+        // Usuário cancelou
+        transferConfirmed.value = false;
+        toast.info('Transferência cancelada. A placa foi limpa.');
+        // Limpa a placa e reseta os estados
+        plateExists.value = false;
+        plateOwnerInfo.value = null;
+        setFieldValue('license_plate', '');
+      }
+    }
+  } else {
+    plateExists.value = false;
+    plateOwnerInfo.value = null;
+    transferConfirmed.value = false;
+  }
+}
+
+// Watch para verificar placa quando digitada (com debounce)
+// APENAS no modo de criação
+watch(
+  () => values.license_plate,
+  (newPlate, oldPlate) => {
+    // NÃO verifica placa no modo de edição
+    if (props.isEdit) {
+      return;
+    }
+    
+    // Limpa timeout anterior
+    if (plateCheckTimeout) {
+      clearTimeout(plateCheckTimeout);
+    }
+
+    // Reseta estados quando a placa é modificada
+    if (newPlate !== oldPlate) {
+      plateExists.value = false;
+      plateOwnerInfo.value = null;
+      transferConfirmed.value = false;
+    }
+
+    // Verifica placa após 800ms de inatividade
+    plateCheckTimeout = setTimeout(() => {
+      checkPlate(newPlate);
+    }, 800);
+  }
+);
+
+/* ---------------------------
  * Sync edit / create
  * --------------------------- */
 watch(
@@ -332,9 +460,11 @@ watch(
   (val) => {
     if (val) {
       setValues(val);
-      if (val.client) {
-        selectedClient.value = val.client;
-        clientSearch.value = val.client.name;
+      if (val.current_owner?.client) {
+        selectedClient.value = val.current_owner.client;
+        clientSearch.value = val.current_owner.client.name;
+        // Define o client_id no formulário
+        setFieldValue('client_id', val.current_owner.client.id);
       }
     } else {
       resetForm();
@@ -347,7 +477,10 @@ watch(
 /* ---------------------------
  * Submit (clean & safe)
  * --------------------------- */
-const submitHandler = handleSubmit((values) => {
+const submitHandler = handleSubmit(async (values) => {
+  console.log('=== DEBUG SUBMIT ===');
+  console.log('Submetendo formulário...');
+  
   const submitData = {
     ...values,
     license_plate: unmaskLicensePlate(values.license_plate),

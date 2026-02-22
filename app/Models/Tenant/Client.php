@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -24,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ *
  * @method static Builder<static>|Client newModelQuery()
  * @method static Builder<static>|Client newQuery()
  * @method static Builder<static>|Client onlyTrashed()
@@ -43,17 +44,21 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|Client whereZipCode($value)
  * @method static Builder<static>|Client withTrashed(bool $withTrashed = true)
  * @method static Builder<static>|Client withoutTrashed()
+ *
  * @mixin \Eloquent
  */
 class Client extends Model
 {
-    use SoftDeletes;
     use HasFactory;
     use HasUlids;
+    use SoftDeletes;
 
     protected $table = 'client';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
+
     protected $fillable = [
         'id',
         'name',
@@ -67,8 +72,21 @@ class Client extends Model
         'observations',
     ];
 
-    public function vehicles(): HasMany
+    public function vehicles(): BelongsToMany
     {
-        return $this->hasMany(Vehicle::class, 'client_id', 'id');
+        return $this->belongsToMany(
+            related: Vehicle::class,
+            table: 'client_vehicle',
+            foreignPivotKey: 'client_id',
+            relatedPivotKey: 'vehicle_id'
+        )
+            ->using(ClientVehicle::class)
+            ->withPivot(['current_owner', 'created_at', 'updated_at'])
+            ->withTimestamps();
+    }
+
+    public function currentVehicles(): BelongsToMany
+    {
+        return $this->vehicles()->wherePivot('current_owner', true);
     }
 }
