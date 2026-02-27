@@ -12,8 +12,8 @@ const adminRoutes = {
   'admin.dashboard': '/admin/dashboard',
   'admin.clients.index': '/admin/clients',
   'admin.tenants.create': '/admin/tenants/create',
-  'admin.tenants.show': (id) => `/admin/tenants/${id}`,
-  'admin.tenants.edit': (id) => `/admin/tenants/${id}/edit`,
+  'admin.tenants.show': (id) => '/admin/tenants/' + id,
+  'admin.tenants.edit': (id) => '/admin/tenants/' + id + '/edit',
   'admin.subscriptions.index': '/admin/subscriptions',
   'admin.subscriptions.plans': '/admin/subscriptions/plans',
   'admin.users.index': '/admin/users',
@@ -30,25 +30,28 @@ const tenantRoutes = {
   'tenant.dashboard': '/dashboard',
   'clients.index': '/clients',
   'clients.create': '/clients/create',
-  'clients.show': (id) => `/clients/${id}`,
-  'clients.edit': (id) => `/clients/${id}/edit`,
+  'clients.show': (id) => '/clients/' + id,
+  'clients.edit': (id) => '/clients/' + id + '/edit',
   'vehicles.index': '/vehicles',
   'vehicles.create': '/vehicles/create',
-  'vehicles.show': (id) => `/vehicles/${id}`,
-  'vehicles.edit': (id) => `/vehicles/${id}/edit`,
+  'vehicles.show': (id) => '/vehicles/' + id,
+  'vehicles.edit': (id) => '/vehicles/' + id + '/edit',
   'services.index': '/services',
   'services.create': '/services/create',
-  'services.show': (id) => `/services/${id}`,
-  'services.edit': (id) => `/services/${id}/edit`,
+  'services.show': (id) => '/services/' + id,
+  'services.edit': (id) => '/services/' + id + '/edit',
   'suppliers.index': '/suppliers',
   'suppliers.create': '/suppliers/create',
-  'suppliers.show': (id) => `/suppliers/${id}`,
-  'suppliers.edit': (id) => `/suppliers/${id}/edit`,
+  'suppliers.show': (id) => '/suppliers/' + id,
+  'suppliers.edit': (id) => '/suppliers/' + id + '/edit',
   'products.index': '/products',
   'products.create': '/products/create',
-  'products.show': (id) => `/products/${id}`,
-  'products.edit': (id) => `/products/${id}/edit`,
+  'products.show': (id) => '/products/' + id,
+  'products.edit': (id) => '/products/' + id + '/edit',
   'stock.movements.index': '/stock/movements',
+  'service-orders.index': '/service-orders',
+  'service-orders.create': '/service-orders/create',
+  'service-orders.show': (id) => '/service-orders/' + id,
   'tenant.logout': '/logout',
 };
 
@@ -106,6 +109,9 @@ export function routeCurrent(name) {
   if (name === 'suppliers.index' && currentComponent === 'Tenant/Suppliers/Index') return true;
   if (name === 'products.index' && currentComponent === 'Tenant/Products/Index') return true;
   if (name === 'stock.movements.index' && currentComponent === 'Tenant/StockMovements/Index') return true;
+  if (name === 'service-orders.index' && currentComponent === 'Tenant/ServiceOrders/Index') return true;
+  if (name === 'service-orders.show' && currentComponent === 'Tenant/ServiceOrders/Show') return true;
+  if (name === 'service-orders.create' && currentComponent === 'Tenant/ServiceOrders/Create') return true;
 
   // Fallback: Verifica pela URL (exata apenas, sem startsWith para evitar múltiplas seleções)
   const currentUrl = page.url;

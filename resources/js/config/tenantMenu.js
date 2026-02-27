@@ -45,4 +45,9 @@ export const tenantMenu = [
         route: 'stock.movements.index',
         icon: 'ki-outline ki-category',
     },
+    {
+        label: 'Ordens de Serviço',
+        route: 'service-orders.index',
+        icon: 'ki-outline ki-note-2',
+    },
 ];

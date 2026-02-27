@@ -132,6 +132,56 @@ select.kt-input {
 
 /* Ajuste de altura para input de busca no DataGrid */
 .kt-input input.kt-input-ghost {
-    min-height: 42px;
-    padding: 0.625rem 0.875rem;
+  min-height: 42px;
+  padding: 0.625rem 0.875rem;
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+}
+
+.badge-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.badge-secondary {
+  background-color: var(--color-muted);
+  color: var(--color-muted-foreground);
+}
+
+.badge-success {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.dark .badge-success {
+  background-color: #166534;
+  color: #dcfce7;
+}
+
+.badge-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.dark .badge-warning {
+  background-color: #92400e;
+  color: #fef3c7;
+}
+
+.badge-danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.dark .badge-danger {
+  background-color: #991b1b;
+  color: #fee2e7;
 }
