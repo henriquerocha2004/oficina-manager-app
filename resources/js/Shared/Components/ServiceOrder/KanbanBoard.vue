@@ -34,20 +34,30 @@
         :key="status"
         :status="status"
         :title="columnTitles[status]"
-        :items="columns[status] || []"
+        :items="columns[status].value"
+        :key-map="statusColumnKey"
+        :can-receive="canTransition"
+        :check-requires-data="checkRequiresData"
+        :dragging-item="draggingItem"
         @card-click="onCardClick"
         @change="onStatusChange"
+        @drag-start="onDragStart"
+        @drag-end="onDragEnd"
       />
     </div>
+
+    <ServiceOrderTransitionModal ref="transitionModal" @confirm="onTransitionConfirm" @cancel="onTransitionCancel" />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import KanbanColumn from './KanbanColumn.vue';
+import ServiceOrderTransitionModal from './ServiceOrderTransitionModal.vue';
 import { useServiceOrderKanban } from '@/Composables/useServiceOrderKanban.js';
 import { KanbanStatuses, KanbanColumnLabels } from '@/Data/serviceOrderStatuses.js';
+import { getTransitionLabel, canTransition, requiresData } from '@/Composables/useServiceOrderTransitions.js';
 
 const {
   columns,
@@ -57,10 +67,36 @@ const {
   setDays,
   load,
   changeStatus,
+  changeStatusWithData,
+  checkTransition,
+  findCurrentStatus,
+  removeFromCurrentColumn,
+  addToColumn,
 } = useServiceOrderKanban();
+
+function checkRequiresData(fromStatus, toStatus) {
+  return requiresData(fromStatus, toStatus).length > 0;
+}
 
 const kanbanStatuses = KanbanStatuses;
 const columnTitles = KanbanColumnLabels;
+
+const transitionModal = ref(null);
+const pendingTransition = ref(null);
+const statusColumnKey = reactive({});
+const draggingItem = ref(null);
+
+function onDragStart(item) {
+  draggingItem.value = item;
+}
+
+function onDragEnd() {
+  draggingItem.value = null;
+}
+
+function forceRerenderColumn(status) {
+  statusColumnKey[status] = (statusColumnKey[status] || 0) + 1;
+}
 
 function onDaysChange(event) {
   setDays(parseInt(event.target.value, 10));
@@ -71,7 +107,89 @@ function onCardClick(serviceOrder) {
 }
 
 async function onStatusChange({ serviceOrder, newStatus }) {
-  await changeStatus(serviceOrder.id, newStatus);
+  const checkResult = checkTransition(serviceOrder.id, newStatus);
+  
+  if (!checkResult.allowed) {
+    window.showToast?.({
+      message: checkResult.error,
+      icon: '<i class="ki-filled ki-cross-circle text-red-500 text-xl"></i>'
+    });
+    await load();
+    return;
+  }
+
+  if (checkResult.needsData) {
+    const title = getTransitionLabel(serviceOrder.status, newStatus);
+    
+    pendingTransition.value = {
+      serviceOrderId: serviceOrder.id,
+      currentStatus: serviceOrder.status,
+      newStatus: newStatus,
+      title,
+      needsDiagnosis: checkResult.needsDiagnosis,
+      needsItems: checkResult.needsItems,
+      initialDiagnosis: serviceOrder.diagnosis,
+      initialItems: serviceOrder.items || [],
+      serviceOrder: serviceOrder
+    };
+
+    const result = await transitionModal.value.open({
+      fromStatus: serviceOrder.status,
+      toStatus: newStatus,
+      title,
+      needsDiagnosis: checkResult.needsDiagnosis,
+      needsItems: checkResult.needsItems,
+      initialDiagnosis: serviceOrder.diagnosis,
+      initialItems: serviceOrder.items || []
+    });
+
+    if (result) {
+      await onTransitionConfirm(result);
+    }
+    return;
+  }
+
+  try {
+    await changeStatus(serviceOrder.id, newStatus);
+    window.showToast?.({
+      message: 'Status atualizado com sucesso',
+      icon: '<i class="ki-filled ki-check-circle text-green-500 text-xl"></i>'
+    });
+  } catch (err) {
+    window.showToast?.({
+      message: err.message || 'Erro ao atualizar status',
+      icon: '<i class="ki-filled ki-cross-circle text-red-500 text-xl"></i>'
+    });
+  }
+}
+
+async function onTransitionConfirm(data) {
+  if (!pendingTransition.value) {
+    return;
+  }
+
+  const { serviceOrderId, currentStatus, newStatus } = pendingTransition.value;
+
+  try {
+    await changeStatusWithData(serviceOrderId, currentStatus, newStatus, data);
+    window.showToast?.({
+      message: 'Status atualizado com sucesso',
+      icon: '<i class="ki-filled ki-check-circle text-green-500 text-xl"></i>'
+    });
+  } catch (err) {
+    window.showToast?.({
+      message: err.message || 'Erro ao atualizar status',
+      icon: '<i class="ki-filled ki-cross-circle text-red-500 text-xl"></i>'
+    });
+    await load();
+  } finally {
+    pendingTransition.value = null;
+  }
+}
+
+function onTransitionCancel() {
+  pendingTransition.value = null;
+  load();
 }
 
 onMounted(() => {

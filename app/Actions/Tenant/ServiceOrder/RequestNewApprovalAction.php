@@ -9,7 +9,7 @@ use App\Models\Tenant\ServiceOrder;
 use App\Models\Tenant\ServiceOrderItem;
 use Throwable;
 
-readonly class SendForApprovalAction
+readonly class RequestNewApprovalAction
 {
     public function __construct(
         private ServiceOrderDomain $domain
@@ -48,7 +48,7 @@ readonly class SendForApprovalAction
             }
         }
 
-        $serviceOrder = $this->domain->sendForApproval($serviceOrder, $userId);
+        $serviceOrder = $this->domain->requestNewApproval($serviceOrder, $userId);
         $serviceOrder->load(['client', 'vehicle', 'items']);
 
         return $serviceOrder;

@@ -13,6 +13,7 @@ use App\Actions\Tenant\ServiceOrder\GetServiceOrderStatsAction;
 use App\Actions\Tenant\ServiceOrder\RefundPaymentAction;
 use App\Actions\Tenant\ServiceOrder\RegisterPaymentAction;
 use App\Actions\Tenant\ServiceOrder\RemoveItemAction;
+use App\Actions\Tenant\ServiceOrder\RequestNewApprovalAction;
 use App\Actions\Tenant\ServiceOrder\SearchServiceOrderAction;
 use App\Actions\Tenant\ServiceOrder\SendForApprovalAction;
 use App\Actions\Tenant\ServiceOrder\StartWorkAction;
@@ -197,10 +198,47 @@ class ServiceOrderController extends Controller
     /**
      * @throws Throwable
      */
-    public function sendForApproval(string $id, SendForApprovalAction $action): JsonResponse
+    public function sendForApproval(string $id, Request $request, SendForApprovalAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, auth()->id());
+            $serviceOrder = $action(
+                $id,
+                auth()->id(),
+                $request->input('diagnosis'),
+                $request->input('items')
+            );
+
+            return $this->setResponse(
+                message: Messages::SERVICE_ORDER_SENT_FOR_APPROVAL,
+                code: Response::HTTP_OK,
+                data: ['service_order' => $serviceOrder],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_UPDATING_SERVICE_ORDER, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: Messages::ERROR_UPDATING_SERVICE_ORDER,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function requestNewApproval(string $id, Request $request, RequestNewApprovalAction $action): JsonResponse
+    {
+        try {
+            $serviceOrder = $action(
+                $id,
+                auth()->id(),
+                $request->input('diagnosis'),
+                $request->input('items')
+            );
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_SENT_FOR_APPROVAL,

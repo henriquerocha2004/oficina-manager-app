@@ -19,8 +19,7 @@ readonly class ServiceOrderDomain
 {
     public function __construct(
         private PaymentService $paymentService
-    ) {
-    }
+    ) {}
 
     /**
      * @throws Throwable
@@ -86,6 +85,34 @@ readonly class ServiceOrderDomain
             eventType: ServiceOrderEventTypeEnum::STATUS_CHANGED,
             description: 'Service order sent for client approval',
             metadata: ['from' => 'draft', 'to' => 'waiting_approval']
+        );
+
+        return $serviceOrder;
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function requestNewApproval(ServiceOrder $serviceOrder, int $userId): ServiceOrder
+    {
+        $this->ensureCanBeModified($serviceOrder);
+
+        throw_if(
+            $serviceOrder->status !== ServiceOrderStatusEnum::IN_PROGRESS,
+            InvalidStatusTransitionException::class
+        );
+
+        $oldStatus = $serviceOrder->status;
+        $serviceOrder->status = ServiceOrderStatusEnum::WAITING_APPROVAL;
+        $serviceOrder->approved_at = null;
+        $serviceOrder->save();
+
+        $this->logEvent(
+            serviceOrder: $serviceOrder,
+            userId: $userId,
+            eventType: ServiceOrderEventTypeEnum::STATUS_CHANGED,
+            description: 'Service order sent for new approval (additional work detected)',
+            metadata: ['from' => $oldStatus->value, 'to' => 'waiting_approval']
         );
 
         return $serviceOrder;

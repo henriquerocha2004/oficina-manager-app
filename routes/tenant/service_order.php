@@ -4,8 +4,10 @@ use App\Http\Controllers\tenant\ServiceOrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('service-orders')
-    ->middleware(['auth:sanctum', 'verified'])
+    ->middleware(['auth:tenant', 'verified'])
     ->group(function () {
+        Route::get('/search', [ServiceOrderController::class, 'find'])
+            ->name('service-orders.search');
         Route::get('/', [ServiceOrderController::class, 'find'])
             ->name('service-orders.find');
         Route::post('/', [ServiceOrderController::class, 'store'])
@@ -18,6 +20,8 @@ Route::prefix('service-orders')
             ->name('service-orders.destroy');
         Route::post('/{id}/send-for-approval', [ServiceOrderController::class, 'sendForApproval'])
             ->name('service-orders.send-for-approval');
+        Route::post('/{id}/request-new-approval', [ServiceOrderController::class, 'requestNewApproval'])
+            ->name('service-orders.request-new-approval');
         Route::post('/{id}/approve', [ServiceOrderController::class, 'approve'])
             ->name('service-orders.approve');
         Route::post('/{id}/start-work', [ServiceOrderController::class, 'startWork'])
