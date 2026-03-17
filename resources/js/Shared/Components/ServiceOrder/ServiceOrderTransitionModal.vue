@@ -62,12 +62,24 @@
                       <option value="service">Serviço</option>
                       <option value="part">Peça</option>
                     </select>
-                    <input
-                      v-model="item.description"
-                      type="text"
-                      class="kt-input flex-1"
-                      placeholder="Descrição"
-                    />
+                    <div class="flex-1">
+                      <input
+                        v-model="item.description"
+                        type="text"
+                        class="kt-input w-full"
+                        placeholder="Buscar serviço ou digite..."
+                        :list="'services-list-' + index"
+                        @input="onServiceInput($event, index)"
+                      />
+                      <datalist :id="'services-list-' + index">
+                        <option 
+                          v-for="service in availableServices" 
+                          :key="service.id" 
+                          :value="service.name"
+                          :data-price="service.base_price"
+                        />
+                      </datalist>
+                    </div>
                     <input
                       v-model.number="item.quantity"
                       type="number"
@@ -126,6 +138,7 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, reactive } from 'vue';
+import { fetchServices } from '@/services/serviceService.js';
 
 const emit = defineEmits(['confirm', 'cancel']);
 
@@ -143,6 +156,9 @@ const form = reactive({
   diagnosis: '',
   items: []
 });
+
+const availableServices = ref([]);
+const loadingServices = ref(false);
 
 const totalItems = computed(() => {
   return form.items.reduce((sum, item) => {
@@ -176,11 +192,16 @@ const open = async (options = {}) => {
   title.value = options.title || 'Enviar para Aprovação';
 
   form.diagnosis = options.initialDiagnosis || '';
-  form.items = options.initialItems ? [...options.initialItems] : [];
+  form.items = options.initialItems ? options.initialItems.map(item => ({
+    ...item,
+    service_id: item.service_id || null
+  })) : [];
 
   if (form.items.length === 0 && needsItems.value) {
     addItem();
   }
+
+  loadServices();
 
   return new Promise((resolve) => {
     resolvePromise = resolve;
@@ -193,7 +214,9 @@ const open = async (options = {}) => {
 
 const showModal = () => {
   if (!window.KTModal) {
-    modalEl.value.style.display = 'block';
+    if (modalEl.value) {
+      modalEl.value.style.display = 'block';
+    }
     return;
   }
 
@@ -203,20 +226,44 @@ const showModal = () => {
     modal = window.KTModal.getInstance(modalEl.value);
   }
 
-  modal ? modal.show() : modalEl.value.style.display = 'block';
+  modal ? modal.show() : (modalEl.value && (modalEl.value.style.display = 'block'));
 };
 
 const addItem = () => {
   form.items.push({
     type: 'service',
+    service_id: null,
     description: '',
     quantity: 1,
     unit_price: 0
   });
 };
 
-const removeItem = (index) => {
-  form.items.splice(index, 1);
+const loadServices = async () => {
+  if (availableServices.value.length > 0) return;
+  
+  loadingServices.value = true;
+  try {
+    const result = await fetchServices({ perPage: 100 });
+    availableServices.value = result.items || [];
+  } catch (error) {
+    console.error('Erro ao carregar serviços:', error);
+  } finally {
+    loadingServices.value = false;
+  }
+};
+
+const onServiceInput = (event, index) => {
+  const description = event.target.value;
+  const item = form.items[index];
+  
+  const service = availableServices.value.find(s => s.name === description);
+  if (service) {
+    item.service_id = service.id;
+    item.unit_price = parseFloat(service.base_price) || 0;
+  } else {
+    item.service_id = null;
+  }
 };
 
 const formatCurrency = (value) => {
@@ -280,11 +327,6 @@ defineExpose({ open });
 .modal-enter-from > div,
 .modal-leave-to > div {
   transform: scale(0.9);
-}
-
-.modal-enter-to,
-.modal-leave-from {
-  opacity: 1;
 }
 
 .modal-enter-to > div,

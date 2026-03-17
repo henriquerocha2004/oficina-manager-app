@@ -130,7 +130,8 @@ async function onStatusChange({ serviceOrder, newStatus }) {
       needsItems: checkResult.needsItems,
       initialDiagnosis: serviceOrder.diagnosis,
       initialItems: serviceOrder.items || [],
-      serviceOrder: serviceOrder
+      serviceOrder: { ...serviceOrder },
+      toStatus: newStatus
     };
 
     const result = await transitionModal.value.open({
