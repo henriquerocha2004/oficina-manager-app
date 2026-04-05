@@ -123,7 +123,7 @@ class VehicleRequestTest extends TestCase
         $this->assertTrue($validator->errors()->has('model'));
     }
 
-    public function testYearIsRequired(): void
+    public function testYearIsOptional(): void
     {
         $data = [
             'license_plate' => 'ABC-1234',
@@ -134,8 +134,8 @@ class VehicleRequestTest extends TestCase
 
         $validator = $this->validate($data);
 
-        $this->assertFalse($validator->passes());
-        $this->assertTrue($validator->errors()->has('year'));
+        $this->assertTrue($validator->passes());
+        $this->assertFalse($validator->errors()->has('year'));
     }
 
     public function testYearMustBeInteger(): void

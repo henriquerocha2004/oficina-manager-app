@@ -183,4 +183,12 @@ class Messages
     public const string PAYMENT_REFUNDED_SUCCESS = 'Payment refunded successfully.';
 
     public const string ERROR_REFUNDING_PAYMENT = 'An error occurred while refunding the payment.';
+
+    public const string SERVICE_ORDER_PHOTO_UPLOADED_SUCCESS = 'Photo uploaded successfully.';
+
+    public const string ERROR_UPLOADING_SERVICE_ORDER_PHOTO = 'An error occurred while uploading the photo.';
+
+    public const string SERVICE_ORDER_PHOTO_DELETED_SUCCESS = 'Photo deleted successfully.';
+
+    public const string ERROR_DELETING_SERVICE_ORDER_PHOTO = 'An error occurred while deleting the photo.';
 }

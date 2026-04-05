@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\tenant;
 
+use App\Enum\Tenant\ServiceOrder\PaymentMethodEnum;
 use App\Actions\Tenant\ServiceOrder\AddItemAction;
 use App\Actions\Tenant\ServiceOrder\ApproveAction;
 use App\Actions\Tenant\ServiceOrder\CancelAction;
 use App\Actions\Tenant\ServiceOrder\CreateServiceOrderAction;
 use App\Actions\Tenant\ServiceOrder\DeleteServiceOrderAction;
+use App\Actions\Tenant\ServiceOrder\DeleteServiceOrderPhotoAction;
 use App\Actions\Tenant\ServiceOrder\FindOneServiceOrderAction;
 use App\Actions\Tenant\ServiceOrder\FinishWorkAction;
 use App\Actions\Tenant\ServiceOrder\GetServiceOrderStatsAction;
@@ -14,23 +16,27 @@ use App\Actions\Tenant\ServiceOrder\RefundPaymentAction;
 use App\Actions\Tenant\ServiceOrder\RegisterPaymentAction;
 use App\Actions\Tenant\ServiceOrder\RemoveItemAction;
 use App\Actions\Tenant\ServiceOrder\RequestNewApprovalAction;
+use App\Actions\Tenant\ServiceOrder\ReturnToApprovalAction;
 use App\Actions\Tenant\ServiceOrder\SearchServiceOrderAction;
 use App\Actions\Tenant\ServiceOrder\SendForApprovalAction;
 use App\Actions\Tenant\ServiceOrder\StartWorkAction;
 use App\Actions\Tenant\ServiceOrder\UpdateDiagnosisAction;
 use App\Actions\Tenant\ServiceOrder\UpdateDiscountAction;
+use App\Actions\Tenant\ServiceOrder\UploadServiceOrderPhotoAction;
 use App\Constants\Messages;
 use App\Dto\ServiceOrderDto;
+use App\Dto\ServiceOrderPhotoDto;
 use App\Dto\ServiceOrderSearchDto;
 use App\Exceptions\ServiceOrder\VehicleOwnershipConflictException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\tenant\AddServiceOrderItemRequest;
 use App\Http\Requests\tenant\CancelServiceOrderRequest;
-use App\Http\Requests\tenant\RefundPaymentRequest;
+use App\Http\Requests\tenant\RegisterRefundRequest;
 use App\Http\Requests\tenant\RegisterPaymentRequest;
 use App\Http\Requests\tenant\StoreServiceOrderRequest;
 use App\Http\Requests\tenant\UpdateDiagnosisRequest;
 use App\Http\Requests\tenant\UpdateDiscountRequest;
+use App\Http\Requests\tenant\UploadServiceOrderPhotoRequest;
 use App\Models\Tenant\ServiceOrderItem;
 use App\Services\Tenant\ServiceOrder\ClientVehicleResolverService;
 use Exception;
@@ -38,6 +44,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -124,6 +132,15 @@ class ServiceOrderController extends Controller
         }
     }
 
+    public function show(string $id, FindOneServiceOrderAction $findOneAction): InertiaResponse
+    {
+        $serviceOrder = $findOneAction($id);
+
+        return Inertia::render('Tenant/ServiceOrders/Show', [
+            'serviceOrder' => $serviceOrder->load(['client', 'vehicle', 'creator', 'technician', 'items', 'payments', 'events.user', 'photos.uploader']),
+        ]);
+    }
+
     public function findOne(string $id, FindOneServiceOrderAction $findOneAction): JsonResponse
     {
         try {
@@ -133,6 +150,30 @@ class ServiceOrderController extends Controller
                 message: Messages::SERVICE_ORDERS_FETCHED_SUCCESS,
                 code: Response::HTTP_OK,
                 data: ['service_order' => $serviceOrder],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_FETCHING_SERVICE_ORDERS, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: Messages::ERROR_FETCHING_SERVICE_ORDERS,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    public function listItems(string $id, FindOneServiceOrderAction $findOneAction): JsonResponse
+    {
+        try {
+            $serviceOrder = $findOneAction($id);
+
+            return $this->setResponse(
+                message: Messages::SERVICE_ORDERS_FETCHED_SUCCESS,
+                code: Response::HTTP_OK,
+                data: ['items' => $serviceOrder->items],
             );
         } catch (Exception $exception) {
             Log::error(Messages::ERROR_FETCHING_SERVICE_ORDERS, [
@@ -239,6 +280,33 @@ class ServiceOrderController extends Controller
                 $request->input('diagnosis'),
                 $request->input('items')
             );
+
+            return $this->setResponse(
+                message: Messages::SERVICE_ORDER_SENT_FOR_APPROVAL,
+                code: Response::HTTP_OK,
+                data: ['service_order' => $serviceOrder],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_UPDATING_SERVICE_ORDER, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: Messages::ERROR_UPDATING_SERVICE_ORDER,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function returnToApproval(string $id, ReturnToApprovalAction $action): JsonResponse
+    {
+        try {
+            $serviceOrder = $action($id, auth()->id());
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_SENT_FOR_APPROVAL,
@@ -374,7 +442,7 @@ class ServiceOrderController extends Controller
     public function updateDiagnosis(string $id, UpdateDiagnosisRequest $request, UpdateDiagnosisAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, auth()->id(), $request->input('diagnosis', ''));
+            $serviceOrder = $action($id, auth()->id(), $request->input('technical_diagnosis', ''));
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_DIAGNOSIS_UPDATED,
@@ -521,10 +589,16 @@ class ServiceOrderController extends Controller
     /**
      * @throws Throwable
      */
-    public function refundPayment(string $id, string $paymentId, RefundPaymentRequest $request, RefundPaymentAction $action): JsonResponse
+    public function refund(string $id, RegisterRefundRequest $request, RefundPaymentAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, $paymentId, auth()->id(), $request->input('reason'));
+            $serviceOrder = $action(
+                $id,
+                auth()->id(),
+                (float) $request->validated('amount'),
+                PaymentMethodEnum::from($request->validated('payment_method')),
+                $request->validated('notes'),
+            );
 
             return $this->setResponse(
                 message: Messages::PAYMENT_REFUNDED_SUCCESS,
@@ -534,12 +608,82 @@ class ServiceOrderController extends Controller
         } catch (Exception $exception) {
             Log::error(Messages::ERROR_REFUNDING_PAYMENT, [
                 'error' => $exception->getMessage(),
+                'line'  => $exception->getLine(),
+                'file'  => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: $exception->getMessage(),
+                code: Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+    }
+
+    /**
+     * Upload a photo to a service order
+     *
+     * @throws Throwable
+     */
+    public function uploadPhoto(
+        string $id,
+        UploadServiceOrderPhotoRequest $request,
+        UploadServiceOrderPhotoAction $action
+    ): JsonResponse {
+        try {
+            $dto = new ServiceOrderPhotoDto(
+                service_order_id: $id,
+                photo: $request->file('photo'),
+                uploaded_by: auth()->id(),
+            );
+
+            $photo = $action($dto);
+            $photo->load('uploader');
+
+            return $this->setResponse(
+                message: Messages::SERVICE_ORDER_PHOTO_UPLOADED_SUCCESS,
+                code: Response::HTTP_CREATED,
+                data: ['photo' => $photo],
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_UPLOADING_SERVICE_ORDER_PHOTO, [
+                'error' => $exception->getMessage(),
                 'line' => $exception->getLine(),
                 'file' => $exception->getFile(),
             ]);
 
             return $this->setResponse(
-                message: Messages::ERROR_REFUNDING_PAYMENT,
+                message: $exception->getMessage() ?: Messages::ERROR_UPLOADING_SERVICE_ORDER_PHOTO,
+                code: Response::HTTP_INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    /**
+     * Delete a photo from a service order
+     *
+     * @throws Throwable
+     */
+    public function deletePhoto(
+        string $id,
+        string $photoId,
+        DeleteServiceOrderPhotoAction $action
+    ): JsonResponse {
+        try {
+            $action($id, $photoId);
+
+            return $this->setResponse(
+                message: Messages::SERVICE_ORDER_PHOTO_DELETED_SUCCESS,
+                code: Response::HTTP_OK,
+            );
+        } catch (Exception $exception) {
+            Log::error(Messages::ERROR_DELETING_SERVICE_ORDER_PHOTO, [
+                'error' => $exception->getMessage(),
+                'line' => $exception->getLine(),
+                'file' => $exception->getFile(),
+            ]);
+
+            return $this->setResponse(
+                message: $exception->getMessage() ?: Messages::ERROR_DELETING_SERVICE_ORDER_PHOTO,
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }

@@ -1,448 +1,831 @@
 <template>
-  <TenantLayout :title="`OS ${serviceOrder?.code || ''}`" :breadcrumbs="breadcrumbs">
-    <div class="kt-container-fixed w-full py-4 px-2">
-      <div v-if="loading" class="flex items-center justify-center py-12">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+  <TenantLayout :title="serviceOrder ? `OS-${serviceOrder.order_number}` : 'OS'" :breadcrumbs="breadcrumbs">
+    <div v-if="serviceOrder" class="-m-5 lg:-m-10 flex flex-col" style="height: calc(100vh - 121px)">
 
-      <div v-else-if="error" class="flex items-center justify-center py-12">
-        <div class="text-center">
-          <p class="text-red-500 mb-2">Erro ao carregar ordem de serviço</p>
-          <button class="kt-btn kt-btn-primary" @click="load">
-            Tentar novamente
-          </button>
+      <!-- Header da OS -->
+      <div class="flex items-center gap-3 px-5 py-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
+        <button
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          @click="goBack"
+        >
+          <i class="ki-filled ki-arrow-left text-lg"></i>
+        </button>
+
+        <div class="flex items-center gap-2 text-sm">
+          <span class="font-bold text-gray-900 dark:text-gray-100">OS-{{ serviceOrder?.order_number }}</span>
+          <span class="text-gray-300 dark:text-gray-600">•</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ serviceOrder.client?.name }}</span>
+          <span class="text-gray-300 dark:text-gray-600">•</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ vehicleLabel }}</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+            {{ serviceOrder.vehicle?.license_plate }}
+          </span>
         </div>
-      </div>
 
-      <div v-else-if="serviceOrder" class="space-y-4">
-        <div class="card bg-white dark:bg-card border border-border rounded-lg">
-          <div class="card-header px-6 py-4 border-b border-neutral-300 dark:border-white/20 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                Ordem de Serviço
-              </h2>
-              <span class="text-lg font-bold text-gray-600 dark:text-gray-400">
-                {{ serviceOrder.code }}
-              </span>
-              <span
-                :class="[
-                  'text-sm px-3 py-1 rounded-full font-medium',
-                  getStatusColor(serviceOrder.status)
-                ]"
-              >
-                {{ getStatusLabel(serviceOrder.status) }}
-              </span>
-            </div>
-            <button class="kt-btn kt-btn-ghost" @click="goBack">
-              <i class="ki-filled ki-left mr-2"></i>
-              Voltar
+        <div class="ml-auto flex items-center gap-3">
+          <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium" :class="statusColor">
+            {{ statusLabel }}
+          </span>
+
+          <!-- Botão Primário de Transição -->
+          <div v-if="getPrimaryAction(serviceOrder.status)" class="flex items-center gap-2">
+            <button
+              class="kt-btn kt-btn-primary kt-btn-sm"
+              :disabled="transitioning"
+              @click="handleTransition(getPrimaryAction(serviceOrder.status))"
+            >
+              <i v-if="transitioning" class="ki-filled ki-arrows-circle animate-spin text-xs mr-1"></i>
+              {{ getTransitionLabel(serviceOrder.status, getPrimaryAction(serviceOrder.status)) }}
             </button>
           </div>
 
-          <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">
-                  Cliente
-                </h3>
-                <div class="space-y-2">
-                  <div class="flex items-center gap-2">
-                    <i class="ki-filled ki-profile-circle text-gray-400"></i>
-                    <span class="font-medium text-gray-900 dark:text-gray-100">
-                      {{ serviceOrder.client.name }}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <i class="ki-filled ki-sms text-gray-400"></i>
-                    <span class="text-gray-600 dark:text-gray-400">
-                      {{ serviceOrder.client.email }}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <i class="ki-filled ki-call text-gray-400"></i>
-                    <span class="text-gray-600 dark:text-gray-400">
-                      {{ serviceOrder.client.phone }}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          <!-- Botões Secundários -->
+          <div v-if="getSecondaryActions(serviceOrder.status).length > 0 || !['completed', 'cancelled'].includes(serviceOrder.status)" class="relative">
+            <button class="kt-btn kt-btn-sm kt-btn-icon" @click.stop="showActionsDropdown = !showActionsDropdown">
+              <i class="ki-filled ki-dots-vertical"></i>
+            </button>
+            <div
+              v-if="showActionsDropdown"
+              class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+              @click.stop
+            >
+              <!-- Ações secundárias de transição -->
+              <button
+                v-for="action in getSecondaryActions(serviceOrder.status)"
+                :key="action"
+                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 first:rounded-t-lg"
+                @click="handleTransition(action); showActionsDropdown = false"
+              >
+                {{ getTransitionLabel(serviceOrder.status, action) }}
+              </button>
 
-              <div>
-                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-3">
-                  Veículo
-                </h3>
-                <div class="space-y-2">
-                  <div class="flex items-center gap-2">
-                    <i class="ki-filled ki-car text-gray-400"></i>
-                    <span class="font-medium text-gray-900 dark:text-gray-100">
-                      {{ serviceOrder.vehicle.brand }} {{ serviceOrder.vehicle.model }}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <i class="ki-filled ki-id text-gray-400"></i>
-                    <span class="text-gray-600 dark:text-gray-400">
-                      {{ serviceOrder.vehicle.plate }}
-                    </span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <i class="ki-filled ki-calendar text-gray-400"></i>
-                    <span class="text-gray-600 dark:text-gray-400">
-                      {{ serviceOrder.vehicle.year }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                  <div class="text-sm text-gray-500 dark:text-gray-400">Data de Entrada</div>
-                  <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    {{ formatDate(serviceOrder.entry_date) }}
-                  </div>
-                </div>
-                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                  <div class="text-sm text-gray-500 dark:text-gray-400">Previsão de Entrega</div>
-                  <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    {{ formatDate(serviceOrder.expected_delivery) }}
-                  </div>
-                </div>
-                <div v-if="serviceOrder.completion_date" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                  <div class="text-sm text-gray-500 dark:text-gray-400">Data de Conclusão</div>
-                  <div class="text-lg font-semibold text-green-600 dark:text-green-400">
-                    {{ formatDate(serviceOrder.completion_date) }}
-                  </div>
-                </div>
-              </div>
+              <!-- Cancelar OS (se não for terminal) -->
+              <button
+                v-if="!['completed', 'cancelled'].includes(serviceOrder.status)"
+                class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 text-red-600 dark:text-red-400 border-t border-gray-100 dark:border-gray-600 last:rounded-b-lg"
+                @click="handleCancelFromFinanceiro(); showActionsDropdown = false"
+              >
+                🚫 Cancelar OS
+              </button>
             </div>
           </div>
-        </div>
-
-        <div class="card bg-white dark:bg-card border border-border rounded-lg">
-          <div class="card-header px-6 py-4 border-b border-neutral-300 dark:border-white/20">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Diagnóstico
-            </h3>
-          </div>
-          <div class="p-6">
-            <p class="text-gray-700 dark:text-gray-300">
-              {{ serviceOrder.diagnosis || 'Sem diagnóstico registrado' }}
-            </p>
-          </div>
-        </div>
-
-        <div class="card bg-white dark:bg-card border border-border rounded-lg">
-          <div class="card-header px-6 py-4 border-b border-neutral-300 dark:border-white/20">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Itens / Serviços
-            </h3>
-          </div>
-          <div class="p-3 overflow-x-auto">
-            <table class="min-w-full table-auto">
-              <thead>
-                <tr class="border-b border-gray-200 dark:border-gray-700">
-                  <th class="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-400">Descrição</th>
-                  <th class="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">Tipo</th>
-                  <th class="px-4 py-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">Qtd</th>
-                  <th class="px-4 py-3 text-right text-sm font-semibold text-gray-600 dark:text-gray-400">Valor Unit.</th>
-                  <th class="px-4 py-3 text-right text-sm font-semibold text-gray-600 dark:text-gray-400">Total</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                <tr v-for="item in serviceOrder.items" :key="item.id">
-                  <td class="px-4 py-3 text-gray-900 dark:text-gray-100">
-                    {{ item.description }}
-                  </td>
-                  <td class="px-4 py-3 text-center">
-                    <span
-                      :class="[
-                        'text-xs px-2 py-1 rounded-full font-medium',
-                        item.type === 'labor' 
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                      ]"
-                    >
-                      {{ item.type === 'labor' ? 'Mão de Obra' : 'Peça' }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400">
-                    {{ item.quantity }}
-                  </td>
-                  <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
-                    {{ formatCurrency(item.unit_price) }}
-                  </td>
-                  <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">
-                    {{ formatCurrency(item.total) }}
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot class="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  <td colspan="4" class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-400">
-                    Subtotal
-                  </td>
-                  <td class="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">
-                    {{ formatCurrency(serviceOrder.subtotal) }}
-                  </td>
-                </tr>
-                <tr v-if="serviceOrder.discount > 0">
-                  <td colspan="4" class="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
-                    Desconto
-                  </td>
-                  <td class="px-4 py-3 text-right text-red-600 dark:text-red-400">
-                    -{{ formatCurrency(serviceOrder.discount) }}
-                  </td>
-                </tr>
-                <tr class="border-t-2 border-gray-200 dark:border-gray-700">
-                  <td colspan="4" class="px-4 py-3 text-right font-bold text-lg text-gray-900 dark:text-gray-100">
-                    Total
-                  </td>
-                  <td class="px-4 py-3 text-right font-bold text-lg text-gray-900 dark:text-gray-100">
-                    {{ formatCurrency(serviceOrder.total) }}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-
-        <div class="card bg-white dark:bg-card border border-border rounded-lg">
-          <div class="card-header px-6 py-4 border-b border-neutral-300 dark:border-white/20">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Histórico
-            </h3>
-          </div>
-          <div class="p-6">
-            <div class="relative">
-              <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-              <div class="space-y-6">
-                <div 
-                  v-for="(event, index) in serviceOrder.history" 
-                  :key="event.id"
-                  class="relative pl-10"
-                >
-                  <div class="absolute left-2.5 w-3 h-3 rounded-full bg-primary border-2 border-white dark:border-gray-800"></div>
-                  <div>
-                    <div class="font-semibold text-gray-900 dark:text-gray-100">
-                      {{ event.action }}
-                    </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
-                      {{ event.description }}
-                    </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      {{ event.user }} • {{ formatDateTime(event.created_at) }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-end gap-3 pt-4">
-          <button 
-            v-if="canCancel"
-            class="kt-btn kt-btn-danger"
-            @click="onCancel"
-          >
-            Cancelar OS
-          </button>
-          <button 
-            v-if="canApprove"
-            class="kt-btn kt-btn-primary"
-            @click="onApprove"
-          >
-            Aprovar OS
-          </button>
-          <button 
-            v-if="canStartWork"
-            class="kt-btn kt-btn-primary"
-            @click="onStartWork"
-          >
-            Iniciar Trabalho
-          </button>
-          <button 
-            v-if="canComplete"
-            class="kt-btn kt-btn-success"
-            @click="onComplete"
-          >
-            Concluir OS
-          </button>
         </div>
       </div>
+
+      <!-- Corpo: sidebar + conteúdo -->
+      <div class="flex flex-1 min-h-0 overflow-hidden">
+
+        <!-- Sidebar esquerda -->
+        <aside class="w-52 shrink-0 border-r border-gray-200 dark:border-gray-700 overflow-y-auto px-4 py-5 space-y-5">
+
+          <!-- Cliente -->
+          <div>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Cliente</p>
+            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ serviceOrder.client?.name }}</p>
+            <p v-if="serviceOrder.client?.phone" class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
+              <i class="ki-filled ki-phone text-[10px]"></i>
+              {{ serviceOrder.client.phone }}
+            </p>
+          </div>
+
+          <!-- Veículo -->
+          <div>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Veículo</p>
+            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1">
+              <i class="ki-filled ki-car text-gray-400 text-xs"></i>
+              {{ vehicleLabel }}
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              {{ serviceOrder.vehicle?.license_plate }}<span v-if="serviceOrder.vehicle?.year"> • {{ serviceOrder.vehicle.year }}</span>
+            </p>
+            <p v-if="serviceOrder.vehicle?.mileage" class="text-xs text-gray-500 dark:text-gray-400">
+              {{ formatMileage(serviceOrder.vehicle.mileage) }}
+            </p>
+            <button class="mt-1.5 text-xs text-orange-600 hover:text-orange-700 font-medium">
+              Ver histórico do veículo →
+            </button>
+          </div>
+
+          <hr class="border-gray-200 dark:border-gray-700" />
+
+          <!-- Resumo financeiro -->
+          <div>
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Resumo Financeiro</p>
+            <div class="space-y-1.5 text-sm">
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-400">Serviços</span>
+                <span class="text-gray-700 dark:text-gray-300">{{ formatCurrency(serviceOrder.total_services || 0) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-400">Peças</span>
+                <span class="text-gray-700 dark:text-gray-300">{{ formatCurrency(serviceOrder.total_parts || 0) }}</span>
+              </div>
+              <div v-if="serviceOrder.discount > 0" class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-400">Desconto</span>
+                <span class="text-green-500">- {{ formatCurrency(serviceOrder.discount) }}</span>
+              </div>
+              <div class="flex justify-between font-semibold pt-1 border-t border-gray-100 dark:border-gray-800">
+                <span class="text-gray-900 dark:text-gray-100">Total</span>
+                <span class="text-gray-900 dark:text-gray-100">{{ formatCurrency(serviceOrder.total || 0) }}</span>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+
+        <!-- Conteúdo principal -->
+        <main class="flex-1 flex flex-col min-h-0">
+
+          <!-- Tabs -->
+          <div class="border-b border-gray-200 dark:border-gray-700 px-5 shrink-0">
+            <nav class="flex -mb-px">
+              <button
+                v-for="tab in tabs"
+                :key="tab.key"
+                class="flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+                :class="activeTab === tab.key
+                  ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                @click="activeTab = tab.key"
+              >
+                <i :class="tab.icon" class="text-sm"></i>
+                {{ tab.label }}
+              </button>
+            </nav>
+          </div>
+
+          <!-- Conteúdo das tabs -->
+          <div class="p-6 flex-1 overflow-y-auto">
+
+            <!-- Diagnóstico -->
+            <div v-if="activeTab === 'diagnostico'" class="max-w-2xl space-y-6">
+              <!-- Banner: OS Cancelada -->
+              <div
+                v-if="serviceOrder.status === 'cancelled'"
+                class="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                    <i class="ki-filled ki-information text-red-600 dark:text-red-400"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-red-900 dark:text-red-100">
+                      Ordem de Serviço Cancelada
+                    </p>
+                    <p class="text-xs text-red-700 dark:text-red-300 mt-0.5">
+                      Esta OS está cancelada e não pode ser editada.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Problema Relatado</h3>
+                <div class="rounded-lg bg-gray-100 dark:bg-gray-800 px-4 py-3 text-sm text-gray-700 dark:text-gray-300 min-h-[48px]">
+                  {{ serviceOrder?.reported_problem || '—' }}
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Diagnóstico do Técnico</h3>
+                <textarea
+                  v-model="diagnosisInput"
+                  class="kt-input w-full"
+                  rows="5"
+                  style="min-height: 120px; resize: vertical;"
+                  placeholder="Descreva os achados do diagnóstico..."
+                  :disabled="serviceOrder.status === 'cancelled'"
+                  @blur="handleDiagnosisBlur"
+                ></textarea>
+              </div>
+
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Fotos</h3>
+                <PhotoUploadZone
+                  :service-order-id="serviceOrder.id"
+                  :photos="serviceOrder.photos || []"
+                  :disabled="serviceOrder.status === 'cancelled'"
+                  @uploaded="handlePhotoUploaded"
+                  @deleted="handlePhotoDeleted"
+                  @error="handlePhotoError"
+                />
+              </div>
+            </div>
+
+            <!-- Itens -->
+            <div v-else-if="activeTab === 'itens'" class="max-w-3xl">
+
+              <!-- Banner: OS Cancelada -->
+              <div
+                v-if="serviceOrder.status === 'cancelled'"
+                class="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4 mb-4"
+              >
+                <div class="flex items-start gap-3">
+                  <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                    <i class="ki-filled ki-information text-red-600 dark:text-red-400"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-red-900 dark:text-red-100">
+                      Ordem de Serviço Cancelada
+                    </p>
+                    <p class="text-xs text-red-700 dark:text-red-300 mt-0.5">
+                      Esta OS está cancelada e não pode ser editada.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cabeçalho da aba -->
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Itens da Ordem de Serviço</h3>
+                <button
+                  v-if="!newItem && serviceOrder.status !== 'cancelled'"
+                  type="button"
+                  class="kt-btn kt-btn-sm kt-btn-primary"
+                  @click="startAddItem"
+                >
+                  <i class="ki-filled ki-plus text-xs"></i>
+                  Adicionar Item
+                </button>
+              </div>
+
+              <!-- Erro -->
+              <div v-if="itemError" class="mb-3 px-3 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                <i class="ki-filled ki-information-2"></i>
+                {{ itemError }}
+                <button class="ml-auto" @click="itemError = null"><i class="ki-filled ki-cross text-xs"></i></button>
+              </div>
+
+              <!-- Lista de itens existentes -->
+              <div v-if="items.length > 0" class="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                      <th class="text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-24">Tipo</th>
+                      <th class="text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400">Descrição</th>
+                      <th class="text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-16">Qtd</th>
+                      <th class="text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-28">Preço Unit.</th>
+                      <th class="text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-28">Subtotal</th>
+                      <th class="w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td class="px-3 py-2">
+                        <span
+                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                          :class="item.type === 'service'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'"
+                        >
+                          {{ item.type === 'service' ? 'Serviço' : 'Peça' }}
+                        </span>
+                      </td>
+                      <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ item.description }}</td>
+                      <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300">{{ item.quantity }}</td>
+                      <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300">{{ formatCurrency(item.unit_price) }}</td>
+                      <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(item.subtotal) }}</td>
+                      <td class="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          class="kt-btn kt-btn-sm kt-btn-icon kt-btn-danger"
+                          :disabled="removingItemId === item.id || serviceOrder.status === 'cancelled'"
+                          @click="handleRemoveItem(item.id)"
+                        >
+                          <i v-if="removingItemId === item.id" class="ki-filled ki-arrows-circle animate-spin text-xs"></i>
+                          <i v-else class="ki-filled ki-trash text-xs"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <td colspan="4" class="px-3 py-2 text-sm font-semibold text-right text-gray-700 dark:text-gray-300">Total</td>
+                      <td class="px-3 py-2 text-right font-bold text-gray-900 dark:text-gray-100">{{ formatCurrency(totalItems) }}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- Estado vazio -->
+              <div v-else-if="!newItem" class="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+                Nenhum item adicionado. Clique em "Adicionar Item" para começar.
+              </div>
+
+              <!-- Formulário de novo item -->
+              <div v-if="newItem" class="p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg space-y-3 bg-gray-50 dark:bg-gray-800/50">
+                <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Novo Item</p>
+
+                <div class="flex gap-2 items-start">
+                  <!-- Tipo -->
+                  <select
+                    v-model="newItem.type"
+                    class="kt-select w-28 shrink-0"
+                    @change="onNewItemTypeChange"
+                  >
+                    <option value="service">Serviço</option>
+                    <option value="part">Peça</option>
+                  </select>
+
+                  <!-- Descrição com dropdown de busca -->
+                  <div class="flex-1 relative">
+                    <input
+                      ref="newItemDescInput"
+                      v-model="newItem.description"
+                      type="text"
+                      class="kt-input w-full"
+                      :placeholder="newItem.type === 'service' ? 'Buscar serviço ou digite...' : 'Nome da peça'"
+                      @input="onNewItemSearch"
+                      @focus="onNewItemFocus"
+                      @blur="onNewItemBlur"
+                    />
+                    <teleport to="body">
+                      <div
+                        v-if="showServiceDropdown && filteredServices.length > 0"
+                        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto"
+                        :style="serviceDropdownStyle"
+                      >
+                        <div
+                          v-for="service in filteredServices"
+                          :key="service.id"
+                          class="px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                          @mousedown.prevent="selectService(service)"
+                        >
+                          <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ service.name }}</div>
+                          <div class="text-xs text-gray-500 dark:text-gray-400">{{ formatCurrency(service.base_price) }}</div>
+                        </div>
+                      </div>
+                    </teleport>
+                  </div>
+
+                  <!-- Quantidade -->
+                  <input
+                    v-model.number="newItem.quantity"
+                    type="number"
+                    class="kt-input w-20 shrink-0"
+                    placeholder="Qtd"
+                    min="1"
+                  />
+
+                  <!-- Preço unitário -->
+                  <input
+                    v-model.number="newItem.unit_price"
+                    type="number"
+                    class="kt-input w-28 shrink-0"
+                    placeholder="Preço"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+
+                <div class="flex gap-2 justify-end">
+                  <button type="button" class="kt-btn kt-btn-sm kt-btn-light" @click="cancelAddItem">Cancelar</button>
+                  <button
+                    type="button"
+                    class="kt-btn kt-btn-sm kt-btn-primary"
+                    :disabled="!canSaveNewItem || savingItem"
+                    @click="confirmAddItem"
+                  >
+                    <span v-if="savingItem">Salvando...</span>
+                    <span v-else>Salvar Item</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Linha do Tempo -->
+            <div v-else-if="activeTab === 'linha-do-tempo'" class="max-w-2xl">
+              <ServiceOrderTimeline :events="serviceOrder.events || []" />
+            </div>
+
+            <!-- Financeiro -->
+            <div v-else-if="activeTab === 'financeiro'" class="max-w-2xl">
+              <ServiceOrderFinanceiro :service-order="serviceOrder" @cancel="handleCancelFromFinanceiro" />
+            </div>
+
+          </div>
+        </main>
+      </div>
     </div>
+
+    <div v-else class="flex items-center justify-center h-64">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+    </div>
+
+    <!-- Modal de Cancelamento -->
+    <teleport to="body">
+      <div v-if="cancelModalOpen" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+          <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-start gap-3">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+              <i class="ki-filled ki-information text-red-600 dark:text-red-400"></i>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Cancelar Ordem de Serviço</h3>
+            </div>
+          </div>
+          <div class="p-6 space-y-4">
+            <!-- Aviso de estorno se houver pagamentos -->
+            <div v-if="totalPaid > 0" class="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg space-y-3">
+              <div class="flex items-start gap-2">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center mt-0.5">
+                  <i class="ki-filled ki-information text-white text-xs"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm text-amber-800 dark:text-amber-200 font-medium">
+                    Esta ação irá cancelar a OS e estornar automaticamente todo o valor pago ao cliente ({{ formatCurrency(totalPaid) }}). Esta ação não pode ser desfeita.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center justify-between pt-2 mt-3 border-t border-amber-200 dark:border-amber-700">
+                <span class="text-sm font-medium text-amber-700 dark:text-amber-300">Total a estornar:</span>
+                <span class="text-lg font-bold text-amber-600 dark:text-amber-400">{{ formatCurrency(totalPaid) }}</span>
+              </div>
+            </div>
+            <p v-else class="text-sm text-gray-600 dark:text-gray-400">
+              Esta ação não pode ser desfeita. Informe o motivo do cancelamento.
+            </p>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Motivo do cancelamento
+              </label>
+              <textarea
+                v-model="cancelReason"
+                class="kt-input w-full"
+                rows="10"
+                style="min-height: 200px; resize: vertical;"
+                placeholder="Ex: Cliente desistiu do serviço, problema não identificado..."
+              ></textarea>
+            </div>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
+            <button @click="cancelModalOpen = false; cancelReason = ''" class="kt-btn">Voltar</button>
+            <button
+              @click="handleCancel"
+              :disabled="!cancelReason.trim() || cancelReason.trim().length < 3"
+              class="kt-btn kt-btn-danger"
+            >
+              <i class="ki-filled ki-cross-circle text-xs mr-1"></i>
+              Confirmar Cancelamento
+            </button>
+          </div>
+        </div>
+      </div>
+    </teleport>
   </TenantLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
-import { fetchServiceOrderById } from '@/services/serviceOrderService.js';
-import { 
-  ServiceOrderStatusLabels, 
-  ServiceOrderStatusColors, 
-  ServiceOrderStatus 
-} from '@/Data/serviceOrderStatuses.js';
+import ServiceOrderTimeline from '@/Shared/Components/ServiceOrder/ServiceOrderTimeline.vue';
+import ServiceOrderFinanceiro from '@/Shared/Components/ServiceOrder/ServiceOrderFinanceiro.vue';
+import PhotoUploadZone from '@/Shared/Components/ServiceOrder/PhotoUploadZone.vue';
+import { ServiceOrderStatusLabels, ServiceOrderStatusColors } from '@/Data/serviceOrderStatuses.js';
+import { getAvailableTransitions, getTransitionLabel } from '@/Composables/useServiceOrderTransitions.js';
+import { addServiceOrderItem, removeServiceOrderItem, updateDiagnosis, changeServiceOrderStatus, requestNewApproval, cancelServiceOrder } from '@/services/serviceOrderService.js';
+import { fetchServices } from '@/services/serviceService.js';
+import { useToast } from '@/Shared/composables/useToast.js';
 
 const props = defineProps({
-  id: {
-    type: String,
+  serviceOrder: {
+    type: Object,
     required: true,
   },
 });
 
-const serviceOrder = ref(null);
-const loading = ref(true);
-const error = ref(null);
+const activeTab = ref('diagnostico');
 
-const breadcrumbs = computed(() => [
-  { label: 'Ordens de Serviço', href: '/service-orders' },
-  { label: serviceOrder.value?.code || 'Detalhes' },
-]);
+const tabs = [
+  { key: 'diagnostico',    label: 'Diagnóstico',   icon: 'ki-filled ki-setting-2' },
+  { key: 'itens',          label: 'Itens',          icon: 'ki-filled ki-basket'    },
+  { key: 'linha-do-tempo', label: 'Linha do Tempo', icon: 'ki-filled ki-time'      },
+  { key: 'financeiro',     label: 'Financeiro',     icon: 'ki-filled ki-dollar'    },
+];
 
-function getStatusLabel(status) {
-  return ServiceOrderStatusLabels[status] || status;
-}
+// --- Itens ---
+const toast = useToast();
+const items = computed(() => props.serviceOrder.items || []);
+const newItem = ref(null);
+const savingItem = ref(false);
+const removingItemId = ref(null);
+const itemError = ref(null);
 
-function getStatusColor(status) {
-  return ServiceOrderStatusColors[status] || 'bg-gray-100 text-gray-800';
-}
+// --- Diagnóstico ---
+const diagnosisInput = ref(props.serviceOrder?.technical_diagnosis ?? '');
 
-function formatDate(date) {
-  return new Date(date).toLocaleDateString('pt-BR');
-}
+// --- Transições ---
+const transitioning = ref(false);
+const cancelModalOpen = ref(false);
+const cancelReason = ref('');
+const showActionsDropdown = ref(false);
 
-function formatDateTime(dateTime) {
-  return new Date(dateTime).toLocaleString('pt-BR');
-}
+// Dropdown de busca de serviços
+const newItemDescInput = ref(null);
+const filteredServices = ref([]);
+const showServiceDropdown = ref(false);
+let searchTimer = null;
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-}
+const totalItems = computed(() =>
+  items.value.reduce((sum, item) => sum + (parseFloat(item.subtotal) || 0), 0)
+);
 
-function goBack() {
-  router.get('/service-orders');
-}
+const canSaveNewItem = computed(() =>
+  newItem.value &&
+  newItem.value.description?.trim() &&
+  newItem.value.quantity > 0 &&
+  newItem.value.unit_price >= 0
+);
 
-const canCancel = computed(() => {
-  if (!serviceOrder.value) return false;
-  const s = serviceOrder.value.status;
-  return s !== ServiceOrderStatus.COMPLETED && s !== ServiceOrderStatus.CANCELLED;
+const serviceDropdownStyle = computed(() => {
+  if (!newItemDescInput.value) return { display: 'none' };
+  const rect = newItemDescInput.value.getBoundingClientRect();
+  return {
+    position: 'fixed',
+    top: `${rect.bottom + 4}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: 99999,
+  };
 });
 
-const canApprove = computed(() => {
-  if (!serviceOrder.value) return false;
-  return serviceOrder.value.status === ServiceOrderStatus.WAITING_APPROVAL;
-});
-
-const canStartWork = computed(() => {
-  if (!serviceOrder.value) return false;
-  return serviceOrder.value.status === ServiceOrderStatus.APPROVED;
-});
-
-const canComplete = computed(() => {
-  if (!serviceOrder.value) return false;
-  return serviceOrder.value.status === ServiceOrderStatus.IN_PROGRESS;
-});
-
-function onCancel() {
-  console.log('Cancel OS');
+function startAddItem() {
+  newItem.value = { type: 'service', service_id: null, description: '', quantity: 1, unit_price: 0 };
 }
 
-function onApprove() {
-  console.log('Approve OS');
+function cancelAddItem() {
+  newItem.value = null;
+  filteredServices.value = [];
+  showServiceDropdown.value = false;
 }
 
-function onStartWork() {
-  console.log('Start Work');
+async function confirmAddItem() {
+  if (!canSaveNewItem.value) return;
+  savingItem.value = true;
+  itemError.value = null;
+  const result = await addServiceOrderItem(props.serviceOrder.id, newItem.value);
+  savingItem.value = false;
+  if (result.success) {
+    newItem.value = null;
+    filteredServices.value = [];
+    toast.success('Item adicionado com sucesso!');
+    router.reload();
+  } else {
+    itemError.value = result.error || 'Erro ao adicionar item.';
+    toast.error(result.error || 'Erro ao adicionar item.');
+  }
 }
 
-function onComplete() {
-  console.log('Complete OS');
+async function handleRemoveItem(itemId) {
+  removingItemId.value = itemId;
+  itemError.value = null;
+  const result = await removeServiceOrderItem(props.serviceOrder.id, itemId);
+  removingItemId.value = null;
+  if (result.success) {
+    toast.success('Item removido com sucesso!');
+    router.reload();
+  } else {
+    itemError.value = result.error || 'Erro ao remover item.';
+    toast.error(result.error || 'Erro ao remover item.');
+  }
 }
 
-async function load() {
-  loading.value = true;
-  error.value = null;
+function onNewItemTypeChange() {
+  if (newItem.value) {
+    newItem.value.service_id = null;
+    newItem.value.description = '';
+  }
+  filteredServices.value = [];
+  showServiceDropdown.value = false;
+}
 
-  try {
-    const result = await fetchServiceOrderById(props.id);
-    if (result.success) {
-      serviceOrder.value = result.data;
-    } else {
-      error.value = result.error;
+function onNewItemSearch(event) {
+  if (newItem.value?.type !== 'service') return;
+  const search = event.target.value;
+  if (search.length < 2) {
+    filteredServices.value = [];
+    showServiceDropdown.value = false;
+    return;
+  }
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    const result = await fetchServices({ search, perPage: 10 });
+    filteredServices.value = result.items || [];
+    showServiceDropdown.value = filteredServices.value.length > 0;
+  }, 300);
+}
+
+function onNewItemFocus(event) {
+  if (newItem.value?.type !== 'service' || event.target.value.length < 2) return;
+  onNewItemSearch(event);
+}
+
+function onNewItemBlur() {
+  setTimeout(() => { showServiceDropdown.value = false; }, 200);
+}
+
+function selectService(service) {
+  newItem.value.service_id = service.id;
+  newItem.value.description = service.name;
+  newItem.value.unit_price = parseFloat(service.base_price) || 0;
+  filteredServices.value = [];
+  showServiceDropdown.value = false;
+}
+
+// --- Diagnóstico ---
+async function handleDiagnosisBlur() {
+  const current = props.serviceOrder?.technical_diagnosis ?? '';
+  if (diagnosisInput.value === current) return;
+
+  // Se o diagnóstico foi apagado (vazio), apenas recarrega sem chamar o endpoint
+  if (!diagnosisInput.value || diagnosisInput.value.trim() === '') {
+    router.reload();
+    return;
+  }
+
+  const result = await updateDiagnosis(props.serviceOrder.id, diagnosisInput.value);
+  if (result.success) {
+    toast.success('Diagnóstico técnico atualizado com sucesso!');
+    router.reload();
+  } else {
+    toast.error(result.error || 'Erro ao salvar diagnóstico.');
+  }
+}
+
+// --- Fotos ---
+function handlePhotoUploaded(photo) {
+  toast.success('Foto enviada com sucesso!');
+  router.reload();
+}
+
+function handlePhotoDeleted(photoId) {
+  toast.success('Foto removida com sucesso!');
+  router.reload();
+}
+
+function handlePhotoError(error) {
+  toast.error(error || 'Erro ao processar foto.');
+}
+
+// --- Transições ---
+const availableTransitions = computed(() => getAvailableTransitions(props.serviceOrder?.status));
+
+function getPrimaryAction(status) {
+  const transitions = {
+    'draft': 'waiting_approval',
+    'waiting_approval': 'approved',
+    'approved': 'in_progress',
+    'in_progress': 'waiting_payment',
+  };
+  return transitions[status];
+}
+
+function getSecondaryActions(status) {
+  const all = availableTransitions.value;
+  const primary = getPrimaryAction(status);
+  return all.filter(action => action !== primary);
+}
+
+async function handleTransition(toStatus) {
+  let result;
+
+  // Validação frontend para "Enviar para Aprovação" (draft → waiting_approval)
+  if (props.serviceOrder.status === 'draft' && toStatus === 'waiting_approval') {
+    const hasItems = props.serviceOrder.items && props.serviceOrder.items.length > 0;
+    const hasDiagnosis = props.serviceOrder.technical_diagnosis?.trim();
+
+    if (!hasItems && !hasDiagnosis) {
+      activeTab.value = 'diagnostico';
+      toast.error('Preencha o diagnóstico e adicione pelo menos um item antes de enviar para aprovação.');
+      return;
     }
-  } catch (e) {
-    error.value = e;
-  } finally {
-    loading.value = false;
+
+    if (!hasDiagnosis) {
+      activeTab.value = 'diagnostico';
+      toast.error('Preencha o diagnóstico antes de enviar para aprovação.');
+      return;
+    }
+
+    if (!hasItems) {
+      activeTab.value = 'itens';
+      toast.error('Adicione pelo menos um item antes de enviar para aprovação.');
+      return;
+    }
+  }
+
+  // "Solicitar Nova Aprovação": valida diagnóstico e envia itens atuais para evitar deleção no backend
+  if (props.serviceOrder.status === 'in_progress' && toStatus === 'waiting_approval') {
+    if (!props.serviceOrder.technical_diagnosis?.trim()) {
+      activeTab.value = 'diagnostico';
+      toast.error('Atualize o diagnóstico técnico antes de solicitar nova aprovação.');
+      return;
+    }
+    transitioning.value = true;
+    result = await requestNewApproval(props.serviceOrder.id, {
+      diagnosis: props.serviceOrder.technical_diagnosis,
+      items: props.serviceOrder.items.map(i => ({
+        id: i.id, type: i.type, description: i.description,
+        quantity: i.quantity, unit_price: i.unit_price,
+        service_id: i.service_id ?? null,
+      }))
+    });
+  } else {
+    transitioning.value = true;
+    result = await changeServiceOrderStatus(props.serviceOrder.id, toStatus, props.serviceOrder.status);
+  }
+
+  transitioning.value = false;
+
+  if (result.success) {
+    toast.success('Status alterado com sucesso!');
+    router.reload();
+  } else {
+    // Feedback específico baseado no erro
+    if (result.error?.toLowerCase().includes('item') || result.error?.toLowerCase().includes('vazio')) {
+      activeTab.value = 'itens';
+    } else if (result.error?.toLowerCase().includes('diagnóstico') || result.error?.toLowerCase().includes('diagnostico')) {
+      activeTab.value = 'diagnostico';
+    }
+    toast.error(result.error || 'Erro ao alterar status.');
+  }
+}
+
+async function handleCancel() {
+  if (!cancelReason.value.trim()) return;
+  const result = await cancelServiceOrder(props.serviceOrder.id, cancelReason.value);
+  if (result.success) {
+    cancelModalOpen.value = false;
+    cancelReason.value = '';
+    toast.success('OS cancelada com sucesso!');
+    router.reload();
+  } else {
+    toast.error(result.error || 'Erro ao cancelar OS.');
+  }
+}
+
+function handleCancelFromFinanceiro() {
+  cancelModalOpen.value = true;
+}
+
+// Fechar dropdown ao clicar fora
+function handleClickOutside(event) {
+  if (showActionsDropdown.value) {
+    showActionsDropdown.value = false;
   }
 }
 
 onMounted(() => {
-  load();
+  document.addEventListener('click', handleClickOutside);
 });
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
+// Sincronizar diagnosisInput quando serviceOrder muda
+watch(
+  () => props.serviceOrder?.technical_diagnosis,
+  (newDiagnosis) => {
+    diagnosisInput.value = newDiagnosis ?? '';
+  },
+  { immediate: true }
+);
+
+// --- Breadcrumbs / status ---
+const totalPaid = computed(() => parseFloat(props.serviceOrder?.paid_amount) || 0);
+
+const breadcrumbs = computed(() => [
+  { label: 'Ordens de Serviço', href: '/service-orders' },
+  { label: props.serviceOrder ? `OS-${props.serviceOrder.order_number}` : 'Detalhes' },
+]);
+
+const vehicleLabel = computed(() => {
+  const v = props.serviceOrder?.vehicle;
+  if (!v) return '—';
+  return [v.brand, v.model, v.year].filter(Boolean).join(' ');
+});
+
+const statusLabel = computed(() =>
+  ServiceOrderStatusLabels[props.serviceOrder?.status] ?? props.serviceOrder?.status ?? ''
+);
+
+const statusColor = computed(() =>
+  ServiceOrderStatusColors[props.serviceOrder?.status] ?? 'bg-gray-100 text-gray-700'
+);
+
+function goBack() {
+  router.visit('/service-orders');
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
+
+function formatMileage(value) {
+  return new Intl.NumberFormat('pt-BR').format(value) + ' km';
+}
 </script>
-
-<style>
-.kt-container-fixed {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-}
-
-@media (min-width: 640px) {
-  .kt-container-fixed { max-width: 640px; }
-}
-@media (min-width: 768px) {
-  .kt-container-fixed { max-width: 768px; }
-}
-@media (min-width: 1024px) {
-  .kt-container-fixed { max-width: 1400px; }
-}
-@media (min-width: 1280px) {
-  .kt-container-fixed { max-width: 1600px; }
-}
-@media (max-width: 640px) {
-  html, body {
-    font-size: 1.1rem !important;
-    zoom: 1 !important;
-  }
-}
-
-.kt-btn-danger {
-  padding: 0.5rem 1rem;
-  background-color: #dc2626;
-  color: white;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  border: none;
-  cursor: pointer;
-}
-
-.kt-btn-danger:hover {
-  background-color: #b91c1c;
-}
-
-.kt-btn-success {
-  padding: 0.5rem 1rem;
-  background-color: #16a34a;
-  color: white;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  border: none;
-  cursor: pointer;
-}
-
-.kt-btn-success:hover {
-  background-color: #15803d;
-}
-</style>

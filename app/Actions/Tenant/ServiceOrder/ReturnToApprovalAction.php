@@ -7,12 +7,11 @@ use App\Exceptions\ServiceOrder\ServiceOrderNotFoundException;
 use App\Models\Tenant\ServiceOrder;
 use Throwable;
 
-readonly class FinishWorkAction
+readonly class ReturnToApprovalAction
 {
     public function __construct(
         private ServiceOrderDomain $domain
-    ) {
-    }
+    ) {}
 
     /**
      * @throws Throwable
@@ -23,8 +22,8 @@ readonly class FinishWorkAction
 
         throw_if(is_null($serviceOrder), ServiceOrderNotFoundException::class);
 
-        $serviceOrder = $this->domain->finishWork($serviceOrder, $userId);
-        $serviceOrder->load(['client', 'vehicle', 'items', 'payments']);
+        $serviceOrder = $this->domain->returnToApproval($serviceOrder, $userId);
+        $serviceOrder->load(['client', 'vehicle', 'items']);
 
         return $serviceOrder;
     }

@@ -46,7 +46,7 @@
       />
     </div>
 
-    <ServiceOrderTransitionModal ref="transitionModal" @confirm="onTransitionConfirm" @cancel="onTransitionCancel" />
+    <ServiceOrderTransitionModal ref="transitionModal" @cancel="onTransitionCancel" />
   </div>
 </template>
 
@@ -58,6 +58,7 @@ import ServiceOrderTransitionModal from './ServiceOrderTransitionModal.vue';
 import { useServiceOrderKanban } from '@/Composables/useServiceOrderKanban.js';
 import { KanbanStatuses, KanbanColumnLabels } from '@/Data/serviceOrderStatuses.js';
 import { getTransitionLabel, canTransition, requiresData } from '@/Composables/useServiceOrderTransitions.js';
+import { fetchServiceOrderItems } from '@/services/serviceOrderService.js';
 
 const {
   columns,
@@ -103,7 +104,7 @@ function onDaysChange(event) {
 }
 
 function onCardClick(serviceOrder) {
-  router.get('/service-orders/' + serviceOrder.id);
+  router.visit('/service-orders/' + serviceOrder.id + '/detail');
 }
 
 async function onStatusChange({ serviceOrder, newStatus }) {
@@ -120,7 +121,15 @@ async function onStatusChange({ serviceOrder, newStatus }) {
 
   if (checkResult.needsData) {
     const title = getTransitionLabel(serviceOrder.status, newStatus);
-    
+
+    let itemsForModal = [];
+    if (serviceOrder.status === 'in_progress') {
+      const result = await fetchServiceOrderItems(serviceOrder.id);
+      if (result.success) {
+        itemsForModal = result.data;
+      }
+    }
+
     pendingTransition.value = {
       serviceOrderId: serviceOrder.id,
       currentStatus: serviceOrder.status,
@@ -129,7 +138,7 @@ async function onStatusChange({ serviceOrder, newStatus }) {
       needsDiagnosis: checkResult.needsDiagnosis,
       needsItems: checkResult.needsItems,
       initialDiagnosis: serviceOrder.diagnosis,
-      initialItems: serviceOrder.items || [],
+      initialItems: itemsForModal,
       serviceOrder: { ...serviceOrder },
       toStatus: newStatus
     };
@@ -141,7 +150,7 @@ async function onStatusChange({ serviceOrder, newStatus }) {
       needsDiagnosis: checkResult.needsDiagnosis,
       needsItems: checkResult.needsItems,
       initialDiagnosis: serviceOrder.diagnosis,
-      initialItems: serviceOrder.items || []
+      initialItems: itemsForModal
     });
 
     if (result) {
@@ -172,7 +181,15 @@ async function onTransitionConfirm(data) {
   const { serviceOrderId, currentStatus, newStatus } = pendingTransition.value;
 
   try {
-    await changeStatusWithData(serviceOrderId, currentStatus, newStatus, data);
+    const updatedOrder = await changeStatusWithData(serviceOrderId, currentStatus, newStatus, data);
+    addToColumn(serviceOrderId, newStatus);
+    if (updatedOrder) {
+      const col = columns[newStatus].value;
+      const idx = col.findIndex(so => String(so.id) === String(serviceOrderId));
+      if (idx !== -1) {
+        col[idx] = updatedOrder;
+      }
+    }
     window.showToast?.({
       message: 'Status atualizado com sucesso',
       icon: '<i class="ki-filled ki-check-circle text-green-500 text-xl"></i>'
@@ -196,6 +213,12 @@ function onTransitionCancel() {
 onMounted(() => {
   load();
 });
+
+function addDraftOrder(serviceOrder) {
+  columns['draft'].value.unshift(serviceOrder);
+}
+
+defineExpose({ addDraftOrder });
 </script>
 
 <style scoped>

@@ -3,6 +3,7 @@
 namespace App\Services\Tenant\ServiceOrder;
 
 use App\Enum\Tenant\ServiceOrder\PaymentMethodEnum;
+use App\Enum\Tenant\ServiceOrder\PaymentTypeEnum;
 use App\Enum\Tenant\ServiceOrder\ServiceOrderEventTypeEnum;
 use App\Enum\Tenant\ServiceOrder\ServiceOrderStatusEnum;
 use App\Exceptions\ServiceOrder\ServiceOrderAlreadyCancelledException;
@@ -25,9 +26,10 @@ class PaymentService
         int $userId,
         float $amount,
         PaymentMethodEnum $paymentMethod,
-        ?string $notes = null
+        ?string $notes = null,
+        ?int $installments = null
     ): ServiceOrderPayment {
-        return DB::transaction(function () use ($serviceOrder, $userId, $amount, $paymentMethod, $notes) {
+        return DB::transaction(function () use ($serviceOrder, $userId, $amount, $paymentMethod, $notes, $installments) {
             $this->ensureCanReceivePayment($serviceOrder);
 
             $serviceOrder = $this->lockServiceOrder($serviceOrder->id);
@@ -37,7 +39,8 @@ class PaymentService
                 userId: $userId,
                 amount: $amount,
                 paymentMethod: $paymentMethod,
-                notes: $notes
+                notes: $notes,
+                installments: $installments
             );
 
             $previousPaidAmount = $serviceOrder->paid_amount;
@@ -62,29 +65,36 @@ class PaymentService
      */
     public function refundPayment(
         ServiceOrder $serviceOrder,
-        ServiceOrderPayment $payment,
         int $userId,
-        string $reason
+        float $amount,
+        PaymentMethodEnum $returnMethod,
+        ?string $reason = null
     ): ServiceOrder {
-        return DB::transaction(function () use ($serviceOrder, $payment, $userId, $reason) {
-            $this->ensurePaymentCanBeRefunded($payment);
+        return DB::transaction(function () use ($serviceOrder, $userId, $amount, $returnMethod, $reason) {
+            $this->ensureCanRefund($serviceOrder, $amount);
 
             $serviceOrder = $this->lockServiceOrder($serviceOrder->id);
 
-            $refundedAmount = $payment->amount;
-
-            $this->markPaymentAsRefunded($payment, $userId, $reason);
+            $this->createRefundRecord(
+                serviceOrder: $serviceOrder,
+                userId: $userId,
+                amount: $amount,
+                returnMethod: $returnMethod,
+                reason: $reason
+            );
 
             $previousPaidAmount = $serviceOrder->paid_amount;
 
-            $this->subtractFromServiceOrderFinances($serviceOrder, $refundedAmount);
+            $this->subtractFromServiceOrderFinances($serviceOrder, $amount);
 
             $statusChanged = $this->reopenIfNecessary($serviceOrder);
 
             $this->logPaymentRefunded(
                 serviceOrder: $serviceOrder,
                 userId: $userId,
-                payment: $payment,
+                refundedAmount: $amount,
+                returnMethod: $returnMethod,
+                reason: $reason,
                 previousPaidAmount: $previousPaidAmount,
                 statusChanged: $statusChanged
             );
@@ -95,9 +105,15 @@ class PaymentService
 
     public function getTotalPaid(ServiceOrder $serviceOrder): float
     {
-        return $serviceOrder->payments()
-            ->whereNull('refunded_at')
+        $totalPayments = $serviceOrder->payments()
+            ->where('type', PaymentTypeEnum::PAYMENT)
             ->sum('amount');
+
+        $totalRefunds = $serviceOrder->payments()
+            ->where('type', PaymentTypeEnum::REFUND)
+            ->sum('amount');
+
+        return max(0, $totalPayments - $totalRefunds);
     }
 
     public function getOutstandingBalance(ServiceOrder $serviceOrder): float
@@ -132,16 +148,16 @@ class PaymentService
     /**
      * @throws Throwable
      */
-    private function ensurePaymentCanBeRefunded(ServiceOrderPayment $payment): void
+    private function ensureCanRefund(ServiceOrder $serviceOrder, float $amount): void
     {
         throw_if(
-            $payment->refunded_at !== null,
-            new Exception('Payment has already been refunded')
+            $serviceOrder->status === ServiceOrderStatusEnum::CANCELLED,
+            ServiceOrderAlreadyCancelledException::class
         );
 
         throw_if(
-            $payment->serviceOrder->status === ServiceOrderStatusEnum::CANCELLED,
-            ServiceOrderAlreadyCancelledException::class
+            $serviceOrder->paid_amount < $amount,
+            new Exception('Refund amount exceeds total paid amount.')
         );
     }
 
@@ -157,15 +173,36 @@ class PaymentService
         int $userId,
         float $amount,
         PaymentMethodEnum $paymentMethod,
-        ?string $notes
+        ?string $notes,
+        ?int $installments = null
     ): ServiceOrderPayment {
         return ServiceOrderPayment::query()->create([
+            'type'             => PaymentTypeEnum::PAYMENT,
             'service_order_id' => $serviceOrder->id,
-            'received_by' => $userId,
-            'payment_method' => $paymentMethod,
-            'amount' => $amount,
-            'paid_at' => Carbon::now(),
-            'notes' => $notes,
+            'received_by'      => $userId,
+            'payment_method'   => $paymentMethod,
+            'amount'           => $amount,
+            'installments'     => $installments,
+            'paid_at'          => Carbon::now(),
+            'notes'            => $notes,
+        ]);
+    }
+
+    private function createRefundRecord(
+        ServiceOrder $serviceOrder,
+        int $userId,
+        float $amount,
+        PaymentMethodEnum $returnMethod,
+        ?string $reason
+    ): ServiceOrderPayment {
+        return ServiceOrderPayment::query()->create([
+            'type'             => PaymentTypeEnum::REFUND,
+            'service_order_id' => $serviceOrder->id,
+            'received_by'      => $userId,
+            'payment_method'   => $returnMethod,
+            'amount'           => $amount,
+            'paid_at'          => Carbon::now(),
+            'notes'            => $reason,
         ]);
     }
 
@@ -181,14 +218,6 @@ class PaymentService
         $serviceOrder->paid_amount -= $amount;
         $serviceOrder->outstanding_balance = $serviceOrder->total - $serviceOrder->paid_amount;
         $serviceOrder->save();
-    }
-
-    private function markPaymentAsRefunded(ServiceOrderPayment $payment, int $userId, string $reason): void
-    {
-        $payment->refunded_at = Carbon::now();
-        $payment->refunded_by = $userId;
-        $payment->refund_reason = $reason;
-        $payment->save();
     }
 
     private function tryAutoComplete(ServiceOrder $serviceOrder, int $userId): void
@@ -207,9 +236,9 @@ class PaymentService
             eventType: ServiceOrderEventTypeEnum::STATUS_CHANGED,
             description: 'Service order auto-completed (work finished and fully paid)',
             metadata: [
-                'from' => 'waiting_payment',
-                'to' => 'completed',
-                'trigger' => 'auto_completion',
+                'from'                => 'waiting_payment',
+                'to'                  => 'completed',
+                'trigger'             => 'auto_completion',
                 'outstanding_balance' => 0
             ]
         );
@@ -244,13 +273,14 @@ class PaymentService
             eventType: ServiceOrderEventTypeEnum::PAYMENT_RECEIVED,
             description: sprintf('Payment received: R$ %.2f via %s', $payment->amount, $payment->payment_method->value),
             metadata: [
-                'payment_id' => $payment->id,
-                'amount' => $payment->amount,
-                'payment_method' => $payment->payment_method->value,
+                'payment_id'          => $payment->id,
+                'amount'              => $payment->amount,
+                'payment_method'      => $payment->payment_method->value,
+                'installments'        => $payment->installments,
                 'previous_paid_amount' => $previousPaidAmount,
-                'new_paid_amount' => $serviceOrder->paid_amount,
+                'new_paid_amount'     => $serviceOrder->paid_amount,
                 'outstanding_balance' => $serviceOrder->outstanding_balance,
-                'has_credit' => $serviceOrder->outstanding_balance < 0,
+                'has_credit'          => $serviceOrder->outstanding_balance < 0,
             ]
         );
     }
@@ -258,30 +288,32 @@ class PaymentService
     private function logPaymentRefunded(
         ServiceOrder $serviceOrder,
         int $userId,
-        ServiceOrderPayment $payment,
+        float $refundedAmount,
+        PaymentMethodEnum $returnMethod,
+        ?string $reason,
         float $previousPaidAmount,
         bool $statusChanged
     ): void {
         $metadata = [
-            'payment_id' => $payment->id,
-            'refunded_amount' => $payment->amount,
-            'reason' => $payment->refund_reason,
+            'refunded_amount'     => $refundedAmount,
+            'return_method'       => $returnMethod->value,
+            'reason'              => $reason,
             'previous_paid_amount' => $previousPaidAmount,
-            'new_paid_amount' => $serviceOrder->paid_amount,
+            'new_paid_amount'     => $serviceOrder->paid_amount,
             'outstanding_balance' => $serviceOrder->outstanding_balance,
-            'status_changed' => $statusChanged,
+            'status_changed'      => $statusChanged,
         ];
 
         if ($statusChanged) {
             $metadata['from_status'] = 'completed';
-            $metadata['to_status'] = 'waiting_payment';
+            $metadata['to_status']   = 'waiting_payment';
         }
 
         $this->logEvent(
             serviceOrder: $serviceOrder,
             userId: $userId,
             eventType: ServiceOrderEventTypeEnum::PAYMENT_REFUNDED,
-            description: sprintf('Payment refunded: R$ %.2f - %s', $payment->amount, $payment->refund_reason),
+            description: sprintf('Payment refunded: R$ %.2f via %s', $refundedAmount, $returnMethod->value),
             metadata: $metadata
         );
     }
@@ -295,10 +327,10 @@ class PaymentService
     ): void {
         ServiceOrderEvent::query()->create([
             'service_order_id' => $serviceOrder->id,
-            'user_id' => $userId,
-            'event_type' => $eventType,
-            'description' => $description,
-            'metadata' => $metadata,
+            'user_id'          => $userId,
+            'event_type'       => $eventType,
+            'description'      => $description,
+            'metadata'         => $metadata,
         ]);
     }
 }

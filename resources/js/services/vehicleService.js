@@ -117,6 +117,23 @@ export async function checkVehiclePlate(licensePlate) {
 }
 
 /**
+ * Busca veículos de um cliente específico.
+ * @param {string|number} clientId
+ * @returns {Promise<{success: boolean, data?: Array, error?: any}>}
+ */
+export async function fetchVehiclesByClient(clientId) {
+    try {
+        const { data } = await axios.get('/vehicles/search', {
+            params: { filters: { client_id: clientId }, per_page: 50 }
+        });
+        const vehicles = data.data.vehicles;
+        return { success: true, data: vehicles.data || [] };
+    } catch (error) {
+        return { success: false, error };
+    }
+}
+
+/**
  * Transfere a propriedade de um veículo para um novo cliente.
  * @param {string} vehicleId
  * @param {string} newClientId

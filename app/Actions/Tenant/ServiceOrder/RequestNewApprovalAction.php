@@ -13,7 +13,8 @@ readonly class RequestNewApprovalAction
 {
     public function __construct(
         private ServiceOrderDomain $domain
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Throwable
@@ -32,8 +33,22 @@ readonly class RequestNewApprovalAction
             $this->domain->updateDiagnosis($serviceOrder, $userId, $diagnosis);
         }
 
+        $submittedIds = collect($items ?? [])
+            ->filter(fn ($itemData) => ! empty($itemData['id']))
+            ->pluck('id')
+            ->toArray();
+
+        $serviceOrder->items()
+            ->whereNotIn('id', $submittedIds)
+            ->get()
+            ->each(fn ($item) => $this->domain->removeItem($serviceOrder, $userId, $item));
+
         if (! empty($items)) {
             foreach ($items as $itemData) {
+                if (!empty($itemData['id'])) {
+                    continue;
+                }
+
                 $item = new ServiceOrderItem([
                     'type' => ServiceOrderItemTypeEnum::from($itemData['type']),
                     'description' => $itemData['description'],

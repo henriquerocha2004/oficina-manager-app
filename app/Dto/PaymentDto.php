@@ -11,7 +11,9 @@ class PaymentDto
         public PaymentMethodEnum $payment_method,
         public float $amount,
         public ?string $notes = null,
-    ) {}
+        public ?int $installments = null,
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {
@@ -20,6 +22,7 @@ class PaymentDto
             payment_method: PaymentMethodEnum::from($data['payment_method']),
             amount: (float) $data['amount'],
             notes: $data['notes'] ?? null,
+            installments: isset($data['installments']) ? (int) $data['installments'] : null,
         );
     }
 
@@ -27,9 +30,10 @@ class PaymentDto
     {
         return array_filter([
             'service_order_id' => $this->service_order_id,
-            'payment_method' => $this->payment_method->value,
-            'amount' => $this->amount,
-            'notes' => $this->notes,
+            'payment_method'   => $this->payment_method->value,
+            'amount'           => $this->amount,
+            'notes'            => $this->notes,
+            'installments'     => $this->installments,
         ], fn ($value) => ! is_null($value));
     }
 }

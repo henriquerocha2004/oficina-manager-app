@@ -20,8 +20,10 @@ use Illuminate\Support\Carbon;
  * @property int $created_by
  * @property int|null $technician_id
  * @property ServiceOrderStatusEnum $status
- * @property string|null $diagnosis
+ * @property string|null $reported_problem
+ * @property string|null $technical_diagnosis
  * @property string|null $observations
+ * @property string|null $customer_complaint
  * @property float $total_parts
  * @property float $total_services
  * @property float $discount
@@ -42,6 +44,7 @@ use Illuminate\Support\Carbon;
  * @property-read ServiceOrderItem[] $items
  * @property-read ServiceOrderEvent[] $events
  * @property-read ServiceOrderPayment[] $payments
+ * @property-read ServiceOrderPhoto[] $photos
  */
 class ServiceOrder extends Model
 {
@@ -61,8 +64,10 @@ class ServiceOrder extends Model
         'created_by',
         'technician_id',
         'status',
-        'diagnosis',
+        'reported_problem',
+        'technical_diagnosis',
         'observations',
+        'customer_complaint',
         'total_parts',
         'total_services',
         'discount',
@@ -122,5 +127,10 @@ class ServiceOrder extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(ServiceOrderPayment::class, 'service_order_id', 'id');
+    }
+
+    public function photos(): HasMany
+    {
+        return $this->hasMany(ServiceOrderPhoto::class, 'service_order_id', 'id');
     }
 }

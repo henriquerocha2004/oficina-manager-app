@@ -26,11 +26,13 @@
 
       <div class="flex-1 min-h-0">
         <Transition name="fade-slide" mode="out-in">
-          <KanbanBoard v-if="viewMode === 'kanban' && !isMobile" />
+          <KanbanBoard v-if="viewMode === 'kanban' && !isMobile" ref="kanbanRef" />
           <ServiceOrderGridView v-else />
         </Transition>
       </div>
     </div>
+
+    <CreateServiceOrderModal ref="createModalRef" @created="onOrderCreated" />
   </TenantLayout>
 </template>
 
@@ -40,9 +42,12 @@ import { router } from '@inertiajs/vue3';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
 import KanbanBoard from '@/Shared/Components/ServiceOrder/KanbanBoard.vue';
 import ServiceOrderGridView from '@/Shared/Components/ServiceOrder/ServiceOrderGridView.vue';
+import CreateServiceOrderModal from '@/Shared/Components/ServiceOrder/CreateServiceOrderModal.vue';
 
 const viewMode = ref('kanban');
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
+const createModalRef = ref(null);
+const kanbanRef = ref(null);
 
 const isMobile = computed(() => windowWidth.value < 1024);
 
@@ -71,7 +76,11 @@ const breadcrumbs = [
 ];
 
 function onNew() {
-  router.get('/service-orders/create');
+  createModalRef.value?.open();
+}
+
+function onOrderCreated(serviceOrder) {
+  router.visit(`/service-orders/${serviceOrder.id}/detail`);
 }
 </script>
 

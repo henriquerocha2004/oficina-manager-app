@@ -19,7 +19,8 @@ readonly class ServiceOrderDomain
 {
     public function __construct(
         private PaymentService $paymentService
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Throwable
@@ -42,7 +43,7 @@ readonly class ServiceOrderDomain
             'created_by' => $createdBy,
             'technician_id' => $technicianId,
             'status' => ServiceOrderStatusEnum::DRAFT,
-            'diagnosis' => $diagnosis,
+            'reported_problem' => $diagnosis,
             'observations' => $observations,
             'discount' => $discount,
             'total_parts' => 0,
@@ -113,6 +114,32 @@ readonly class ServiceOrderDomain
             eventType: ServiceOrderEventTypeEnum::STATUS_CHANGED,
             description: 'Service order sent for new approval (additional work detected)',
             metadata: ['from' => $oldStatus->value, 'to' => 'waiting_approval']
+        );
+
+        return $serviceOrder;
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function returnToApproval(ServiceOrder $serviceOrder, int $userId): ServiceOrder
+    {
+        $this->ensureCanBeModified($serviceOrder);
+
+        throw_if(
+            $serviceOrder->status !== ServiceOrderStatusEnum::WAITING_PAYMENT,
+            InvalidStatusTransitionException::class
+        );
+
+        $serviceOrder->status = ServiceOrderStatusEnum::WAITING_APPROVAL;
+        $serviceOrder->save();
+
+        $this->logEvent(
+            serviceOrder: $serviceOrder,
+            userId: $userId,
+            eventType: ServiceOrderEventTypeEnum::STATUS_CHANGED,
+            description: 'Service order returned to approval from waiting payment',
+            metadata: ['from' => 'waiting_payment', 'to' => 'waiting_approval']
         );
 
         return $serviceOrder;
@@ -215,6 +242,18 @@ readonly class ServiceOrderDomain
             ServiceOrderAlreadyCancelledException::class
         );
 
+        // Estornar automaticamente todos os pagamentos se houver saldo pago
+        $paidAmount = (float) $serviceOrder->paid_amount;
+        if ($paidAmount > 0) {
+            $this->paymentService->refundPayment(
+                serviceOrder: $serviceOrder,
+                userId: $userId,
+                amount: $paidAmount,
+                returnMethod: \App\Enum\Tenant\ServiceOrder\PaymentMethodEnum::CASH,
+                reason: 'Estorno total — OS cancelada'
+            );
+        }
+
         $oldStatus = $serviceOrder->status->value;
         $serviceOrder->status = ServiceOrderStatusEnum::CANCELLED;
         $serviceOrder->cancelled_at = Carbon::now();
@@ -224,7 +263,7 @@ readonly class ServiceOrderDomain
             serviceOrder: $serviceOrder,
             userId: $userId,
             eventType: ServiceOrderEventTypeEnum::STATUS_CHANGED,
-            description: 'Service order cancelled: '.$reason,
+            description: 'Service order cancelled: ' . $reason,
             metadata: ['from' => $oldStatus, 'to' => 'cancelled', 'reason' => $reason]
         );
 
@@ -238,8 +277,8 @@ readonly class ServiceOrderDomain
     {
         $this->ensureCanBeModified($serviceOrder);
 
-        $oldDiagnosis = $serviceOrder->diagnosis;
-        $serviceOrder->diagnosis = $diagnosis;
+        $oldDiagnosis = $serviceOrder->technical_diagnosis;
+        $serviceOrder->technical_diagnosis = $diagnosis;
         $serviceOrder->save();
 
         $this->logEvent(
@@ -263,23 +302,42 @@ readonly class ServiceOrderDomain
     ): ServiceOrder {
         $this->ensureCanBeModified($serviceOrder);
 
-        $serviceOrder->items()->save($item);
-        $this->recalculateTotals($serviceOrder);
-
-        $this->logEvent(
-            serviceOrder: $serviceOrder,
-            userId: $userId,
-            eventType: ServiceOrderEventTypeEnum::ITEM_ADDED,
-            description: sprintf('Item added: %s (Qty: %d, R$ %.2f)', $item->description, $item->quantity, $item->subtotal),
-            metadata: [
-                'item_id' => $item->id,
-                'type' => $item->type->value,
+        $created = $serviceOrder->items()->firstOrCreate(
+            [
+                'type' => $item->type,
+                'service_id' => $item->service_id,
+                'product_id' => $item->product_id,
                 'description' => $item->description,
+            ],
+            [
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'subtotal' => $item->subtotal,
             ]
         );
+
+        if ($created->wasRecentlyCreated) {
+            $this->recalculateTotals($serviceOrder);
+            $this->logEvent(
+                serviceOrder: $serviceOrder,
+                userId: $userId,
+                eventType: ServiceOrderEventTypeEnum::ITEM_ADDED,
+                description: sprintf(
+                    'Item added: %s (Qty: %d, R$ %.2f)',
+                    $created->description,
+                    $created->quantity,
+                    $created->subtotal
+                ),
+                metadata: [
+                    'item_id' => $created->id,
+                    'type' => $created->type->value,
+                    'description' => $created->description,
+                    'quantity' => $created->quantity,
+                    'unit_price' => $created->unit_price,
+                    'subtotal' => $created->subtotal,
+                ]
+            );
+        }
 
         return $serviceOrder;
     }
@@ -300,7 +358,7 @@ readonly class ServiceOrderDomain
             serviceOrder: $serviceOrder,
             userId: $userId,
             eventType: ServiceOrderEventTypeEnum::ITEM_REMOVED,
-            description: 'Item removed: '.$description,
+            description: 'Item removed: ' . $description,
             metadata: ['item_id' => $item->id, 'description' => $description]
         );
 
@@ -356,7 +414,7 @@ readonly class ServiceOrderDomain
     public function generateOrderNumber(int $year): string
     {
         $lastOrder = ServiceOrder::query()
-            ->where('order_number', 'like', $year.'-%')
+            ->where('order_number', 'like', $year . '-%')
             ->orderBy('order_number', 'desc')
             ->first();
 

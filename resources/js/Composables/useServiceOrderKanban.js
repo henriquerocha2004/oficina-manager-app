@@ -137,10 +137,11 @@ export function useServiceOrderKanban() {
      * Move status diretamente (sem dados)
      */
     async function changeStatus(serviceOrderId, newStatus) {
+        const currentStatus = findCurrentStatus(serviceOrderId);
         addToColumn(serviceOrderId, newStatus);
 
-        const result = await changeServiceOrderStatus(serviceOrderId, newStatus);
-        
+        const result = await changeServiceOrderStatus(serviceOrderId, newStatus, currentStatus);
+
         if (!result.success) {
             await load();
             throw result.error;

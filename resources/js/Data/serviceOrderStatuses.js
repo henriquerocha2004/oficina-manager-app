@@ -47,7 +47,7 @@ export const KanbanStatuses = [
     ServiceOrderStatus.WAITING_APPROVAL,
     ServiceOrderStatus.APPROVED,
     ServiceOrderStatus.IN_PROGRESS,
-    ServiceOrderStatus.COMPLETED,
+    ServiceOrderStatus.WAITING_PAYMENT,
 ];
 
 /**
@@ -57,6 +57,6 @@ export const KanbanColumnLabels = {
     [ServiceOrderStatus.DRAFT]: 'Iniciado',
     [ServiceOrderStatus.WAITING_APPROVAL]: 'Aguardando Aprovação',
     [ServiceOrderStatus.APPROVED]: 'Aprovado',
-    [ServiceOrderStatus.IN_PROGRESS]: 'Em Progresso',
-    [ServiceOrderStatus.COMPLETED]: 'Concluído',
+    [ServiceOrderStatus.IN_PROGRESS]: 'Serviço em Andamento',
+    [ServiceOrderStatus.WAITING_PAYMENT]: 'Aguardando Pagamento',
 };

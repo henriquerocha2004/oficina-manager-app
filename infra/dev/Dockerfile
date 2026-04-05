@@ -4,7 +4,8 @@ FROM php:8.5-fpm
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpng-dev \
-    libjpeg-dev \
+    libjpeg62-turbo-dev \
+    libwebp-dev \
     libonig-dev \
     libxml2-dev \
     libpq-dev \
@@ -15,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     sqlite3 \
     libsqlite3-dev \
+    && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Instala e configura Xdebug

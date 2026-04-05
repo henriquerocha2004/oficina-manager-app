@@ -10,8 +10,11 @@ use App\Domain\Tenant\ServiceOrder\ServiceOrderDomain;
 use App\Dto\PaymentDto;
 use App\Dto\ServiceOrderDto;
 use App\Enum\Tenant\ServiceOrder\PaymentMethodEnum;
+use App\Enum\Tenant\ServiceOrder\PaymentTypeEnum;
 use App\Enum\Tenant\ServiceOrder\ServiceOrderItemTypeEnum;
+use App\Enum\Tenant\ServiceOrder\ServiceOrderStatusEnum;
 use App\Models\Tenant\Client;
+use App\Models\Tenant\ServiceOrder;
 use App\Models\Tenant\ServiceOrderItem;
 use App\Models\Tenant\User;
 use App\Models\Tenant\Vehicle;
@@ -26,93 +29,111 @@ class RefundPaymentActionTest extends TestCase
     use DatabaseTransactions;
 
     /**
+     * Creates a service order with one item (total = R$100) and one payment of R$50.
+     * Returns [$serviceOrder, $user].
+     *
      * @throws Throwable
      * @throws BindingResolutionException
      */
     private function createServiceOrderWithPayment(): array
     {
-        $client = Client::factory()->create();
+        $client  = Client::factory()->create();
         $vehicle = Vehicle::factory()->create();
-        $user = User::factory()->create();
+        $user    = User::factory()->create();
 
-        $dto = new ServiceOrderDto(
+        $domain = new ServiceOrderDomain($this->app->make(PaymentService::class));
+
+        $serviceOrder = (new CreateServiceOrderAction($domain))(new ServiceOrderDto(
             client_id: $client->id,
             vehicle_id: $vehicle->id,
             created_by: $user->id,
-        );
-
-        $domain = new ServiceOrderDomain(
-            $this->app->make(PaymentService::class)
-        );
-
-        $createAction = new CreateServiceOrderAction($domain);
-        $serviceOrder = $createAction($dto);
+        ));
 
         $item = new ServiceOrderItem([
-            'type' => ServiceOrderItemTypeEnum::SERVICE,
+            'type'        => ServiceOrderItemTypeEnum::SERVICE,
             'description' => 'Oil change',
-            'quantity' => 1,
-            'unit_price' => 100.00,
-            'subtotal' => 100.00,
+            'quantity'    => 1,
+            'unit_price'  => 100.00,
+            'subtotal'    => 100.00,
         ]);
 
-        $addAction = new AddItemAction($domain);
-        $serviceOrder = $addAction($serviceOrder->id, $user->id, $item);
+        $serviceOrder = (new AddItemAction($domain))($serviceOrder->id, $user->id, $item);
 
         $paymentDto = new PaymentDto(
             service_order_id: $serviceOrder->id,
             payment_method: PaymentMethodEnum::CASH,
             amount: 50.00,
-            notes: 'Partial payment'
         );
 
-        $registerAction = new RegisterPaymentAction(
-            $this->app->make(PaymentService::class)
-        );
+        (new RegisterPaymentAction($this->app->make(PaymentService::class)))
+            ($serviceOrder->id, $user->id, $paymentDto);
 
-        $payment = $registerAction($serviceOrder->id, $user->id, $paymentDto);
-
-        return [$serviceOrder->refresh(), $payment, $user];
+        return [$serviceOrder->refresh(), $user];
     }
 
     /**
      * @throws Throwable
-     * @throws BindingResolutionException
      */
-    public function test_refunds_payment(): void
+    public function testRefundCreatesNewRecord(): void
     {
-        [$serviceOrder, $payment, $user] = $this->createServiceOrderWithPayment();
+        [$serviceOrder, $user] = $this->createServiceOrderWithPayment();
 
-        $action = new RefundPaymentAction(
-            $this->app->make(PaymentService::class)
-        );
+        $action = new RefundPaymentAction($this->app->make(PaymentService::class));
+        $action($serviceOrder->id, $user->id, 30.00, PaymentMethodEnum::PIX, 'Motivo teste');
 
-        $result = $action($serviceOrder->id, $payment->id, $user->id, 'Client requested refund');
-
-        $this->assertNotNull($result);
+        $this->assertDatabaseHas('service_order_payments', [
+            'service_order_id' => $serviceOrder->id,
+            'type'             => PaymentTypeEnum::REFUND->value,
+            'amount'           => 30.00,
+        ]);
 
         $serviceOrder->refresh();
-        $this->assertEquals(0, $serviceOrder->paid_amount);
-        $this->assertEquals(100.00, $serviceOrder->outstanding_balance);
+        $this->assertEquals(20.00, $serviceOrder->paid_amount);
+        $this->assertEquals(80.00, $serviceOrder->outstanding_balance);
     }
 
     /**
-     * @throws BindingResolutionException
      * @throws Throwable
      */
-    public function test_partial_refund_updates_amounts(): void
+    public function testFullRefundReopensCompletedOrder(): void
     {
-        [$serviceOrder, $payment, $user] = $this->createServiceOrderWithPayment();
+        [$serviceOrder, $user] = $this->createServiceOrderWithPayment();
 
-        $this->assertEquals(50.00, $serviceOrder->paid_amount);
-        $this->assertEquals(50.00, $serviceOrder->outstanding_balance);
+        // Move order to WAITING_PAYMENT so auto-complete can trigger
+        $serviceOrder->status = ServiceOrderStatusEnum::WAITING_PAYMENT;
+        $serviceOrder->save();
 
-        $action = new RefundPaymentAction(
-            $this->app->make(PaymentService::class)
+        // Pay the remaining R$50 to complete the order
+        $payFull = new PaymentDto(
+            service_order_id: $serviceOrder->id,
+            payment_method: PaymentMethodEnum::CASH,
+            amount: 50.00,
         );
+        (new RegisterPaymentAction($this->app->make(PaymentService::class)))
+            ($serviceOrder->id, $user->id, $payFull);
 
-        $result = $action($serviceOrder->id, $payment->id, $user->id, 'Partial refund');
+        $serviceOrder->refresh();
+        $this->assertEquals(ServiceOrderStatusEnum::COMPLETED, $serviceOrder->status);
 
-        $this->assertNotNull($result);
+        // Refund the full amount
+        $action = new RefundPaymentAction($this->app->make(PaymentService::class));
+        $action($serviceOrder->id, $user->id, 100.00, PaymentMethodEnum::CASH);
+
+        $serviceOrder->refresh();
+        $this->assertEquals(ServiceOrderStatusEnum::WAITING_PAYMENT, $serviceOrder->status);
+        $this->assertEquals(0, $serviceOrder->paid_amount);
+    }
+
+    /**
+     * @throws Throwable
+     */
+    public function testRefundExceedingPaidAmountThrows(): void
+    {
+        [$serviceOrder, $user] = $this->createServiceOrderWithPayment(); // paid_amount = 50
+
+        $this->expectException(\Exception::class);
+
+        $action = new RefundPaymentAction($this->app->make(PaymentService::class));
+        $action($serviceOrder->id, $user->id, 99.00, PaymentMethodEnum::CASH);
     }
 }

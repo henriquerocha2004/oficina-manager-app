@@ -119,4 +119,32 @@ class RegisterPaymentActionTest extends TestCase
         $this->assertEquals(100.00, $serviceOrder->paid_amount);
         $this->assertEquals(0, $serviceOrder->outstanding_balance);
     }
+
+    /**
+     * @throws \Throwable
+     */
+    public function testRegistersPaymentWithInstallments(): void
+    {
+        $serviceOrder = $this->createServiceOrderWithItem();
+        $user = User::factory()->create();
+
+        $dto = new PaymentDto(
+            service_order_id: $serviceOrder->id,
+            payment_method: PaymentMethodEnum::CREDIT_CARD,
+            amount: 100.00,
+            installments: 3,
+        );
+
+        $action = new RegisterPaymentAction(
+            $this->app->make(PaymentService::class)
+        );
+
+        $payment = $action($serviceOrder->id, $user->id, $dto);
+
+        $this->assertEquals(3, $payment->installments);
+        $this->assertEquals(PaymentMethodEnum::CREDIT_CARD, $payment->payment_method);
+
+        $serviceOrder->refresh();
+        $this->assertEquals(100.00, $serviceOrder->paid_amount);
+    }
 }

@@ -13,7 +13,8 @@ readonly class RegisterPaymentAction
 {
     public function __construct(
         private PaymentService $paymentService
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Throwable
@@ -29,7 +30,8 @@ readonly class RegisterPaymentAction
             userId: $userId,
             amount: $dto->amount,
             paymentMethod: $dto->payment_method,
-            notes: $dto->notes
+            notes: $dto->notes,
+            installments: $dto->installments
         );
 
         $serviceOrder->refresh();

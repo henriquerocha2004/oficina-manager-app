@@ -11,11 +11,11 @@ export const transitions = {
         }
     },
     [ServiceOrderStatus.WAITING_APPROVAL]: {
-        canGoTo: [ServiceOrderStatus.DRAFT, ServiceOrderStatus.APPROVED],
+        canGoTo: [ServiceOrderStatus.APPROVED],
         requiresData: {}
     },
     [ServiceOrderStatus.APPROVED]: {
-        canGoTo: [ServiceOrderStatus.WAITING_APPROVAL, ServiceOrderStatus.IN_PROGRESS],
+        canGoTo: [ServiceOrderStatus.IN_PROGRESS],
         requiresData: {}
     },
     [ServiceOrderStatus.IN_PROGRESS]: {
@@ -25,7 +25,7 @@ export const transitions = {
         }
     },
     [ServiceOrderStatus.WAITING_PAYMENT]: {
-        canGoTo: [ServiceOrderStatus.IN_PROGRESS],
+        canGoTo: [ServiceOrderStatus.WAITING_APPROVAL],
         requiresData: {}
     },
     [ServiceOrderStatus.COMPLETED]: {
@@ -46,11 +46,9 @@ export const transitionLabels = {
         [ServiceOrderStatus.WAITING_APPROVAL]: 'Enviar para Aprovação'
     },
     [ServiceOrderStatus.WAITING_APPROVAL]: {
-        [ServiceOrderStatus.DRAFT]: 'Voltar para Rascunho',
         [ServiceOrderStatus.APPROVED]: 'Aprovar'
     },
     [ServiceOrderStatus.APPROVED]: {
-        [ServiceOrderStatus.WAITING_APPROVAL]: 'Solicitar Nova Aprovação',
         [ServiceOrderStatus.IN_PROGRESS]: 'Iniciar Trabalho'
     },
     [ServiceOrderStatus.IN_PROGRESS]: {
@@ -58,7 +56,7 @@ export const transitionLabels = {
         [ServiceOrderStatus.WAITING_PAYMENT]: 'Finalizar Trabalho'
     },
     [ServiceOrderStatus.WAITING_PAYMENT]: {
-        [ServiceOrderStatus.IN_PROGRESS]: 'Retomar Trabalho'
+        [ServiceOrderStatus.WAITING_APPROVAL]: 'Retornar para Aprovação'
     }
 };
 

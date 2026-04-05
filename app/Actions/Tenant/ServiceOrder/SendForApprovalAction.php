@@ -13,7 +13,8 @@ readonly class SendForApprovalAction
 {
     public function __construct(
         private ServiceOrderDomain $domain
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Throwable
@@ -32,7 +33,7 @@ readonly class SendForApprovalAction
             $this->domain->updateDiagnosis($serviceOrder, $userId, $diagnosis);
         }
 
-        if (! empty($items)) {
+        if (!empty($items)) {
             foreach ($items as $itemData) {
                 $item = new ServiceOrderItem([
                     'type' => ServiceOrderItemTypeEnum::from($itemData['type']),

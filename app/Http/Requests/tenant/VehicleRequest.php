@@ -15,9 +15,10 @@ class VehicleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'client_id' => ['required', 'string'],
             'brand' => ['required', 'string', 'min:3', 'max:255'],
             'model' => ['required', 'string', 'min:1', 'max:255'],
-            'year' => ['required', 'integer', 'min:1886', 'max:' . (date('Y') + 1)],
+            'year' => ['nullable', 'integer', 'min:1886', 'max:' . (date('Y') + 1)],
             'color' => ['nullable', 'string', 'max:50'],
             'license_plate' => ['required', 'string', 'regex:/^[A-Z]{3}-?[0-9]{1}[A-Z0-9][0-9]{2}$/'],
             'vehicle_type' => ['nullable', 'string', 'in:car,motorcycle'],

@@ -32,7 +32,7 @@ class VehicleControllerTest extends TestCase
         /** @var VehicleRequest&MockInterface $requestMock */
         $requestMock = Mockery::mock(VehicleRequest::class);
         $requestMock->shouldReceive('toDto')->andReturn($vehicleDto);
-        $requestMock->shouldReceive('input')->with('client_id')->andReturn($clientId);
+        $requestMock->shouldReceive('validated')->with('client_id')->andReturn($clientId);
 
         $createdVehicle = new Vehicle;
 

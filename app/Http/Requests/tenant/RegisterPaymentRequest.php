@@ -3,6 +3,7 @@
 namespace App\Http\Requests\tenant;
 
 use App\Dto\PaymentDto;
+use App\Enum\Tenant\ServiceOrder\PaymentMethodEnum;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -11,9 +12,10 @@ class RegisterPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => ['required', 'string', Rule::in(['cash', 'credit_card', 'debit_card', 'pix', 'bank_transfer', 'check'])],
-            'amount' => ['required', 'numeric', 'min:0.01'],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'payment_method' => ['required', 'string', Rule::in(array_column(PaymentMethodEnum::cases(), 'value'))],
+            'amount'         => ['required', 'numeric', 'min:0.01'],
+            'notes'          => ['nullable', 'string', 'max:1000'],
+            'installments'   => ['nullable', 'integer', 'min:1', 'max:24'],
         ];
     }
 
