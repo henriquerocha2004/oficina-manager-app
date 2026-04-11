@@ -22,9 +22,6 @@ docker exec oficina-manager-app php artisan test --testsuite=Unit
 docker exec oficina-manager-app npm test
 docker exec oficina-manager-app npx vitest resources/js/tests/SomeTest.spec.js
 
-# Code style
-docker exec oficina-manager-app ./vendor/bin/pint
-
 # Database
 docker exec oficina-manager-app php artisan migrate
 docker exec oficina-manager-app php artisan migrate:fresh --seed

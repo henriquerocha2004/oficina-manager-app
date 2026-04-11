@@ -7,22 +7,21 @@
 <style scoped>
 .stats-container {
     display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
 }
 
-/* Tablet: 2 colunas */
 @media (min-width: 768px) {
     .stats-container {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
-/* Desktop: 4 colunas */
 @media (min-width: 1024px) {
     .stats-container {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1rem;
     }
 }
 </style>

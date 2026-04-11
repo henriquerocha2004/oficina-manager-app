@@ -1,5 +1,5 @@
 <template>
-  <div class="service-order-grid">
+  <div class="service-order-grid h-full">
     <DataGrid
       :columns="columns"
       :items="items"
@@ -13,12 +13,6 @@
     >
       <template #filters>
         <ServiceOrderFilters @filter-change="onFilterChange" />
-      </template>
-
-      <template #actions>
-        <button class="kt-btn kt-btn-primary" @click="$emit('new')">
-          Nova OS
-        </button>
       </template>
 
       <template #cell-code="{ row }">
@@ -52,10 +46,11 @@
       <template #cell-status="{ row }">
         <span
           :class="[
-            'text-xs px-2 py-1 rounded-full font-medium',
+            'inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium',
             getStatusColor(row.status)
           ]"
         >
+          <i :class="[getStatusIcon(row.status), 'text-xs']"></i>
           {{ getStatusLabel(row.status) }}
         </span>
       </template>
@@ -75,7 +70,7 @@
           <button
             class="kt-btn kt-btn-sm kt-btn-ghost"
             title="Visualizar"
-            @click="$emit('view', row)"
+            @click="router.visit(`/service-orders/${row.id}/detail`)"
           >
             <i class="ki-filled ki-eye text-gray-600 dark:text-gray-400"></i>
           </button>
@@ -92,9 +87,7 @@ import DataGrid from '@/Shared/Components/DataGrid.vue';
 import ServiceOrderFilters from './ServiceOrderFilters.vue';
 import { useServiceOrderGrid } from '@/Composables/useServiceOrderGrid.js';
 import { useServiceOrderFilters } from '@/Composables/useServiceOrderFilters.js';
-import { ServiceOrderStatusLabels, ServiceOrderStatusColors } from '@/Data/serviceOrderStatuses.js';
-
-defineEmits(['new', 'view']);
+import { ServiceOrderStatusLabels, ServiceOrderStatusColors, ServiceOrderStatusIcons } from '@/Data/serviceOrderStatuses.js';
 
 const {
   items,
@@ -124,13 +117,9 @@ const columns = [
   { key: 'actions', label: 'Ações', sortable: false },
 ];
 
-function getStatusLabel(status) {
-  return ServiceOrderStatusLabels[status] || status;
-}
-
-function getStatusColor(status) {
-  return ServiceOrderStatusColors[status] || 'bg-gray-100 text-gray-800';
-}
+function getStatusLabel(status) { return ServiceOrderStatusLabels[status] || status; }
+function getStatusColor(status) { return ServiceOrderStatusColors[status] || 'bg-gray-100 text-gray-800'; }
+function getStatusIcon(status)  { return ServiceOrderStatusIcons[status]  || 'ki-filled ki-information'; }
 
 function formatDate(date) {
   return new Date(date).toLocaleDateString('pt-BR');

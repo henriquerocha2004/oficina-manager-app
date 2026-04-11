@@ -7,13 +7,13 @@
             >
                 Data Início
             </label>
-            <input
+            <KtDatePickerInput
                 :id="dateFromId"
-                type="date"
-                :value="modelValue.from"
-                @input="updateDateFrom"
+                :model-value="modelValue.from"
                 :max="modelValue.to || undefined"
-                class="kt-input"
+                aria-label="Selecionar data inicial"
+                trigger-label="Selecionar data inicial"
+                @update:model-value="updateDateFrom"
             />
         </div>
         <div class="flex-1">
@@ -23,13 +23,13 @@
             >
                 Data Fim
             </label>
-            <input
+            <KtDatePickerInput
                 :id="dateToId"
-                type="date"
-                :value="modelValue.to"
-                @input="updateDateTo"
+                :model-value="modelValue.to"
                 :min="modelValue.from || undefined"
-                class="kt-input"
+                aria-label="Selecionar data final"
+                trigger-label="Selecionar data final"
+                @update:model-value="updateDateTo"
             />
         </div>
     </div>
@@ -37,6 +37,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import KtDatePickerInput from '@/Shared/Components/KtDatePickerInput.vue';
 
 const props = defineProps({
     modelValue: {
@@ -53,23 +54,23 @@ const dateToId = computed(() => `date-to-${Math.random().toString(36).substring(
 
 /**
  * Atualiza a data inicial
- * @param {Event} event
+ * @param {string} value
  */
-function updateDateFrom(event) {
+function updateDateFrom(value) {
     emit('update:modelValue', {
         ...props.modelValue,
-        from: event.target.value,
+        from: value,
     });
 }
 
 /**
  * Atualiza a data final
- * @param {Event} event
+ * @param {string} value
  */
-function updateDateTo(event) {
+function updateDateTo(value) {
     emit('update:modelValue', {
         ...props.modelValue,
-        to: event.target.value,
+        to: value,
     });
 }
 </script>
@@ -89,13 +90,4 @@ function updateDateTo(event) {
     color: #cbd5e1;
 }
 
-/* Corrigir ícones de calendário no dark mode */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    cursor: pointer;
-    filter: invert(0);
-}
-
-.dark input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-}
 </style>

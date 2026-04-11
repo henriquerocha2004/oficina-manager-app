@@ -18,6 +18,10 @@ Route::prefix('service-orders')
             ->name('service-orders.show');
         Route::get('/{id}/detail', [ServiceOrderController::class, 'show'])
             ->name('service-orders.detail');
+        Route::get('/{id}/pdf', [ServiceOrderController::class, 'pdf'])
+            ->name('service-orders.pdf');
+        Route::get('/{id}/receipt', [ServiceOrderController::class, 'receipt'])
+            ->name('service-orders.receipt');
         Route::delete('/{id}', [ServiceOrderController::class, 'delete'])
             ->name('service-orders.destroy');
         Route::post('/{id}/send-for-approval', [ServiceOrderController::class, 'sendForApproval'])

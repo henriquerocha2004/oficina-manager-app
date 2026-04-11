@@ -1,11 +1,11 @@
 <template>
-  <div class="toolbar px-5 lg:px-10 border-b border-border flex items-center justify-between gap-4" style="height: 65px; min-height: 65px;">
-    <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+  <div class="toolbar px-5 lg:px-10 border-b border-border flex items-center justify-between gap-4 h-12 lg:h-16.25 shrink-0">
+    <h1 class="text-base lg:text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
       {{ title }}
     </h1>
 
     <div class="flex items-center gap-4">
-      <nav v-if="breadcrumbs && breadcrumbs.length > 0" class="breadcrumb">
+      <nav v-if="breadcrumbs && breadcrumbs.length > 0" class="breadcrumb hidden lg:block">
         <ol class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
           <li
             v-for="(crumb, index) in breadcrumbs"

@@ -3,7 +3,6 @@
 namespace App\Models\Tenant;
 
 use App\Enum\Tenant\ServiceOrder\ServiceOrderStatusEnum;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -55,7 +54,7 @@ class ServiceOrder extends Model
     protected $table = 'service_orders';
     public $incrementing = false;
     protected $keyType = 'string';
-    
+
     protected $fillable = [
         'id',
         'order_number',

@@ -101,13 +101,15 @@ export async function fetchServiceOrders({ page = 1, perPage = 10, search = '', 
             sort_direction: sortDir,
         };
 
-        if (filters.dateFrom) params.date_from = filters.dateFrom;
-        if (filters.dateTo) params.date_to = filters.dateTo;
-        if (filters.status) params.status = filters.status;
-        if (filters.clientId) params.client_id = filters.clientId;
-        if (filters.vehicleId) params.vehicle_id = filters.vehicleId;
+        if (filters.dateFrom)     params.date_from    = filters.dateFrom;
+        if (filters.dateTo)       params.date_to      = filters.dateTo;
+        if (filters.status)       params.status       = filters.status;
+        if (filters.client)       params.client_name  = filters.client;
+        if (filters.plate)        params.plate        = filters.plate;
+        if (filters.orderNumber)  params.order_number = filters.orderNumber;
+        if (filters.clientId)     params.client_id    = filters.clientId;
+        if (filters.vehicleId)    params.vehicle_id   = filters.vehicleId;
         if (filters.technicianId) params.technician_id = filters.technicianId;
-        if (filters.orderNumber) params.order_number = filters.orderNumber;
 
         const { data } = await axios.get('/service-orders/search', { params });
 

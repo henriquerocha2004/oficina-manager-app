@@ -60,7 +60,7 @@ export function useStats(data, type, statsFromApi = null) {
 export function formatClientStats(stats) {
     return [
         {
-            icon: 'user',
+            icon: 'ki-outline ki-user',
             title: 'Total de Clientes',
             value: stats.total || 0,
             subtitle: stats.last_90_days > 0
@@ -70,7 +70,7 @@ export function formatClientStats(stats) {
             color: 'orange',
         },
         {
-            icon: 'calendar',
+            icon: 'ki-outline ki-calendar',
             title: 'Novos nos Últimos 90 Dias',
             value: stats.last_90_days || 0,
             subtitle: stats.growth > 0
@@ -80,7 +80,7 @@ export function formatClientStats(stats) {
             color: 'green',
         },
         {
-            icon: 'geolocation',
+            icon: 'ki-outline ki-geolocation',
             title: 'Top Cidade',
             value: stats.top_city || 'N/A',
             subtitle: `${stats.top_city_percentage}% dos clientes`,
@@ -88,7 +88,7 @@ export function formatClientStats(stats) {
             color: 'blue',
         },
         {
-            icon: 'chart-simple',
+            icon: 'ki-outline ki-chart-simple',
             title: 'Crescimento',
             value: `${stats.growth || 0}`,
             subtitle: 'Últimos 90 dias vs anteriores',
@@ -106,7 +106,7 @@ export function formatClientStats(stats) {
 export function formatSupplierStats(stats) {
     return [
         {
-            icon: 'shop',
+            icon: 'ki-outline ki-shop',
             title: 'Total de Fornecedores',
             value: stats.total || 0,
             subtitle: stats.last_90_days > 0
@@ -116,7 +116,7 @@ export function formatSupplierStats(stats) {
             color: 'orange',
         },
         {
-            icon: 'check-circle',
+            icon: 'ki-outline ki-check-circle',
             title: 'Fornecedores Ativos',
             value: stats.active_suppliers || 0,
             subtitle: `${stats.active_percentage}% do total`,
@@ -124,7 +124,7 @@ export function formatSupplierStats(stats) {
             color: 'green',
         },
         {
-            icon: 'geolocation',
+            icon: 'ki-outline ki-geolocation',
             title: 'Top Estado',
             value: stats.top_state || 'N/A',
             subtitle: stats.top_state
@@ -134,7 +134,7 @@ export function formatSupplierStats(stats) {
             color: 'blue',
         },
         {
-            icon: 'calendar',
+            icon: 'ki-outline ki-calendar',
             title: 'Novos nos Últimos 90 Dias',
             value: stats.last_90_days || 0,
             subtitle: stats.growth > 0
@@ -154,7 +154,7 @@ export function formatSupplierStats(stats) {
 export function formatProductStats(stats) {
     return [
         {
-            icon: 'package',
+            icon: 'ki-outline ki-package',
             title: 'Total de Produtos',
             value: stats.total || 0,
             subtitle: stats.last_90_days > 0
@@ -164,7 +164,7 @@ export function formatProductStats(stats) {
             color: 'orange',
         },
         {
-            icon: 'dollar',
+            icon: 'ki-outline ki-dollar',
             title: 'Valor Total em Estoque',
             value: `R$ ${parseFloat(stats.total_value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
             subtitle: 'Baseado no preço unitário',
@@ -172,7 +172,7 @@ export function formatProductStats(stats) {
             color: 'green',
         },
         {
-            icon: 'check-circle',
+            icon: 'ki-outline ki-check-circle',
             title: 'Produtos Ativos',
             value: `${stats.active_percentage || 0}%`,
             subtitle: `${stats.active_products || 0} de ${stats.total || 0} produtos`,
@@ -180,7 +180,7 @@ export function formatProductStats(stats) {
             color: 'green',
         },
         {
-            icon: 'category',
+            icon: 'ki-outline ki-category',
             title: 'Top Categoria',
             value: stats.top_category || 'N/A',
             subtitle: stats.top_category
@@ -200,7 +200,7 @@ export function formatProductStats(stats) {
 export function formatServiceStats(stats) {
     return [
         {
-            icon: 'wrench',
+            icon: 'ki-outline ki-wrench',
             title: 'Total de Serviços',
             value: stats.total || 0,
             subtitle: stats.last_90_days > 0
@@ -210,7 +210,7 @@ export function formatServiceStats(stats) {
             color: 'orange',
         },
         {
-            icon: 'check-circle',
+            icon: 'ki-outline ki-check-circle',
             title: 'Serviços Ativos',
             value: stats.active_services || 0,
             subtitle: `${Math.round((stats.active_services / (stats.total || 1)) * 100)}% do total`,
@@ -218,7 +218,7 @@ export function formatServiceStats(stats) {
             color: 'green',
         },
         {
-            icon: 'dollar',
+            icon: 'ki-outline ki-dollar',
             title: 'Valor Médio',
             value: `R$ ${parseFloat(stats.average_price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
             subtitle: 'Preço base médio dos serviços',
@@ -226,7 +226,7 @@ export function formatServiceStats(stats) {
             color: 'green',
         },
         {
-            icon: 'calendar',
+            icon: 'ki-outline ki-calendar',
             title: 'Novos nos Últimos 90 Dias',
             value: stats.last_90_days || 0,
             subtitle: stats.growth > 0
@@ -246,7 +246,7 @@ export function formatServiceStats(stats) {
 export function formatVehicleStats(stats) {
     return [
         {
-            icon: 'car',
+            icon: 'ki-outline ki-car',
             title: 'Total de Veículos',
             value: stats.total || 0,
             subtitle: stats.last_90_days > 0
@@ -256,7 +256,7 @@ export function formatVehicleStats(stats) {
             color: 'orange',
         },
         {
-            icon: 'calendar',
+            icon: 'ki-outline ki-calendar',
             title: 'Novos nos Últimos 90 Dias',
             value: stats.last_90_days || 0,
             subtitle: stats.growth > 0
@@ -266,7 +266,7 @@ export function formatVehicleStats(stats) {
             color: 'green',
         },
         {
-            icon: 'award',
+            icon: 'ki-outline ki-award',
             title: 'Top Marca',
             value: stats.top_brand || 'N/A',
             subtitle: stats.top_brand
@@ -276,7 +276,7 @@ export function formatVehicleStats(stats) {
             color: 'blue',
         },
         {
-            icon: 'chart-simple',
+            icon: 'ki-outline ki-chart-simple',
             title: 'Crescimento',
             value: `${stats.growth || 0}`,
             subtitle: 'Últimos 90 dias vs anteriores',
@@ -320,7 +320,7 @@ function calculateClientStats(clients) {
 
     return [
         {
-            icon: 'user',
+            icon: 'ki-outline ki-user',
             title: 'Total de Clientes',
             value: total,
             subtitle: thisMonth > 0 ? `${thisMonth} novos este mês` : 'Nenhum cliente novo este mês',
@@ -328,7 +328,7 @@ function calculateClientStats(clients) {
             color: 'orange',
         },
         {
-            icon: 'calendar',
+            icon: 'ki-outline ki-calendar',
             title: 'Novos no Mês',
             value: thisMonth,
             subtitle: growth > 0 ? `${growth} a mais que mês anterior` : 'Mesma quantidade do mês anterior',
@@ -336,7 +336,7 @@ function calculateClientStats(clients) {
             color: 'green',
         },
         {
-            icon: 'geolocation',
+            icon: 'ki-outline ki-geolocation',
             title: 'Top Cidade',
             value: topCity,
             subtitle: `${topCityPercentage}% dos clientes`,
@@ -344,7 +344,7 @@ function calculateClientStats(clients) {
             color: 'blue',
         },
         {
-            icon: 'chart-simple',
+            icon: 'ki-outline ki-chart-simple',
             title: 'Crescimento',
             value: `${growth}`,
             subtitle: 'Comparado ao mês anterior',
@@ -381,7 +381,7 @@ function calculateSupplierStats(suppliers) {
 
     return [
         {
-            icon: 'shop',
+            icon: 'ki-outline ki-shop',
             title: 'Total de Fornecedores',
             value: total,
             subtitle: thisMonth > 0 ? `${thisMonth} novos este mês` : 'Nenhum fornecedor novo este mês',
@@ -389,7 +389,7 @@ function calculateSupplierStats(suppliers) {
             color: 'orange',
         },
         {
-            icon: 'check-circle',
+            icon: 'ki-outline ki-check-circle',
             title: 'Fornecedores Ativos',
             value: active,
             subtitle: `${((active / total) * 100).toFixed(0)}% do total`,
@@ -397,7 +397,7 @@ function calculateSupplierStats(suppliers) {
             color: 'green',
         },
         {
-            icon: 'geolocation',
+            icon: 'ki-outline ki-geolocation',
             title: 'Top Estado',
             value: topState,
             subtitle: 'Estado com mais fornecedores',
@@ -405,7 +405,7 @@ function calculateSupplierStats(suppliers) {
             color: 'blue',
         },
         {
-            icon: 'calendar',
+            icon: 'ki-outline ki-calendar',
             title: 'Novos no Mês',
             value: thisMonth,
             subtitle: 'Cadastrados este mês',
@@ -437,7 +437,7 @@ function calculateServiceStats(services) {
 
     return [
         {
-            icon: 'wrench',
+            icon: 'ki-outline ki-wrench',
             title: 'Total de Serviços',
             value: total,
             subtitle: `${active} serviços ativos`,
@@ -445,7 +445,7 @@ function calculateServiceStats(services) {
             color: 'orange',
         },
         {
-            icon: 'dollar',
+            icon: 'ki-outline ki-dollar',
             title: 'Preço Médio',
             value: `R$ ${avgPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
             subtitle: 'Por serviço',
@@ -453,7 +453,7 @@ function calculateServiceStats(services) {
             color: 'green',
         },
         {
-            icon: 'category',
+            icon: 'ki-outline ki-category',
             title: 'Categoria Popular',
             value: topCategory,
             subtitle: 'Mais oferecida',
@@ -461,7 +461,7 @@ function calculateServiceStats(services) {
             color: 'blue',
         },
         {
-            icon: 'check-circle',
+            icon: 'ki-outline ki-check-circle',
             title: 'Taxa de Ativação',
             value: `${((active / total) * 100).toFixed(0)}%`,
             subtitle: `${active} de ${total} ativos`,
@@ -499,7 +499,7 @@ function calculateVehicleStats(vehicles) {
 
     return [
         {
-            icon: 'car',
+            icon: 'ki-outline ki-car',
             title: 'Total de Veículos',
             value: total,
             subtitle: thisMonth > 0 ? `${thisMonth} novos este mês` : 'Nenhum veículo novo este mês',
@@ -507,7 +507,7 @@ function calculateVehicleStats(vehicles) {
             color: 'orange',
         },
         {
-            icon: 'chart-simple',
+            icon: 'ki-outline ki-chart-simple',
             title: 'Carros vs Motos',
             value: `${((cars / total) * 100).toFixed(0)}% / ${((motos / total) * 100).toFixed(0)}%`,
             subtitle: `${cars} carros, ${motos} motos`,
@@ -515,7 +515,7 @@ function calculateVehicleStats(vehicles) {
             color: 'blue',
         },
         {
-            icon: 'star',
+            icon: 'ki-outline ki-star',
             title: 'Marca Popular',
             value: topBrand,
             subtitle: 'Marca mais comum',
@@ -523,7 +523,7 @@ function calculateVehicleStats(vehicles) {
             color: 'purple',
         },
         {
-            icon: 'calendar',
+            icon: 'ki-outline ki-calendar',
             title: 'Novos no Mês',
             value: thisMonth,
             subtitle: 'Cadastrados este mês',
@@ -538,7 +538,7 @@ function calculateVehicleStats(vehicles) {
  */
 function getEmptyStats(type) {
     const emptyCard = {
-        icon: 'information',
+        icon: 'ki-outline ki-information',
         title: 'Sem dados',
         value: '0',
         subtitle: 'Nenhum registro encontrado',

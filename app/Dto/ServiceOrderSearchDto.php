@@ -18,6 +18,8 @@ class ServiceOrderSearchDto
         public ?string $order_number = null,
         public ?string $date_from = null,
         public ?string $date_to = null,
+        public ?string $client_name = null,
+        public ?string $plate = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -34,6 +36,8 @@ class ServiceOrderSearchDto
             order_number: $data['order_number'] ?? null,
             date_from: $data['date_from'] ?? null,
             date_to: $data['date_to'] ?? null,
+            client_name: $data['client_name'] ?? null,
+            plate: $data['plate'] ?? null,
         );
     }
 }

@@ -27,6 +27,19 @@ export const ServiceOrderStatusLabels = {
 };
 
 /**
+ * Ícones para os status
+ */
+export const ServiceOrderStatusIcons = {
+    [ServiceOrderStatus.DRAFT]:           'ki-filled ki-note',
+    [ServiceOrderStatus.WAITING_APPROVAL]:'ki-filled ki-time',
+    [ServiceOrderStatus.APPROVED]:        'ki-filled ki-check-circle',
+    [ServiceOrderStatus.IN_PROGRESS]:     'ki-filled ki-setting-2',
+    [ServiceOrderStatus.WAITING_PAYMENT]: 'ki-filled ki-wallet',
+    [ServiceOrderStatus.COMPLETED]:       'ki-filled ki-double-check',
+    [ServiceOrderStatus.CANCELLED]:       'ki-filled ki-cross-circle',
+};
+
+/**
  * Cores para os status (para badges)
  */
 export const ServiceOrderStatusColors = {

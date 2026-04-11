@@ -1,5 +1,5 @@
 <template>
-  <div class="flex grow">
+  <div class="flex w-full min-w-0 min-h-screen">
     <!-- Mobile Header -->
     <slot name="mobile-header" />
 
@@ -8,14 +8,14 @@
 
     <!-- Main Wrapper -->
     <div 
-      class="main-wrapper flex flex-col grow bg-background dark:bg-background"
+      class="main-wrapper flex flex-col grow min-w-0 bg-background dark:bg-background"
       :style="mainWrapperStyle"
     >
       <!-- Toolbar -->
       <slot name="toolbar" />
 
       <!-- Main Content -->
-      <main class="flex-1 p-5 lg:p-10">
+      <main class="flex-1 p-5 lg:p-10 overflow-y-auto min-h-0">
         <slot />
       </main>
 
@@ -73,7 +73,8 @@ const mainWrapperStyle = computed(() => {
 
 /* Main wrapper base styles */
 .main-wrapper {
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 /* Mobile: adicionar padding-top para compensar header fixo */

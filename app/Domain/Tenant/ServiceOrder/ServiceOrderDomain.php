@@ -2,6 +2,7 @@
 
 namespace App\Domain\Tenant\ServiceOrder;
 
+use App\Enum\Tenant\ServiceOrder\PaymentMethodEnum;
 use App\Enum\Tenant\ServiceOrder\ServiceOrderEventTypeEnum;
 use App\Enum\Tenant\ServiceOrder\ServiceOrderStatusEnum;
 use App\Exceptions\ServiceOrder\InvalidStatusTransitionException;
@@ -249,7 +250,7 @@ readonly class ServiceOrderDomain
                 serviceOrder: $serviceOrder,
                 userId: $userId,
                 amount: $paidAmount,
-                returnMethod: \App\Enum\Tenant\ServiceOrder\PaymentMethodEnum::CASH,
+                returnMethod: PaymentMethodEnum::CASH,
                 reason: 'Estorno total — OS cancelada'
             );
         }

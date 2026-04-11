@@ -24,8 +24,22 @@ class SearchServiceOrderAction
             $query->where('client_id', $searchDto->client_id);
         }
 
+        if ($searchDto->client_name !== null) {
+            $term = '%' . $searchDto->client_name . '%';
+            $query->whereHas('client', function ($q) use ($term) {
+                $q->whereRaw('name ilike ?', [$term]);
+            });
+        }
+
         if ($searchDto->vehicle_id !== null) {
             $query->where('vehicle_id', $searchDto->vehicle_id);
+        }
+
+        if ($searchDto->plate !== null) {
+            $term = '%' . $searchDto->plate . '%';
+            $query->whereHas('vehicle', function ($q) use ($term) {
+                $q->whereRaw('license_plate ilike ?', [$term]);
+            });
         }
 
         if ($searchDto->technician_id !== null) {
@@ -33,7 +47,8 @@ class SearchServiceOrderAction
         }
 
         if ($searchDto->order_number !== null) {
-            $query->where('order_number', 'like', '%'.$searchDto->order_number.'%');
+            $term = '%' . $searchDto->order_number . '%';
+            $query->whereRaw('order_number::text ilike ?', [$term]);
         }
 
         if ($searchDto->date_from !== null) {
@@ -45,9 +60,11 @@ class SearchServiceOrderAction
         }
 
         if ($searchDto->search !== null) {
-            $query->where(function ($q) use ($searchDto) {
-                $q->where('order_number', 'like', '%'.$searchDto->search.'%')
-                    ->orWhere('diagnosis', 'like', '%'.$searchDto->search.'%');
+            $term = '%' . $searchDto->search . '%';
+            $query->where(function ($q) use ($term) {
+                $q->whereRaw('order_number::text ilike ?', [$term])
+                    ->orWhereRaw('reported_problem ilike ?', [$term])
+                    ->orWhereRaw('technical_diagnosis ilike ?', [$term]);
             });
         }
 

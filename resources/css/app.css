@@ -1,6 +1,17 @@
 /* Keenicons Font Icons */
 @import '@assets/vendors/keenicons/styles.bundle.css';
 
+/* Global overflow fix — prevent any content from causing horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
 /* Metronic Components CSS - Extract only needed components */
 @import '@assets/css/styles.css';
 

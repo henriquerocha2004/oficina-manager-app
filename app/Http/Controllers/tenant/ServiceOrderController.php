@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\tenant;
 
-use App\Enum\Tenant\ServiceOrder\PaymentMethodEnum;
 use App\Actions\Tenant\ServiceOrder\AddItemAction;
 use App\Actions\Tenant\ServiceOrder\ApproveAction;
 use App\Actions\Tenant\ServiceOrder\CancelAction;
@@ -27,26 +26,28 @@ use App\Constants\Messages;
 use App\Dto\ServiceOrderDto;
 use App\Dto\ServiceOrderPhotoDto;
 use App\Dto\ServiceOrderSearchDto;
+use App\Enum\Tenant\ServiceOrder\PaymentMethodEnum;
 use App\Exceptions\ServiceOrder\VehicleOwnershipConflictException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\tenant\AddServiceOrderItemRequest;
 use App\Http\Requests\tenant\CancelServiceOrderRequest;
-use App\Http\Requests\tenant\RegisterRefundRequest;
 use App\Http\Requests\tenant\RegisterPaymentRequest;
+use App\Http\Requests\tenant\RegisterRefundRequest;
 use App\Http\Requests\tenant\StoreServiceOrderRequest;
 use App\Http\Requests\tenant\UpdateDiagnosisRequest;
 use App\Http\Requests\tenant\UpdateDiscountRequest;
 use App\Http\Requests\tenant\UploadServiceOrderPhotoRequest;
 use App\Models\Tenant\ServiceOrderItem;
 use App\Services\Tenant\ServiceOrder\ClientVehicleResolverService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class ServiceOrderController extends Controller
@@ -139,6 +140,41 @@ class ServiceOrderController extends Controller
         return Inertia::render('Tenant/ServiceOrders/Show', [
             'serviceOrder' => $serviceOrder->load(['client', 'vehicle', 'creator', 'technician', 'items', 'payments', 'events.user', 'photos.uploader']),
         ]);
+    }
+
+    public function pdf(string $id, FindOneServiceOrderAction $findOneAction): \Illuminate\Http\Response
+    {
+        $serviceOrder = $findOneAction($id);
+        $serviceOrder->load(['client', 'vehicle', 'creator', 'technician', 'items', 'payments', 'photos']);
+
+        $pdf = Pdf::loadView('tenant.service_order_pdf', ['serviceOrder' => $serviceOrder])
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->stream("OS-{$serviceOrder->order_number}.pdf");
+    }
+
+    public function receipt(
+        string $id,
+        Request $request,
+        FindOneServiceOrderAction $findOneAction
+    ): \Illuminate\Http\Response {
+        $serviceOrder = $findOneAction($id);
+        $serviceOrder->load(['client', 'vehicle']);
+
+        $type   = in_array($request->input('type'), ['payment', 'refund']) ? $request->input('type') : 'payment';
+        $amount = max(0.01, (float) $request->input('amount', 0));
+        $method = $request->input('method', 'cash');
+
+        $typeLabel = $type === 'refund' ? 'Estorno' : 'Pagamento';
+
+        $pdf = Pdf::loadView('tenant.payment_receipt_pdf', [
+            'serviceOrder'  => $serviceOrder,
+            'receiptType'   => $type,
+            'receiptAmount' => $amount,
+            'receiptMethod' => $method,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Recibo-{$typeLabel}-OS-{$serviceOrder->order_number}.pdf");
     }
 
     public function findOne(string $id, FindOneServiceOrderAction $findOneAction): JsonResponse

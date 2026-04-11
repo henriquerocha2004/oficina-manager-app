@@ -1,43 +1,53 @@
 <template>
   <TenantLayout :title="serviceOrder ? `OS-${serviceOrder.order_number}` : 'OS'" :breadcrumbs="breadcrumbs">
-    <div v-if="serviceOrder" class="-m-5 lg:-m-10 flex flex-col" style="height: calc(100vh - 121px)">
+    <div v-if="serviceOrder" class="-m-5 lg:-m-10 flex flex-col h-full">
 
       <!-- Header da OS -->
-      <div class="flex items-center gap-3 px-5 py-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
+      <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 shrink-0">
         <button
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0"
           @click="goBack"
         >
           <i class="ki-filled ki-arrow-left text-lg"></i>
         </button>
 
-        <div class="flex items-center gap-2 text-sm">
-          <span class="font-bold text-gray-900 dark:text-gray-100">OS-{{ serviceOrder?.order_number }}</span>
-          <span class="text-gray-300 dark:text-gray-600">•</span>
-          <span class="text-gray-600 dark:text-gray-400">{{ serviceOrder.client?.name }}</span>
-          <span class="text-gray-300 dark:text-gray-600">•</span>
-          <span class="text-gray-600 dark:text-gray-400">{{ vehicleLabel }}</span>
-          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+        <div class="flex items-center gap-1.5 text-sm min-w-0 flex-1">
+          <span class="font-bold text-gray-900 dark:text-gray-100 shrink-0">OS-{{ serviceOrder?.order_number }}</span>
+          <span class="text-gray-300 dark:text-gray-600 hidden lg:inline">•</span>
+          <span class="text-gray-600 dark:text-gray-400 truncate hidden lg:inline">{{ serviceOrder.client?.name }}</span>
+          <span class="text-gray-300 dark:text-gray-600 hidden lg:inline">•</span>
+          <span class="text-gray-600 dark:text-gray-400 truncate hidden lg:inline">{{ vehicleLabel }}</span>
+          <span class="hidden lg:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600 shrink-0">
             {{ serviceOrder.vehicle?.license_plate }}
           </span>
         </div>
 
-        <div class="ml-auto flex items-center gap-3">
-          <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium" :class="statusColor">
+        <div class="ml-auto flex items-center gap-1.5 shrink-0">
+          <span class="hidden lg:inline-flex items-center px-2.5 py-1 rounded text-xs font-medium" :class="statusColor">
             {{ statusLabel }}
           </span>
 
+          <!-- Botão Imprimir PDF -->
+          <a
+            :href="`/service-orders/${serviceOrder.id}/pdf`"
+            target="_blank"
+            class="kt-btn kt-btn-sm kt-btn-icon"
+            title="Imprimir OS (PDF)"
+          >
+            <i class="ki-filled ki-printer"></i>
+          </a>
+
           <!-- Botão Primário de Transição -->
-          <div v-if="getPrimaryAction(serviceOrder.status)" class="flex items-center gap-2">
-            <button
-              class="kt-btn kt-btn-primary kt-btn-sm"
-              :disabled="transitioning"
-              @click="handleTransition(getPrimaryAction(serviceOrder.status))"
-            >
-              <i v-if="transitioning" class="ki-filled ki-arrows-circle animate-spin text-xs mr-1"></i>
-              {{ getTransitionLabel(serviceOrder.status, getPrimaryAction(serviceOrder.status)) }}
-            </button>
-          </div>
+          <button
+            v-if="getPrimaryAction(serviceOrder.status)"
+            class="kt-btn kt-btn-primary kt-btn-sm max-w-32.5 truncate"
+            :disabled="transitioning"
+            :title="getTransitionLabel(serviceOrder.status, getPrimaryAction(serviceOrder.status))"
+            @click="handleTransition(getPrimaryAction(serviceOrder.status))"
+          >
+            <i v-if="transitioning" class="ki-filled ki-arrows-circle animate-spin text-xs mr-1 shrink-0"></i>
+            <span class="truncate">{{ getTransitionLabel(serviceOrder.status, getPrimaryAction(serviceOrder.status)) }}</span>
+          </button>
 
           <!-- Botões Secundários -->
           <div v-if="getSecondaryActions(serviceOrder.status).length > 0 || !['completed', 'cancelled'].includes(serviceOrder.status)" class="relative">
@@ -72,11 +82,80 @@
         </div>
       </div>
 
+      <!-- Mobile only: info summary (substitui sidebar que fica hidden) -->
+      <div class="lg:hidden shrink-0 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        <button
+          class="w-full flex items-center justify-between px-4 py-2.5 text-xs"
+          @click="showMobileInfo = !showMobileInfo"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <i class="ki-filled ki-profile-circle text-gray-400 shrink-0"></i>
+              <span class="font-medium text-gray-700 dark:text-gray-300 truncate">{{ serviceOrder.client?.name }}</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <i class="ki-filled ki-car text-gray-400"></i>
+              <span class="text-gray-500 dark:text-gray-400">{{ serviceOrder.vehicle?.license_plate }}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0 ml-2">
+            <span class="font-semibold text-gray-900 dark:text-gray-100">{{ formatCurrency(serviceOrder.total || 0) }}</span>
+            <i class="ki-filled text-gray-400 text-[10px]" :class="showMobileInfo ? 'ki-arrow-up' : 'ki-arrow-down'"></i>
+          </div>
+        </button>
+        <div v-if="showMobileInfo" class="px-4 pb-3 space-y-3 border-t border-gray-200 dark:border-gray-700">
+          <div class="grid grid-cols-2 gap-3 pt-2.5">
+            <!-- Cliente -->
+            <div>
+              <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Cliente</p>
+              <p class="text-xs font-semibold text-gray-900 dark:text-gray-100">{{ serviceOrder.client?.name }}</p>
+              <p v-if="serviceOrder.client?.phone" class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
+                <i class="ki-filled ki-phone text-[10px]"></i>
+                {{ serviceOrder.client.phone }}
+              </p>
+            </div>
+            <!-- Veículo -->
+            <div>
+              <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Veículo</p>
+              <p class="text-xs font-semibold text-gray-900 dark:text-gray-100">{{ vehicleLabel }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {{ serviceOrder.vehicle?.license_plate }}<span v-if="serviceOrder.vehicle?.year"> • {{ serviceOrder.vehicle.year }}</span>
+              </p>
+              <p v-if="serviceOrder.vehicle?.mileage" class="text-xs text-gray-500 dark:text-gray-400">
+                {{ formatMileage(serviceOrder.vehicle.mileage) }}
+              </p>
+            </div>
+          </div>
+          <!-- Resumo financeiro -->
+          <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+            <p class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Resumo Financeiro</p>
+            <div class="space-y-1 text-xs">
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-400">Serviços</span>
+                <span class="text-gray-700 dark:text-gray-300">{{ formatCurrency(serviceOrder.total_services || 0) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-400">Peças</span>
+                <span class="text-gray-700 dark:text-gray-300">{{ formatCurrency(serviceOrder.total_parts || 0) }}</span>
+              </div>
+              <div v-if="serviceOrder.discount > 0" class="flex justify-between">
+                <span class="text-gray-500 dark:text-gray-400">Desconto</span>
+                <span class="text-green-500">- {{ formatCurrency(serviceOrder.discount) }}</span>
+              </div>
+              <div class="flex justify-between font-semibold pt-1 border-t border-gray-100 dark:border-gray-800">
+                <span class="text-gray-900 dark:text-gray-100">Total</span>
+                <span class="text-gray-900 dark:text-gray-100">{{ formatCurrency(serviceOrder.total || 0) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Corpo: sidebar + conteúdo -->
       <div class="flex flex-1 min-h-0 overflow-hidden">
 
         <!-- Sidebar esquerda -->
-        <aside class="w-52 shrink-0 border-r border-gray-200 dark:border-gray-700 overflow-y-auto px-4 py-5 space-y-5">
+        <aside class="hidden lg:block w-52 shrink-0 border-r border-gray-200 dark:border-gray-700 overflow-y-auto px-4 py-5 space-y-5">
 
           <!-- Cliente -->
           <div>
@@ -137,28 +216,29 @@
         <main class="flex-1 flex flex-col min-h-0">
 
           <!-- Tabs -->
-          <div class="border-b border-gray-200 dark:border-gray-700 px-5 shrink-0">
-            <nav class="flex -mb-px">
+          <div class="border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <nav class="flex">
               <button
                 v-for="tab in tabs"
                 :key="tab.key"
-                class="flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+                :title="tab.label"
+                class="flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium border-b-2 transition-colors"
                 :class="activeTab === tab.key
                   ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                   : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
                 @click="activeTab = tab.key"
               >
-                <i :class="tab.icon" class="text-sm"></i>
-                {{ tab.label }}
+                <i :class="tab.icon" class="text-sm shrink-0"></i>
+                <span class="hidden sm:inline truncate">{{ tab.label }}</span>
               </button>
             </nav>
           </div>
 
           <!-- Conteúdo das tabs -->
-          <div class="p-6 flex-1 overflow-y-auto">
+          <div class="p-4 sm:p-6 flex-1 overflow-y-auto" style="-webkit-overflow-scrolling: touch; overscroll-behavior: contain;">
 
             <!-- Diagnóstico -->
-            <div v-if="activeTab === 'diagnostico'" class="max-w-2xl space-y-6">
+            <div v-if="activeTab === 'diagnostico'" class="w-full max-w-2xl space-y-6">
               <!-- Banner: OS Cancelada -->
               <div
                 v-if="serviceOrder.status === 'cancelled'"
@@ -213,7 +293,7 @@
             </div>
 
             <!-- Itens -->
-            <div v-else-if="activeTab === 'itens'" class="max-w-3xl">
+            <div v-else-if="activeTab === 'itens'" class="w-full max-w-3xl">
 
               <!-- Banner: OS Cancelada -->
               <div
@@ -261,19 +341,19 @@
                 <table class="w-full text-sm">
                   <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                     <tr>
-                      <th class="text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-24">Tipo</th>
+                      <th class="text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-20">Tipo</th>
                       <th class="text-left px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400">Descrição</th>
-                      <th class="text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-16">Qtd</th>
-                      <th class="text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-28">Preço Unit.</th>
-                      <th class="text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-28">Subtotal</th>
+                      <th class="hidden sm:table-cell text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-14">Qtd</th>
+                      <th class="hidden sm:table-cell text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-28">Preço Unit.</th>
+                      <th class="text-right px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 w-24">Subtotal</th>
                       <th class="w-10"></th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                     <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                      <td class="px-3 py-2">
+                      <td class="px-3 py-2.5">
                         <span
-                          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                          class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium"
                           :class="item.type === 'service'
                             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                             : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'"
@@ -281,11 +361,17 @@
                           {{ item.type === 'service' ? 'Serviço' : 'Peça' }}
                         </span>
                       </td>
-                      <td class="px-3 py-2 text-gray-900 dark:text-gray-100">{{ item.description }}</td>
-                      <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300">{{ item.quantity }}</td>
-                      <td class="px-3 py-2 text-right text-gray-700 dark:text-gray-300">{{ formatCurrency(item.unit_price) }}</td>
-                      <td class="px-3 py-2 text-right font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(item.subtotal) }}</td>
-                      <td class="px-3 py-2 text-center">
+                      <td class="px-3 py-2.5">
+                        <span class="text-gray-900 dark:text-gray-100">{{ item.description }}</span>
+                        <!-- Qtd × preço visível apenas no mobile -->
+                        <span class="sm:hidden block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                          {{ item.quantity }}× {{ formatCurrency(item.unit_price) }}
+                        </span>
+                      </td>
+                      <td class="hidden sm:table-cell px-3 py-2.5 text-right text-gray-700 dark:text-gray-300">{{ item.quantity }}</td>
+                      <td class="hidden sm:table-cell px-3 py-2.5 text-right text-gray-700 dark:text-gray-300">{{ formatCurrency(item.unit_price) }}</td>
+                      <td class="px-3 py-2.5 text-right font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(item.subtotal) }}</td>
+                      <td class="px-3 py-2.5 text-center">
                         <button
                           type="button"
                           class="kt-btn kt-btn-sm kt-btn-icon kt-btn-danger"
@@ -300,7 +386,8 @@
                   </tbody>
                   <tfoot class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <td colspan="4" class="px-3 py-2 text-sm font-semibold text-right text-gray-700 dark:text-gray-300">Total</td>
+                      <td colspan="2" class="sm:hidden px-3 py-2 text-sm font-semibold text-right text-gray-700 dark:text-gray-300">Total</td>
+                      <td colspan="4" class="hidden sm:table-cell px-3 py-2 text-sm font-semibold text-right text-gray-700 dark:text-gray-300">Total</td>
                       <td class="px-3 py-2 text-right font-bold text-gray-900 dark:text-gray-100">{{ formatCurrency(totalItems) }}</td>
                       <td></td>
                     </tr>
@@ -317,11 +404,11 @@
               <div v-if="newItem" class="p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg space-y-3 bg-gray-50 dark:bg-gray-800/50">
                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Novo Item</p>
 
-                <div class="flex gap-2 items-start">
+                <div class="flex flex-col sm:flex-row gap-2 items-start">
                   <!-- Tipo -->
                   <select
                     v-model="newItem.type"
-                    class="kt-select w-28 shrink-0"
+                    class="kt-select w-full sm:w-28 shrink-0"
                     @change="onNewItemTypeChange"
                   >
                     <option value="service">Serviço</option>
@@ -329,7 +416,7 @@
                   </select>
 
                   <!-- Descrição com dropdown de busca -->
-                  <div class="flex-1 relative">
+                  <div class="flex-1 relative w-full">
                     <input
                       ref="newItemDescInput"
                       v-model="newItem.description"
@@ -359,24 +446,26 @@
                     </teleport>
                   </div>
 
-                  <!-- Quantidade -->
-                  <input
-                    v-model.number="newItem.quantity"
-                    type="number"
-                    class="kt-input w-20 shrink-0"
-                    placeholder="Qtd"
-                    min="1"
-                  />
+                  <div class="flex gap-2 w-full sm:w-auto">
+                    <!-- Quantidade -->
+                    <input
+                      v-model.number="newItem.quantity"
+                      type="number"
+                      class="kt-input w-full sm:w-20 shrink-0"
+                      placeholder="Qtd"
+                      min="1"
+                    />
 
-                  <!-- Preço unitário -->
-                  <input
-                    v-model.number="newItem.unit_price"
-                    type="number"
-                    class="kt-input w-28 shrink-0"
-                    placeholder="Preço"
-                    step="0.01"
-                    min="0"
-                  />
+                    <!-- Preço unitário -->
+                    <input
+                      v-model.number="newItem.unit_price"
+                      type="number"
+                      class="kt-input w-full sm:w-28 shrink-0"
+                      placeholder="Preço"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
                 </div>
 
                 <div class="flex gap-2 justify-end">
@@ -396,12 +485,12 @@
             </div>
 
             <!-- Linha do Tempo -->
-            <div v-else-if="activeTab === 'linha-do-tempo'" class="max-w-2xl">
+            <div v-else-if="activeTab === 'linha-do-tempo'" class="w-full max-w-2xl">
               <ServiceOrderTimeline :events="serviceOrder.events || []" />
             </div>
 
             <!-- Financeiro -->
-            <div v-else-if="activeTab === 'financeiro'" class="max-w-2xl">
+            <div v-else-if="activeTab === 'financeiro'" class="w-full max-w-2xl">
               <ServiceOrderFinanceiro :service-order="serviceOrder" @cancel="handleCancelFromFinanceiro" />
             </div>
 
@@ -499,6 +588,8 @@ const props = defineProps({
 });
 
 const activeTab = ref('diagnostico');
+const showMobileInfo = ref(false);
+
 
 const tabs = [
   { key: 'diagnostico',    label: 'Diagnóstico',   icon: 'ki-filled ki-setting-2' },

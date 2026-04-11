@@ -9,6 +9,7 @@ export function useServiceOrderFilters() {
         client: '',
         plate: '',
         status: '',
+        orderNumber: '',
     });
 
     function saveToStorage() {
@@ -30,12 +31,13 @@ export function useServiceOrderFilters() {
     }
 
     function clearFilters() {
-        filters.dateFrom = '';
-        filters.dateTo = '';
-        filters.client = '';
-        filters.plate = '';
-        filters.status = '';
-        
+        filters.dateFrom    = '';
+        filters.dateTo      = '';
+        filters.client      = '';
+        filters.plate       = '';
+        filters.status      = '';
+        filters.orderNumber = '';
+
         try {
             sessionStorage.removeItem(STORAGE_KEY);
         } catch (error) {
@@ -45,11 +47,12 @@ export function useServiceOrderFilters() {
 
     const activeFiltersCount = computed(() => {
         let count = 0;
-        if (filters.dateFrom) count++;
-        if (filters.dateTo) count++;
-        if (filters.client) count++;
-        if (filters.plate) count++;
-        if (filters.status) count++;
+        if (filters.dateFrom)    count++;
+        if (filters.dateTo)      count++;
+        if (filters.client)      count++;
+        if (filters.plate)       count++;
+        if (filters.status)      count++;
+        if (filters.orderNumber) count++;
         return count;
     });
 
@@ -57,11 +60,12 @@ export function useServiceOrderFilters() {
 
     function initFromStorage() {
         const saved = loadFromStorage();
-        if (saved.dateFrom) filters.dateFrom = saved.dateFrom;
-        if (saved.dateTo) filters.dateTo = saved.dateTo;
-        if (saved.client) filters.client = saved.client;
-        if (saved.plate) filters.plate = saved.plate;
-        if (saved.status) filters.status = saved.status;
+        if (saved.dateFrom)    filters.dateFrom    = saved.dateFrom;
+        if (saved.dateTo)      filters.dateTo      = saved.dateTo;
+        if (saved.client)      filters.client      = saved.client;
+        if (saved.plate)       filters.plate       = saved.plate;
+        if (saved.status)      filters.status      = saved.status;
+        if (saved.orderNumber) filters.orderNumber = saved.orderNumber;
     }
 
     return {

@@ -67,6 +67,9 @@ function closeFilters() {
 
 function handleClickOutside(event) {
     if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+        if (event.target.closest('[data-vc="calendar"]')) {
+            return;
+        }
         closeFilters();
     }
 }
@@ -107,8 +110,8 @@ onUnmounted(() => {
 
 .filter-panel {
     position: absolute !important;
-    bottom: calc(100% + 0.5rem) !important;
-    top: auto !important;
+    top: calc(100% + 0.5rem) !important;
+    bottom: auto !important;
     left: 0;
     right: auto;
     min-width: 720px;
@@ -196,9 +199,6 @@ onUnmounted(() => {
 }
 
 .filter-panel-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
     padding: 1.25rem;
 }
 

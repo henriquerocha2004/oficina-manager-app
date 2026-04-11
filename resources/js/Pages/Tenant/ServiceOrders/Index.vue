@@ -44,15 +44,21 @@ import KanbanBoard from '@/Shared/Components/ServiceOrder/KanbanBoard.vue';
 import ServiceOrderGridView from '@/Shared/Components/ServiceOrder/ServiceOrderGridView.vue';
 import CreateServiceOrderModal from '@/Shared/Components/ServiceOrder/CreateServiceOrderModal.vue';
 
-const viewMode = ref('kanban');
+const VIEW_MODE_KEY = 'service-orders-view-mode';
+
 const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
 const createModalRef = ref(null);
 const kanbanRef = ref(null);
 
 const isMobile = computed(() => windowWidth.value < 1024);
 
+const viewMode = ref(
+  isMobile.value ? 'grid' : (localStorage.getItem(VIEW_MODE_KEY) ?? 'kanban')
+);
+
 function onViewModeChange(mode) {
   viewMode.value = mode;
+  localStorage.setItem(VIEW_MODE_KEY, mode);
 }
 
 function updateWidth() {

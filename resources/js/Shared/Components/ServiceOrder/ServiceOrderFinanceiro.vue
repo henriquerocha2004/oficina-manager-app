@@ -63,11 +63,22 @@
       <!-- Header -->
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Pagamentos</h3>
-        <transition name="fade">
-          <span v-if="showSavedBadge" class="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
-            <i class="ki-filled ki-check text-xs"></i> Salvo
-          </span>
-        </transition>
+        <div class="flex items-center gap-2">
+          <transition name="fade">
+            <span v-if="showSavedBadge" class="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+              <i class="ki-filled ki-check text-xs"></i> Salvo
+            </span>
+          </transition>
+          <button
+            v-if="history.length > 0"
+            type="button"
+            class="kt-btn kt-btn-xs"
+            @click="openReceiptModal"
+          >
+            <i class="ki-filled ki-printer text-xs"></i>
+            <span class="hidden sm:inline ml-1">Imprimir Recibo</span>
+          </button>
+        </div>
       </div>
 
       <!-- Pago / Restante -->
@@ -109,7 +120,7 @@
               ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
               : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700'"
           >
-            <div class="flex items-center gap-2.5">
+            <div class="flex items-center gap-2.5 min-w-0">
               <div
                 class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                 :class="item.type === 'refund'
@@ -118,7 +129,7 @@
               >
                 <i class="text-xs" :class="item.type === 'refund' ? 'ki-filled ki-arrows-circle' : methodIcon(item.payment_method)"></i>
               </div>
-              <div>
+              <div class="min-w-0">
                 <div class="flex items-center gap-1.5">
                   <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {{ item.type === 'refund' ? 'Estorno' : methodLabel(item.payment_method) }}
@@ -133,15 +144,15 @@
                     {{ item.installments }}x
                   </span>
                 </div>
-                <p class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
-                  <i class="ki-filled ki-calendar text-[10px]"></i>
+                <p class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5 truncate">
+                  <i class="ki-filled ki-calendar text-[10px] shrink-0"></i>
                   {{ formatDate(item.paid_at) }}
-                  <span v-if="item.notes" class="ml-1">· {{ item.notes }}</span>
+                  <span v-if="item.notes" class="ml-1 truncate">· {{ item.notes }}</span>
                 </p>
               </div>
             </div>
             <span
-              class="text-sm font-semibold"
+              class="text-sm font-semibold shrink-0"
               :class="item.type === 'refund' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'"
             >
               {{ item.type === 'refund' ? '-' : '' }}{{ formatCurrency(parseFloat(item.amount)) }}
@@ -168,7 +179,7 @@
         </div>
 
         <!-- Método -->
-        <div class="grid grid-cols-4 gap-2 mb-3">
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
           <button
             v-for="m in paymentMethods"
             :key="m.value"
@@ -280,7 +291,7 @@
     <!-- Card 3: Ações -->
     <div v-if="totalPaid > 0 && serviceOrder.status !== 'cancelled'" class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
       <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Ações</h3>
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <button type="button" class="kt-btn kt-btn-sm" @click="openRefundModal">
           <i class="ki-filled ki-arrows-circle text-xs"></i>
           Estornar Valor
@@ -291,6 +302,155 @@
         </button>
       </div>
     </div>
+
+    <!-- Modal de Recibo -->
+    <teleport to="body">
+      <div
+        v-if="showReceiptModal"
+        class="fixed inset-0 z-[9999] flex items-center justify-center"
+        style="background: rgba(0,0,0,0.5)"
+        @click.self="showReceiptModal = false"
+      >
+        <div class="bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-4 p-6">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Gerar Recibo</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-600" @click="showReceiptModal = false">
+              <i class="ki-filled ki-cross text-sm"></i>
+            </button>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">
+            Escolha o tipo, a forma e o valor para o recibo imprimível.
+          </p>
+
+          <!-- Tipo: Pagamento / Estorno -->
+          <div class="flex gap-2 mb-4">
+            <button
+              type="button"
+              class="flex-1 py-2 rounded-lg border text-sm font-medium transition-colors"
+              :class="receiptForm.type === 'payment'
+                ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400'
+                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'"
+              @click="receiptForm.type = 'payment'; receiptForm.amount = 0"
+            >
+              <i class="ki-filled ki-dollar text-xs mr-1"></i>
+              Pagamento
+            </button>
+            <button
+              v-if="hasRefunds"
+              type="button"
+              class="flex-1 py-2 rounded-lg border text-sm font-medium transition-colors"
+              :class="receiptForm.type === 'refund'
+                ? 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'"
+              @click="receiptForm.type = 'refund'; receiptForm.amount = 0"
+            >
+              <i class="ki-filled ki-arrows-circle text-xs mr-1"></i>
+              Estorno
+            </button>
+          </div>
+
+          <!-- Método -->
+          <div class="grid grid-cols-4 gap-2 mb-4">
+            <button
+              v-for="m in paymentMethods"
+              :key="m.value"
+              type="button"
+              class="flex flex-col items-center gap-1 py-2 px-1 rounded-lg border text-xs font-medium transition-colors"
+              :class="receiptForm.method === m.value
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'
+                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'"
+              @click="receiptForm.method = m.value"
+            >
+              <i class="text-base" :class="m.icon"></i>
+              {{ m.label }}
+            </button>
+          </div>
+
+          <!-- Valor -->
+          <div class="mb-3">
+            <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Valor (R$)</label>
+            <input
+              v-model.number="receiptForm.amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              class="kt-input w-full text-lg"
+              placeholder="0,00"
+            />
+          </div>
+
+          <!-- Atalhos de valor -->
+          <div class="flex flex-wrap gap-2 mb-6">
+            <template v-if="receiptForm.type === 'payment'">
+              <button
+                type="button"
+                class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 transition-colors"
+                @click="receiptForm.amount = parseFloat(totalPaid.toFixed(2))"
+              >
+                Total pago ({{ formatCurrency(totalPaid) }})
+              </button>
+              <button
+                v-if="outstanding > 0"
+                type="button"
+                class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 transition-colors"
+                @click="receiptForm.amount = parseFloat(outstanding.toFixed(2))"
+              >
+                Restante ({{ formatCurrency(outstanding) }})
+              </button>
+              <button
+                v-if="totalPaid > 0"
+                type="button"
+                class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 transition-colors"
+                @click="receiptForm.amount = parseFloat((totalPaid / 2).toFixed(2))"
+              >
+                Metade ({{ formatCurrency(totalPaid / 2) }})
+              </button>
+              <button
+                v-for="p in paymentHistory"
+                :key="p.id"
+                type="button"
+                class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 transition-colors"
+                @click="receiptForm.amount = parseFloat(p.amount)"
+              >
+                {{ methodLabel(p.payment_method) }} {{ formatCurrency(parseFloat(p.amount)) }}
+              </button>
+            </template>
+            <template v-else>
+              <button
+                type="button"
+                class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 transition-colors"
+                @click="receiptForm.amount = parseFloat(totalRefunded.toFixed(2))"
+              >
+                Total estornado ({{ formatCurrency(totalRefunded) }})
+              </button>
+              <button
+                v-for="r in refundHistory"
+                :key="r.id"
+                type="button"
+                class="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 transition-colors"
+                @click="receiptForm.amount = parseFloat(r.amount)"
+              >
+                Estorno {{ formatCurrency(parseFloat(r.amount)) }}
+              </button>
+            </template>
+          </div>
+
+          <div class="flex gap-3">
+            <button type="button" class="kt-btn flex-1" @click="showReceiptModal = false">Cancelar</button>
+            <a
+              :href="receiptUrl"
+              target="_blank"
+              class="kt-btn kt-btn-primary flex-1 text-center"
+              :class="{ 'opacity-50 pointer-events-none': !receiptForm.amount || receiptForm.amount <= 0 }"
+              @click="showReceiptModal = false"
+            >
+              <i class="ki-filled ki-printer text-xs mr-1"></i>
+              Gerar Recibo
+            </a>
+          </div>
+        </div>
+      </div>
+    </teleport>
 
     <!-- Modal de Estorno -->
     <teleport to="body">
@@ -393,13 +553,15 @@ const emit = defineEmits(['cancel']);
 const toast = useToast();
 
 // ---- Estado ----
-const showPaymentForm = ref(false);
-const showRefundModal = ref(false);
-const showSavedBadge  = ref(false);
-const savingPayment   = ref(false);
-const savingRefund    = ref(false);
-const paymentForm = ref({ method: 'cash', amount: 0, installments: 1, notes: '' });
-const refundForm  = ref({ amount: 0, method: 'cash', notes: '' });
+const showPaymentForm  = ref(false);
+const showRefundModal  = ref(false);
+const showReceiptModal = ref(false);
+const showSavedBadge   = ref(false);
+const savingPayment    = ref(false);
+const savingRefund     = ref(false);
+const paymentForm  = ref({ method: 'cash', amount: 0, installments: 1, notes: '' });
+const refundForm   = ref({ amount: 0, method: 'cash', notes: '' });
+const receiptForm  = ref({ type: 'payment', amount: 0, method: 'cash' });
 const discountValue = ref(parseFloat(props.serviceOrder.discount) || 0);
 
 // ---- Computed ----
@@ -423,6 +585,20 @@ const totalRefunded = computed(() =>
     .filter(p => p.type === 'refund')
     .reduce((s, p) => s + parseFloat(p.amount), 0)
 );
+
+const paymentHistory = computed(() => history.value.filter(h => h.type !== 'refund'));
+const refundHistory  = computed(() => history.value.filter(h => h.type === 'refund'));
+const hasRefunds     = computed(() => refundHistory.value.length > 0);
+
+const receiptUrl = computed(() => {
+  if (!receiptForm.value.amount || receiptForm.value.amount <= 0) return '#';
+  const params = new URLSearchParams({
+    type:   receiptForm.value.type,
+    amount: String(receiptForm.value.amount),
+    method: receiptForm.value.method,
+  });
+  return `/service-orders/${props.serviceOrder.id}/receipt?${params}`;
+});
 
 const servicesCount = computed(() => props.serviceOrder.items?.filter(i => i.type === 'service').length ?? 0);
 const partsCount    = computed(() => props.serviceOrder.items?.filter(i => i.type === 'part').length ?? 0);
@@ -462,6 +638,11 @@ function closePaymentForm() {
 function openRefundModal() {
   refundForm.value = { amount: 0, method: 'cash', notes: '' };
   showRefundModal.value = true;
+}
+
+function openReceiptModal() {
+  receiptForm.value = { type: 'payment', amount: 0, method: 'cash' };
+  showReceiptModal.value = true;
 }
 
 async function handleRegisterPayment() {
