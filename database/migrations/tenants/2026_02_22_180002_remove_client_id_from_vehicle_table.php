@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::connection('tenant')->table('vehicle', function (Blueprint $table): void {
+        Schema::table('vehicle', function (Blueprint $table): void {
             $table->dropForeign(['client_id']);
             $table->dropColumn('client_id');
         });
@@ -18,7 +18,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::connection('tenant')->table('vehicle', function (Blueprint $table): void {
+        Schema::table('vehicle', function (Blueprint $table): void {
             $table->foreignUlid('client_id')
                 ->nullable()
                 ->constrained('client')
