@@ -40,3 +40,5 @@ test-db-refresh:
 
 test:
 	docker exec -u $(USER_ID):$(GROUP_ID) oficina-manager-app php artisan test
+down:
+	$(USER_ID):$(GROUP_ID) docker compose -f infra/dev/docker-compose.yml down
