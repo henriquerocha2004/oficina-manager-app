@@ -7,10 +7,6 @@ require __DIR__.'/auth.php';
 
 // Protected tenant routes
 Route::middleware(['auth:tenant', 'tenant'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Tenant/Dashboard');
-    })->name('tenant.dashboard');
-
     // Client routes
     require __DIR__.'/client.php';
 
@@ -25,6 +21,9 @@ Route::middleware(['auth:tenant', 'tenant'])->group(function () {
 
     // Product routes
     require __DIR__.'/product.php';
+
+    // User routes
+    require __DIR__.'/user.php';
 
     // Stock routes
     require __DIR__.'/stock.php';

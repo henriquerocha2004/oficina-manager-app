@@ -191,4 +191,20 @@ class Messages
     public const string SERVICE_ORDER_PHOTO_DELETED_SUCCESS = 'Photo deleted successfully.';
 
     public const string ERROR_DELETING_SERVICE_ORDER_PHOTO = 'An error occurred while deleting the photo.';
+
+    public const string USER_CREATED_SUCCESS = 'User created successfully.';
+
+    public const string ERROR_CREATING_USER = 'An error occurred while creating the user.';
+
+    public const string USERS_FETCHED_SUCCESS = 'Users fetched successfully.';
+
+    public const string ERROR_FETCHING_USERS = 'Failed to fetch users.';
+
+    public const string USER_UPDATED_SUCCESS = 'User updated successfully.';
+
+    public const string ERROR_UPDATING_USER = 'An error occurred while updating the user.';
+
+    public const string USER_DELETED_SUCCESS = 'User deleted successfully.';
+
+    public const string ERROR_DELETING_USER = 'An error occurred while deleting the user.';
 }

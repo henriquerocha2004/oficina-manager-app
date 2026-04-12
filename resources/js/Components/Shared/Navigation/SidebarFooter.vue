@@ -22,16 +22,17 @@
             <div class="flex-1 min-w-0">
               <div class="font-semibold text-base text-gray-100 truncate">{{ user?.name }}</div>
               <div class="text-xs text-gray-400 truncate">{{ user?.email }}</div>
+              <div class="mt-2">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium" :class="currentRoleBadgeClass">
+                  {{ currentRoleLabel }}
+                </span>
+              </div>
             </div>
           </div>
           <!-- Menu -->
           <div class="py-1">
             <div class="flex flex-col gap-0.5 px-2 py-1">
-              <Link :href="route(profileRoute)" class="flex items-center gap-3 px-3 py-1.5 rounded-lg text-gray-200 hover:bg-gray-800 transition text-sm">
-                <i class="ki-outline ki-user text-lg"></i>
-                <span>Meu Perfil</span>
-              </Link>
-              <Link :href="route(settingsRoute)" class="flex items-center gap-3 px-3 py-1.5 rounded-lg text-gray-200 hover:bg-gray-800 transition text-sm">
+              <Link :href="route(accountRoute)" class="flex items-center gap-3 px-3 py-1.5 rounded-lg text-gray-200 hover:bg-gray-800 transition text-sm">
                 <i class="ki-outline ki-setting-2 text-lg"></i>
                 <span>Minha Conta</span>
                 <i class="ki-outline ki-chevron-right ml-auto text-base opacity-60"></i>
@@ -59,17 +60,7 @@
       </div>
       <!-- Ícones à direita -->
       <div class="flex items-center gap-3">
-        <button
-          class="inline-flex items-center justify-center text-gray-400 hover:text-primary transition-colors relative"
-          @click="$emit('open-notifications')"
-          title="Notificações"
-        >
-          <i class="ki-outline ki-notification-on text-xl"></i>
-          <span
-            v-if="notificationsCount > 0"
-            class="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full w-2 h-2 bg-red-500"
-          ></span>
-        </button>
+
         <Link
           :href="route(logoutRoute)"
           method="post"
@@ -89,6 +80,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { useRoute } from '@/Composables/useRoute';
 import { useTheme } from '@/Composables/useTheme';
+import { getUserRoleBadgeClass, getUserRoleLabel } from '@/Data/userRoles.js';
 import blankAvatar from '@assets/media/avatars/blank.png';
 
 const props = defineProps({
@@ -96,11 +88,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  profileRoute: {
-    type: String,
-    required: true,
-  },
-  settingsRoute: {
+  accountRoute: {
     type: String,
     required: true,
   },
@@ -117,10 +105,12 @@ const props = defineProps({
 defineEmits(['open-notifications']);
 
 const page = usePage();
-const user = page.props.auth?.user;
+const user = computed(() => page.props.auth?.user);
 const { route } = useRoute();
 const { toggleTheme, getCurrentTheme, THEME_MODES } = useTheme();
 
+const currentRoleLabel = computed(() => getUserRoleLabel(user.value?.role || ''));
+const currentRoleBadgeClass = computed(() => getUserRoleBadgeClass(user.value?.role || ''));
 
 const isDropdownOpen = ref(false);
 const dropdownRef = ref(null);

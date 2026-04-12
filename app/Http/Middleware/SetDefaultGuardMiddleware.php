@@ -19,7 +19,7 @@ class SetDefaultGuardMiddleware
             // Requisições de tenant (via subdomain)
             config(['fortify.guard' => 'tenant']);
             config(['fortify.passwords' => 'users']);
-            config(['fortify.home' => '/dashboard']);
+            config(['fortify.home' => '/clients']);
         }
 
         return $next($request);

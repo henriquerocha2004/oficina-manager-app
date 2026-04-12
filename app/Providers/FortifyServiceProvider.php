@@ -28,7 +28,7 @@ class FortifyServiceProvider extends ServiceProvider
             return new class implements LoginResponse {
                 public function toResponse($request): Response
                 {
-                    $home = $request->is('admin/*') || $request->is('admin') ? '/admin/dashboard' : '/dashboard';
+                    $home = $request->is('admin/*') || $request->is('admin') ? '/admin/dashboard' : '/clients';
                     return Inertia::location($home);
                 }
             };

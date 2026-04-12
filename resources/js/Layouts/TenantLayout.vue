@@ -28,8 +28,7 @@
         
         <SidebarFooter
           :collapsed="!isSidebarOpen"
-          profile-route="tenant.settings.account"
-          settings-route="tenant.settings.profile"
+          account-route="account.index"
           logout-route="tenant.logout"
           :notifications-count="notificationsCount"
           @open-notifications="openNotificationsDrawer"

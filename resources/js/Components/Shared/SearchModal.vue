@@ -183,11 +183,11 @@ const mockResults = [
   },
   {
     id: 3,
-    title: 'Configurações do Sistema',
-    description: 'Ajustes e preferências',
+    title: 'Minha Conta',
+    description: 'Alterar nome, senha e foto do perfil',
     type: 'Configuração',
     icon: 'ki-outline ki-setting-2 text-gray-600',
-    route: 'tenant.settings.profile',
+    route: 'account.index',
   },
   {
     id: 4,

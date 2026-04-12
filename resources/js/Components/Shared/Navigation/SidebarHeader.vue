@@ -13,18 +13,7 @@
         </span>
       </div>
       
-      <!-- Botões do Header -->
-      <div v-if="!collapsed" class="flex items-center gap-1">
-        <button
-          v-if="showSearch"
-          type="button"
-          @click="$emit('open-search')"
-          class="inline-flex items-center justify-center h-8 w-8 px-0 rounded-lg bg-primary text-white transition-colors"
-          title="Buscar"
-        >
-          <i class="ki-outline ki-magnifier"></i>
-        </button>
-      </div>
+
     </div>
   </div>
 </template>

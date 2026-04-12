@@ -11,11 +11,6 @@
 
 export const tenantMenu = [
     {
-        label: 'Dashboard',
-        route: 'tenant.dashboard',
-        icon: 'ki-outline ki-element-11',
-    },
-    {
         label: 'Clientes',
         route: 'clients.index',
         icon: 'ki-outline ki-profile-circle',
@@ -26,28 +21,13 @@ export const tenantMenu = [
         icon: 'ki-outline ki-car',
     },
     {
-        label: 'Serviços',
-        route: 'services.index',
-        icon: 'ki-outline ki-setting-2',
-    },
-    {
-        label: 'Fornecedores',
-        route: 'suppliers.index',
-        icon: 'ki-outline ki-delivery',
-    },
-    {
-        label: 'Produtos',
-        route: 'products.index',
-        icon: 'ki-outline ki-package',
-    },
-    {
-        label: 'Mov. Estoque',
-        route: 'stock.movements.index',
-        icon: 'ki-outline ki-category',
-    },
-    {
         label: 'Ordens de Serviço',
         route: 'service-orders.index',
         icon: 'ki-outline ki-note-2',
+    },
+    {
+        label: 'Usuários',
+        route: 'users.index',
+        icon: 'ki-outline ki-user',
     },
 ];
