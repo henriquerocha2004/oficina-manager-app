@@ -1,4 +1,5 @@
 import { ref, watchEffect } from 'vue';
+import { savePreferences } from '@/services/preferencesService.js';
 
 const STORAGE_KEY = 'kt-theme';
 const THEME_MODES = {
@@ -69,6 +70,7 @@ export function useTheme() {
         theme.value = mode;
         localStorage.setItem(STORAGE_KEY, mode);
         applyTheme();
+        savePreferences({ theme: mode });
     };
 
     /**
@@ -94,6 +96,20 @@ export function useTheme() {
         return theme.value;
     };
 
+    /**
+     * Sincroniza o tema com a preferência salva no perfil do usuário.
+     * Deve ser chamado após o mount do layout autenticado, quando auth.user está disponível.
+     * @param {Object|null} userPreferences - page.props.auth.user.preferences
+     */
+    const syncThemeFromUser = (userPreferences) => {
+        const savedTheme = userPreferences?.theme;
+        if (savedTheme && Object.values(THEME_MODES).includes(savedTheme) && savedTheme !== theme.value) {
+            theme.value = savedTheme;
+            localStorage.setItem(STORAGE_KEY, savedTheme);
+            applyTheme();
+        }
+    };
+
     // Watch for system theme changes when in system mode
     watchEffect(() => {
         if (theme.value === THEME_MODES.SYSTEM) {
@@ -110,6 +126,7 @@ export function useTheme() {
         setTheme,
         toggleTheme,
         initTheme,
+        syncThemeFromUser,
         getCurrentTheme,
         THEME_MODES,
     };

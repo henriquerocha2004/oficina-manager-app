@@ -17,7 +17,9 @@ use App\Http\Requests\tenant\AccountRequest;
 use App\Http\Requests\tenant\UserRequest;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -188,6 +190,24 @@ class UserController extends Controller
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }
+    }
+
+    public function updatePreferences(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'theme'        => ['sometimes', 'string', Rule::in(['light', 'dark', 'system'])],
+            'so_view_mode' => ['sometimes', 'string', Rule::in(['kanban', 'grid'])],
+        ]);
+
+        $user = $request->user('tenant');
+        $user->update([
+            'preferences' => array_merge($user->preferences ?? [], $validated),
+        ]);
+
+        return $this->setResponse(
+            message: 'Preferências atualizadas.',
+            code: Response::HTTP_OK,
+        );
     }
 
     public function updateAccount(AccountRequest $request, UpdateUserAction $updateUserAction): JsonResponse

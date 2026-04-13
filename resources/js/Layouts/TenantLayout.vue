@@ -75,7 +75,8 @@
 </template>
 
 <script setup>
-import { ref, computed, provide } from 'vue';
+import { ref, computed, provide, onMounted } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 import BaseAuthenticatedLayout from './BaseAuthenticatedLayout.vue';
 import Sidebar from '@/Components/Shared/Navigation/Sidebar.vue';
@@ -90,6 +91,7 @@ import SearchModal from '@/Components/Shared/SearchModal.vue';
 import { tenantMenu } from '@/config/tenantMenu.js';
 import { useSidebar } from '@/Composables/useSidebar.js';
 import { usePermissions } from '@/Composables/usePermissions.js';
+import { useTheme } from '@/Composables/useTheme.js';
 
 const props = defineProps({
   title: {
@@ -115,6 +117,12 @@ const { role } = usePermissions();
 const filteredMenu = computed(() =>
   tenantMenu.filter(item => !item.roles || item.roles.includes(role.value))
 );
+
+const page = usePage();
+const { syncThemeFromUser } = useTheme();
+onMounted(() => {
+  syncThemeFromUser(page.props.auth?.user?.preferences);
+});
 
 // Prover função isAccordionOpen para componentes filhos
 provide('isAccordionOpen', isAccordionOpen);

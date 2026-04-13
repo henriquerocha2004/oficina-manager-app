@@ -22,6 +22,7 @@ class User extends Authenticatable
         'role',
         'is_active',
         'avatar_path',
+        'preferences',
     ];
 
     protected $appends = [
@@ -40,6 +41,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRoleEnum::class,
             'is_active' => 'boolean',
+            'preferences' => 'array',
         ];
     }
 

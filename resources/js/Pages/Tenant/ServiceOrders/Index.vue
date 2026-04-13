@@ -38,14 +38,17 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
 import KanbanBoard from '@/Shared/Components/ServiceOrder/KanbanBoard.vue';
 import ServiceOrderGridView from '@/Shared/Components/ServiceOrder/ServiceOrderGridView.vue';
 import CreateServiceOrderModal from '@/Shared/Components/ServiceOrder/CreateServiceOrderModal.vue';
 import { usePermissions } from '@/Composables/usePermissions.js';
+import { savePreferences } from '@/services/preferencesService.js';
 
 const { canCreateServiceOrder } = usePermissions();
+
+const page = usePage();
 
 const VIEW_MODE_KEY = 'service-orders-view-mode';
 
@@ -55,13 +58,15 @@ const kanbanRef = ref(null);
 
 const isMobile = computed(() => windowWidth.value < 1024);
 
+const userViewMode = page.props.auth?.user?.preferences?.so_view_mode ?? null;
 const viewMode = ref(
-  isMobile.value ? 'grid' : (localStorage.getItem(VIEW_MODE_KEY) ?? 'kanban')
+  isMobile.value ? 'grid' : (userViewMode ?? localStorage.getItem(VIEW_MODE_KEY) ?? 'kanban')
 );
 
 function onViewModeChange(mode) {
   viewMode.value = mode;
   localStorage.setItem(VIEW_MODE_KEY, mode);
+  savePreferences({ so_view_mode: mode });
 }
 
 function updateWidth() {

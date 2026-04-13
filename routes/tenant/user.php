@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/account', [UserController::class, 'account'])->name('account.index');
 Route::post('/account', [UserController::class, 'updateAccount'])->name('account.update');
+Route::patch('/account/preferences', [UserController::class, 'updatePreferences'])->name('account.preferences');
 
 Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
     Route::get('/', [UserController::class, 'index'])->name('index');
