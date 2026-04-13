@@ -21,7 +21,7 @@
         />
         
         <SidebarMenu
-          :menu-items="tenantMenu"
+          :menu-items="filteredMenu"
           :collapsed="!isSidebarOpen"
           @toggle-accordion="toggleAccordion"
         />
@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, provide } from 'vue';
+import { ref, computed, provide } from 'vue';
 import { router } from '@inertiajs/vue3';
 import BaseAuthenticatedLayout from './BaseAuthenticatedLayout.vue';
 import Sidebar from '@/Components/Shared/Navigation/Sidebar.vue';
@@ -89,6 +89,7 @@ import NotificationsDrawer from '@/Components/Shared/NotificationsDrawer.vue';
 import SearchModal from '@/Components/Shared/SearchModal.vue';
 import { tenantMenu } from '@/config/tenantMenu.js';
 import { useSidebar } from '@/Composables/useSidebar.js';
+import { usePermissions } from '@/Composables/usePermissions.js';
 
 const props = defineProps({
   title: {
@@ -109,6 +110,11 @@ const {
   isAccordionOpen,
   closeSidebarOnMobile,
 } = useSidebar('tenant');
+
+const { role } = usePermissions();
+const filteredMenu = computed(() =>
+  tenantMenu.filter(item => !item.roles || item.roles.includes(role.value))
+);
 
 // Prover função isAccordionOpen para componentes filhos
 provide('isAccordionOpen', isAccordionOpen);
