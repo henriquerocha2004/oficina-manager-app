@@ -18,7 +18,7 @@
             <i class="ki-filled ki-row-vertical text-sm"></i>
           </button>
         </div>
-        <button class="kt-btn" @click="onNew">
+        <button v-if="canCreateServiceOrder()" class="kt-btn" @click="onNew">
           <i class="ki-filled ki-plus text-sm mr-1"></i>
           Nova OS
         </button>
@@ -43,6 +43,9 @@ import TenantLayout from '@/Layouts/TenantLayout.vue';
 import KanbanBoard from '@/Shared/Components/ServiceOrder/KanbanBoard.vue';
 import ServiceOrderGridView from '@/Shared/Components/ServiceOrder/ServiceOrderGridView.vue';
 import CreateServiceOrderModal from '@/Shared/Components/ServiceOrder/CreateServiceOrderModal.vue';
+import { usePermissions } from '@/Composables/usePermissions.js';
+
+const { canCreateServiceOrder } = usePermissions();
 
 const VIEW_MODE_KEY = 'service-orders-view-mode';
 

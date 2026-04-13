@@ -1,10 +1,11 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use App\Http\Middleware\IdentifyTenant;
+use App\Http\Middleware\EnsureTenantPermission;
 use App\Http\Middleware\HandleInertiaRequests;
-use App\Http\Middleware\SetDefaultGuardMiddleware;
+use App\Http\Middleware\IdentifyTenant;
 use App\Http\Middleware\RedirectIfAdminAuthenticated;
+use App\Http\Middleware\SetDefaultGuardMiddleware;
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
@@ -18,9 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-           'tenant' => IdentifyTenant::class,
-           'guard.resolver' => SetDefaultGuardMiddleware::class,
-           'guest.admin' => RedirectIfAdminAuthenticated::class,
+            'tenant' => IdentifyTenant::class,
+            'guard.resolver' => SetDefaultGuardMiddleware::class,
+            'guest.admin' => RedirectIfAdminAuthenticated::class,
+            'tenant.permission' => EnsureTenantPermission::class,
         ]);
         $middleware->web(
             append: [
@@ -38,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             $subdomain = explode('.', $host)[0];
+
             return route('tenant.login', ['subdomain' => $subdomain]);
         });
     })
