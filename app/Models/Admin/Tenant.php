@@ -2,10 +2,12 @@
 
 namespace App\Models\Admin;
 
+use App\Enum\Admin\TenantStatus;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -50,6 +52,7 @@ use Illuminate\Support\Carbon;
 class Tenant extends ManagerBaseModel
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'tenant';
     protected $guarded = [];
@@ -62,10 +65,22 @@ class Tenant extends ManagerBaseModel
         'name',
         'document',
         'database_name',
+        'status',
+        'trial_until',
+        'client_id',
+    ];
+
+    protected $casts = [
+        'trial_until' => 'datetime',
     ];
 
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class, 'subscription_id', 'id');
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class, 'client_id');
     }
 }

@@ -1,48 +1,47 @@
 <template>
   <AuthLayout>
-    <!-- Customizar lado direito via slot "branded" -->
     <template #branded>
-      <AuthBrandedPanel
-        :overlay="true"
-        overlay-color="rgba(0, 0, 0, 0.7)"
-      >
-        <!-- Logo -->
-        <div class="mb-8">
-          <div class="flex items-center gap-3">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-              <svg class="h-7 w-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+      <AuthBrandedPanel custom-class="bg-slate-50 dark:bg-[#0d1117]">
+        <div class="flex h-full flex-col items-center justify-center gap-6 px-4 py-8">
+
+          <img
+            src="@assets/media/images/login.png"
+            alt="Mecânico trabalhando no motor"
+            class="w-full max-w-md object-contain rounded-2xl dark:mix-blend-lighten"
+          />
+
+          <div class="text-center">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Easy Oficina</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Gestão completa da sua oficina em um só lugar</p>
+          </div>
+
+          <div class="flex items-center gap-8 text-center">
+            <div class="flex flex-col items-center gap-2">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-white/5">
+                <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Ordens de<br/>Serviço</span>
             </div>
-            <div>
-              <h1 class="text-2xl font-bold text-white">Auto Mecânica Pro</h1>
-              <p class="text-sm text-gray-300">Portal de Acesso Seguro</p>
+            <div class="flex flex-col items-center gap-2">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-white/5">
+                <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Clientes</span>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-white/5">
+                <svg class="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Estoque</span>
             </div>
           </div>
-        </div>
 
-        <!-- Título e Subtítulo -->
-        <div class="mb-12">
-          <h2 class="mb-3 text-4xl font-bold text-white">
-            Recuperação de<br />Senha
-          </h2>
-          <p class="text-lg text-gray-300">
-            Enviaremos um link para redefinir sua senha
-          </p>
-        </div>
-
-        <!-- Informação de segurança -->
-        <div class="rounded-lg bg-white/10 p-6 backdrop-blur-sm">
-          <div class="mb-3 flex items-center gap-2">
-            <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <h3 class="font-semibold text-white">Segurança</h3>
-          </div>
-          <p class="text-sm text-gray-300">
-            O link de recuperação expira em 60 minutos e só pode ser usado uma vez.
-          </p>
         </div>
       </AuthBrandedPanel>
     </template>
@@ -53,13 +52,10 @@
       @submit.prevent="handleSubmit"
     >
       <div class="flex flex-col gap-4">
-        <!-- Logo no topo do formulário -->
+        <!-- Logo -->
         <div class="mb-2 flex flex-col items-center gap-3">
-          <div class="flex h-14 w-14 items-center justify-center rounded-lg bg-primary">
-            <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
+          <img :src="logoLight" alt="Easy Oficina" class="h-16 object-contain dark:hidden" />
+          <img :src="logoDark" alt="Easy Oficina" class="h-16 object-contain hidden dark:block" />
           <div class="text-center">
             <h2 class="text-xl font-bold text-foreground">Esqueceu sua senha?</h2>
             <p class="text-sm text-muted-foreground">Digite seu email para receber o link de recuperação</p>
@@ -67,7 +63,7 @@
         </div>
 
         <!-- Success Message -->
-        <div 
+        <div
           v-if="submitted"
           class="rounded-lg border border-primary/20 bg-primary/10 p-4 text-sm text-foreground"
         >
@@ -144,6 +140,8 @@ import AuthLayout from '@/Layouts/AuthLayout.vue';
 import AuthBrandedPanel from '@/Components/Auth/AuthBrandedPanel.vue';
 import Button from '@/Components/UI/Button.vue';
 import Input from '@/Components/UI/Input.vue';
+import logoLight from '@assets/media/images/logo_light.png';
+import logoDark from '@assets/media/images/logo_dark.png';
 
 const submitted = ref(false);
 
@@ -157,11 +155,5 @@ const handleSubmit = () => {
       submitted.value = true;
     },
   });
-
-  form.processing = true;
-  setTimeout(() => {
-    form.processing = false;
-    submitted.value = true;
-  }, 1000);
 };
 </script>

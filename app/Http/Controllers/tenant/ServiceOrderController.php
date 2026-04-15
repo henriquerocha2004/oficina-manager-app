@@ -138,7 +138,16 @@ class ServiceOrderController extends Controller
         $serviceOrder = $findOneAction($id);
 
         return Inertia::render('Tenant/ServiceOrders/Show', [
-            'serviceOrder' => $serviceOrder->load(['client', 'vehicle', 'creator', 'technician', 'items', 'payments', 'events.user', 'photos.uploader']),
+            'serviceOrder' => $serviceOrder->load([
+                'client',
+                'vehicle',
+                'creator',
+                'technician',
+                'items',
+                'payments',
+                'events.user',
+                'photos.uploader',
+            ]),
         ]);
     }
 
@@ -596,8 +605,11 @@ class ServiceOrderController extends Controller
     /**
      * @throws Throwable
      */
-    public function registerPayment(string $id, RegisterPaymentRequest $request, RegisterPaymentAction $action): JsonResponse
-    {
+    public function registerPayment(
+        string $id,
+        RegisterPaymentRequest $request,
+        RegisterPaymentAction $action
+    ): JsonResponse {
         try {
             $dto = $request->toDto($id);
 

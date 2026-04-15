@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckTenantStatus;
 use App\Http\Middleware\EnsureTenantPermission;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\IdentifyTenant;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guard.resolver' => SetDefaultGuardMiddleware::class,
             'guest.admin' => RedirectIfAdminAuthenticated::class,
             'tenant.permission' => EnsureTenantPermission::class,
+            'check.tenant.status' => CheckTenantStatus::class,
         ]);
         $middleware->web(
             append: [
@@ -45,11 +47,13 @@ return Application::configure(basePath: dirname(__DIR__))
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (Request $request) {
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
             if ($request->is('admin/*')) {
                 return redirect()->route('admin.login');
             }
 
-            return redirect()->route('tenant.login');
+            $subdomain = explode('.', $request->getHost())[0];
+
+            return redirect()->route('tenant.login', ['subdomain' => $subdomain]);
         });
     })->create();

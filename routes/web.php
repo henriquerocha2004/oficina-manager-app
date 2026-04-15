@@ -11,7 +11,7 @@ Route::group([
 
 Route::group([
     'domain' => '{subdomain}.' . config('app.base_domain'),
-    'middleware' => 'tenant',
+    'middleware' => ['tenant', 'check.tenant.status'],
 ], function () {
     require __DIR__ . '/tenant/tenants.php';
 });

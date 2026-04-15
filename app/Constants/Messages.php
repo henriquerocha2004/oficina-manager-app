@@ -207,4 +207,40 @@ class Messages
     public const string USER_DELETED_SUCCESS = 'User deleted successfully.';
 
     public const string ERROR_DELETING_USER = 'An error occurred while deleting the user.';
+
+    // Admin Client
+    public const string ADMIN_CLIENT_CREATED_SUCCESS = 'Client created successfully.';
+
+    public const string ADMIN_CLIENT_CREATION_ERROR = 'An error occurred while creating the client.';
+
+    public const string ADMIN_CLIENT_UPDATED_SUCCESS = 'Client updated successfully.';
+
+    public const string ADMIN_CLIENT_UPDATE_ERROR = 'An error occurred while updating the client.';
+
+    public const string ADMIN_CLIENT_DELETED_SUCCESS = 'Client deleted successfully.';
+
+    public const string ADMIN_CLIENT_DELETE_ERROR = 'An error occurred while deleting the client.';
+
+    public const string ADMIN_CLIENTS_FETCHED_SUCCESS = 'Clients fetched successfully.';
+
+    public const string ADMIN_CLIENTS_FETCH_ERROR = 'Failed to fetch clients.';
+
+    // Admin Tenant
+    public const string ADMIN_TENANT_UPDATED_SUCCESS = 'Tenant updated successfully.';
+
+    public const string ADMIN_TENANT_UPDATE_ERROR = 'An error occurred while updating the tenant.';
+
+    public const string ADMIN_TENANT_DELETED_SUCCESS = 'Tenant deleted successfully.';
+
+    public const string ADMIN_TENANT_DELETE_ERROR = 'An error occurred while deleting the tenant.';
+
+    public const string ADMIN_TENANTS_FETCHED_SUCCESS = 'Tenants fetched successfully.';
+
+    public const string ADMIN_TENANTS_FETCH_ERROR = 'Failed to fetch tenants.';
+
+    public const string ADMIN_TENANT_CREATED_SUCCESS = 'Tenant created successfully.';
+
+    public const string ADMIN_TENANT_CREATION_ERROR = 'An error occurred while creating the tenant.';
+
+    public const string TENANT_ACCOUNT_DISABLED = 'Sua conta foi desativada. Entre em contato com o suporte.';
 }
