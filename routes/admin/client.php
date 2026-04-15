@@ -3,7 +3,7 @@
 use App\Http\Controllers\admin\ClientController;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['prefix' => 'clients', 'as' => 'clients.'], function () {
+Route::group(['prefix' => 'clients', 'as' => 'admin.clients.'], function () {
     Route::get('/', [ClientController::class, 'index'])->name('index');
     Route::post('/', [ClientController::class, 'store'])->name('store');
     Route::get('/search', [ClientController::class, 'find'])->name('find');
