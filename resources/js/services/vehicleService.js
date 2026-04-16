@@ -134,6 +134,35 @@ export async function fetchVehiclesByClient(clientId) {
 }
 
 /**
+ * Busca as ordens de serviço de um veículo específico.
+ * @param {string} vehicleId
+ * @param {Object} params
+ * @returns {Promise<{items: Array, total: number, page: number, perPage: number}>}
+ */
+export async function fetchVehicleServiceOrders(vehicleId, { page = 1, perPage = 10, search = '', sortKey = 'created_at', sortDir = 'desc' } = {}) {
+    const params = {
+        page,
+        per_page: perPage,
+        vehicle_id: vehicleId,
+    };
+
+    if (search) params.search = search;
+    if (sortKey) {
+        params.sort_field = sortKey;
+        params.sort_direction = sortDir;
+    }
+
+    const { data } = await axios.get('/service-orders/search', { params });
+    const orders = data.data.service_orders;
+    return {
+        items: orders.data,
+        total: orders.total,
+        page: orders.current_page,
+        perPage: orders.per_page,
+    };
+}
+
+/**
  * Transfere a propriedade de um veículo para um novo cliente.
  * @param {string} vehicleId
  * @param {string} newClientId

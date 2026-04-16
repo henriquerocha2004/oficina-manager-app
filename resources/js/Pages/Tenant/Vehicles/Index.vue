@@ -120,6 +120,13 @@
         </template>
         <template #cell-actions="{ row }">
           <div class="text-end flex gap-2 justify-end">
+            <button
+              class="kt-btn kt-btn-sm kt-btn-ghost"
+              @click="router.visit(`/vehicles/${row.id}/history`)"
+              title="Histórico"
+            >
+              <i class="ki-filled ki-time text-gray-800 dark:text-gray-200"></i>
+            </button>
             <button class="kt-btn kt-btn-sm kt-btn-ghost" @click="onEdit(row.id)" title="Editar">
               <i class="ki-filled ki-pencil text-gray-800 dark:text-gray-200"></i>
             </button>
@@ -144,6 +151,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import { router } from '@inertiajs/vue3';
 import DataGrid from '../../../Shared/Components/DataGrid.vue';
 import TenantLayout from '@/Layouts/TenantLayout.vue';
 import StatsContainer from '@/Shared/Components/StatsContainer.vue';
