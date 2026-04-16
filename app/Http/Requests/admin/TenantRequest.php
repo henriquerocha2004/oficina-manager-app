@@ -24,10 +24,12 @@ class TenantRequest extends FormRequest
             'document' => ['required', 'string', 'max:20'],
         ];
 
+        $rules['status'] = ['nullable', Rule::enum(TenantStatus::class)];
+        $rules['client_id'] = ['nullable', 'string', 'max:26'];
+        $rules['trial_until'] = ['nullable', 'date', 'required_if:status,trial'];
+
         if ($this->isMethod('put') || $this->isMethod('patch')) {
             $rules['status'] = ['required', Rule::enum(TenantStatus::class)];
-            $rules['client_id'] = ['nullable', 'string', 'max:26'];
-            $rules['trial_until'] = ['nullable', 'date', 'required_if:status,trial'];
         }
 
         return $rules;
@@ -55,6 +57,9 @@ class TenantRequest extends FormRequest
             document: $this->validated('document'),
             email: $this->validated('email'),
             domain: $this->validated('domain'),
+            status: $this->validated('status') ?? 'active',
+            trial_until: $this->validated('trial_until'),
+            client_id: $this->validated('client_id'),
         );
     }
 

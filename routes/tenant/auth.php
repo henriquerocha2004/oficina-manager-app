@@ -12,7 +12,7 @@ use Laravel\Fortify\Http\Controllers\EmailVerificationPromptController;
 use Laravel\Fortify\Http\Controllers\VerifyEmailController;
 
 // Guest routes (unauthenticated)
-Route::middleware(['tenant', 'guard.resolver', 'guest:tenant'])->group(function () {
+Route::middleware(['guest:tenant'])->group(function () {
     // Login routes
     Route::get('/', [AuthController::class, 'login'])->name('tenant.login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
@@ -31,7 +31,7 @@ Route::middleware(['tenant', 'guard.resolver', 'guest:tenant'])->group(function 
 });
 
 // Authenticated routes
-Route::middleware(['auth:tenant', 'tenant'])->group(function () {
+Route::middleware(['auth:tenant'])->group(function () {
     // Logout
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('tenant.logout');
 

@@ -42,29 +42,27 @@
               <FormError :errors="errors" />
             </FormField>
 
-            <template v-if="isEdit">
-              <FormField name="status" label="Status" v-slot="{ field, errors }">
-                <select v-bind="field" class="kt-select w-full">
-                  <option value="active">Ativo</option>
-                  <option value="inactive">Inativo</option>
-                  <option value="trial">Trial</option>
-                </select>
-                <FormError :errors="errors" />
-              </FormField>
+            <FormField name="status" label="Status" v-slot="{ field, errors }">
+              <select v-bind="field" class="kt-select w-full">
+                <option value="active">Ativo</option>
+                <option value="inactive">Inativo</option>
+                <option value="trial">Trial</option>
+              </select>
+              <FormError :errors="errors" />
+            </FormField>
 
-              <FormField v-if="values.status === 'trial'" name="trial_until" label="Trial até" v-slot="{ field, errors }">
-                <input v-bind="field" class="kt-input w-full" type="date" />
-                <FormError :errors="errors" />
-              </FormField>
+            <FormField v-if="values.status === 'trial'" name="trial_until" label="Trial até" v-slot="{ field, errors }">
+              <input v-bind="field" class="kt-input w-full" type="date" />
+              <FormError :errors="errors" />
+            </FormField>
 
-              <FormField name="client_id" label="Cliente" v-slot="{ field, errors }">
-                <select v-bind="field" class="kt-select w-full">
-                  <option value="">Nenhum</option>
-                  <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option>
-                </select>
-                <FormError :errors="errors" />
-              </FormField>
-            </template>
+            <FormField name="client_id" label="Cliente" v-slot="{ field, errors }">
+              <select v-bind="field" class="kt-select w-full">
+                <option value="">Nenhum</option>
+                <option v-for="c in clients" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+              <FormError :errors="errors" />
+            </FormField>
 
             <div class="flex justify-end gap-2 mt-4">
               <button type="button" class="kt-btn kt-btn-ghost" @click="$emit('close')">
@@ -105,7 +103,7 @@ const schema = yup.object({
   email: yup.string().email('Email inválido').required('Email é obrigatório'),
   domain: yup.string().required('Domínio é obrigatório'),
   document: yup.string().required('Documento é obrigatório'),
-  status: yup.string().oneOf(['active', 'inactive', 'trial']).nullable(),
+  status: yup.string().oneOf(['active', 'inactive', 'trial']).default('active').required('Status é obrigatório'),
   trial_until: yup.string().nullable(),
   client_id: yup.string().nullable(),
 });

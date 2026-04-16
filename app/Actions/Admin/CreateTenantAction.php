@@ -39,6 +39,9 @@ class CreateTenantAction
             'document' => $tenantCreateDto->document,
             'domain' => $tenantCreateDto->domain,
             'email' => $tenantCreateDto->email,
+            'status' => $tenantCreateDto->status,
+            'trial_until' => $tenantCreateDto->trial_until,
+            'client_id' => $tenantCreateDto->client_id,
         ]);
 
         try {

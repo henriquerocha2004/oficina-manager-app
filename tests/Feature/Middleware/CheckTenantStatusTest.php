@@ -14,6 +14,15 @@ class CheckTenantStatusTest extends AdminTestCase
 {
     private string $adminConnection;
 
+    private function attachSessionToRequest(Request $request): Request
+    {
+        $session = app('session.store');
+        $session->start();
+        $request->setLaravelSession($session);
+
+        return $request;
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -29,7 +38,7 @@ class CheckTenantStatusTest extends AdminTestCase
 
         $middleware = new CheckTenantStatus($tenantManager);
 
-        $request = Request::create('http://test-tenant.localhost/dashboard');
+        $request = $this->attachSessionToRequest(Request::create('http://test-tenant.localhost/dashboard'));
         $request->headers->set('host', 'test-tenant.localhost');
 
         $called = false;
@@ -51,7 +60,7 @@ class CheckTenantStatusTest extends AdminTestCase
 
         $middleware = new CheckTenantStatus($tenantManager);
 
-        $request = Request::create('http://test-tenant.localhost/dashboard');
+        $request = $this->attachSessionToRequest(Request::create('http://test-tenant.localhost/dashboard'));
         $request->headers->set('host', 'test-tenant.localhost');
 
         $called = false;
@@ -71,7 +80,7 @@ class CheckTenantStatusTest extends AdminTestCase
 
         $middleware = new CheckTenantStatus($tenantManager);
 
-        $request = Request::create('http://test-tenant.localhost/dashboard');
+        $request = $this->attachSessionToRequest(Request::create('http://test-tenant.localhost/dashboard'));
 
         $called = false;
         $response = $middleware->handle($request, function () use (&$called) {

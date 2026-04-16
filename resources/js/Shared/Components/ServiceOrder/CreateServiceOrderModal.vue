@@ -99,11 +99,25 @@
                     </div>
                     <div>
                       <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Telefone</label>
-                      <input v-model="newClient.phone" type="text" class="kt-input w-full" placeholder="(11) 99999-9999" />
+                      <input
+                        v-model="newClient.phone"
+                        type="text"
+                        class="kt-input w-full"
+                        placeholder="(11) 99999-9999"
+                        :maxlength="phoneLengthLimit"
+                        @input="applyClientMask('phone', maskPhone, $event)"
+                      />
                     </div>
                     <div>
                       <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">CPF/CNPJ</label>
-                      <input v-model="newClient.document_number" type="text" class="kt-input w-full" placeholder="000.000.000-00" />
+                      <input
+                        v-model="newClient.document_number"
+                        type="text"
+                        class="kt-input w-full"
+                        placeholder="000.000.000-00"
+                        :maxlength="docLimit"
+                        @input="applyClientMask('document_number', maskDocument, $event)"
+                      />
                     </div>
                     <div class="col-span-2">
                       <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">E-mail</label>
@@ -204,8 +218,10 @@
                       <input v-model="newVehicle.model" type="text" class="kt-input w-full" placeholder="Civic" />
                     </div>
                     <div>
-                      <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Ano</label>
-                      <input v-model="newVehicle.year" type="text" class="kt-input w-full" placeholder="2020" />
+                      <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                        Ano <span class="text-red-500">*</span>
+                      </label>
+                      <input v-model="newVehicle.year" type="text" class="kt-input w-full" placeholder="2020" required />
                     </div>
                     <div>
                       <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Cor</label>
@@ -265,12 +281,15 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue';
-import { fetchClients, createClient } from '@/services/clientService.js';
-import { fetchVehiclesByClient, createVehicle } from '@/services/vehicleService.js';
-import { createServiceOrder } from '@/services/serviceOrderService.js';
+ import { ref, computed, nextTick } from 'vue';
+ import { fetchClients, createClient } from '@/services/clientService.js';
+ import { fetchVehiclesByClient, createVehicle } from '@/services/vehicleService.js';
+ import { createServiceOrder } from '@/services/serviceOrderService.js';
+ import { useMasks } from '@/Composables/useMasks';
 
 const emit = defineEmits(['created', 'close']);
+
+const { maskDocument, maskPhone, getDocMaxLength, getPhoneMaxLength, unmask } = useMasks();
 
 const isVisible = ref(false);
 const modalEl = ref(null);
@@ -303,6 +322,10 @@ const createError = ref('');
 
 let searchTimer = null;
 
+const docLimit = computed(() => getDocMaxLength(newClient.value.document_number || ''));
+
+const phoneLengthLimit = computed(() => getPhoneMaxLength(newClient.value.phone || ''));
+
 const dropdownStyle = computed(() => {
     if (!searchInput.value) return { display: 'none' };
     const rect = searchInput.value.getBoundingClientRect();
@@ -319,8 +342,16 @@ function onSearchBlur() {
     setTimeout(() => { showDropdown.value = false; }, 200);
 }
 
+function applyClientMask(fieldName, maskFn, event) {
+    const maskedValue = maskFn(event.target.value);
+    newClient.value = {
+        ...newClient.value,
+        [fieldName]: maskedValue,
+    };
+}
+
 const canSaveVehicle = computed(() =>
-    newVehicle.value.license_plate && newVehicle.value.brand && newVehicle.value.model
+    newVehicle.value.license_plate && newVehicle.value.brand && newVehicle.value.model && newVehicle.value.year
 );
 
 const canCreate = computed(() => selectedClient.value && selectedVehicle.value);
@@ -420,7 +451,12 @@ async function saveNewClient() {
     if (!newClient.value.name) return;
     savingClient.value = true;
     clientError.value = '';
-    const result = await createClient(newClient.value);
+    const payload = {
+        ...newClient.value,
+        document_number: unmask(newClient.value.document_number),
+        phone: unmask(newClient.value.phone),
+    };
+    const result = await createClient(payload);
     savingClient.value = false;
     if (result.success) {
         const created = result.data?.data?.client || result.data?.client || result.data;

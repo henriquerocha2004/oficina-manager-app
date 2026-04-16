@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Middleware\CheckTenantStatus;
+use App\Http\Middleware\EnsureTenantSessionIsValid;
 use App\Http\Middleware\EnsureTenantPermission;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\IdentifyTenant;
 use App\Http\Middleware\RedirectIfAdminAuthenticated;
 use App\Http\Middleware\SetDefaultGuardMiddleware;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -25,12 +28,21 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest.admin' => RedirectIfAdminAuthenticated::class,
             'tenant.permission' => EnsureTenantPermission::class,
             'check.tenant.status' => CheckTenantStatus::class,
+            'tenant.auth.session' => EnsureTenantSessionIsValid::class,
         ]);
         $middleware->web(
             append: [
                 HandleInertiaRequests::class,
             ],
         );
+        $middleware->priority([
+            IdentifyTenant::class,
+            CheckTenantStatus::class,
+            SetDefaultGuardMiddleware::class,
+            RedirectIfAdminAuthenticated::class,
+            RedirectIfAuthenticated::class,
+            AuthenticatesRequests::class,
+        ]);
         $middleware->redirectGuestsTo(function (Request $request): string {
             $host = $request->getHost();
             $baseDomain = config('app.base_domain');

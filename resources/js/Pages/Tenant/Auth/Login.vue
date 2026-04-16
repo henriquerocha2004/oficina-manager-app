@@ -43,13 +43,20 @@
     </template>
 
     <!-- Login Form -->
-    <form
-      id="tenant_login_form"
-      @submit.prevent="handleSubmit"
-    >
-      <div class="flex flex-col gap-3.5">
-        <!-- Logo no topo do formulário -->
-        <div class="mb-2 flex flex-col items-center gap-3">
+     <form
+       id="tenant_login_form"
+       @submit.prevent="handleSubmit"
+     >
+       <div class="flex flex-col gap-3.5">
+         <div
+           v-if="page.props.flash?.error"
+           class="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+         >
+           {{ page.props.flash.error }}
+         </div>
+
+         <!-- Logo no topo do formulário -->
+         <div class="mb-2 flex flex-col items-center gap-3">
           <img :src="logoLight" alt="Easy Oficina" class="h-16 object-contain dark:hidden" />
           <img :src="logoDark" alt="Easy Oficina" class="h-16 object-contain hidden dark:block" />
         </div>
@@ -134,7 +141,7 @@
 </template>
 
 <script setup>
-import { useForm, Link } from '@inertiajs/vue3';
+ import { useForm, Link, usePage } from '@inertiajs/vue3';
 import AuthLayout from '@/Layouts/AuthLayout.vue';
 import AuthBrandedPanel from '@/Components/Auth/AuthBrandedPanel.vue';
 import Button from '@/Components/UI/Button.vue';
@@ -149,6 +156,7 @@ const form = useForm({
   password: '',
   remember: false,
 });
+const page = usePage();
 
 const handleSubmit = () => {
   form.post('/login', {
