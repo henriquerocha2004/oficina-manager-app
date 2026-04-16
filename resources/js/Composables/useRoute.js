@@ -112,11 +112,14 @@ export function routeCurrent(name) {
   if (name === 'admin.tenants.index' && currentComponent === 'Admin/Tenants/Index') return true;
   if (name === 'clients.index' && currentComponent === 'Tenant/Clients/Index') return true;
   if (name === 'vehicles.index' && currentComponent === 'Tenant/Vehicles/Index') return true;
+  if (name === 'vehicles.index' && currentComponent === 'Tenant/Vehicles/History') return true;
   if (name === 'services.index' && currentComponent === 'Tenant/Services/Index') return true;
   if (name === 'suppliers.index' && currentComponent === 'Tenant/Suppliers/Index') return true;
   if (name === 'products.index' && currentComponent === 'Tenant/Products/Index') return true;
   if (name === 'stock.movements.index' && currentComponent === 'Tenant/StockMovements/Index') return true;
   if (name === 'service-orders.index' && currentComponent === 'Tenant/ServiceOrders/Index') return true;
+  if (name === 'service-orders.index' && currentComponent === 'Tenant/ServiceOrders/Show') return true;
+  if (name === 'service-orders.index' && currentComponent === 'Tenant/ServiceOrders/Create') return true;
   if (name === 'service-orders.show' && currentComponent === 'Tenant/ServiceOrders/Show') return true;
   if (name === 'service-orders.create' && currentComponent === 'Tenant/ServiceOrders/Create') return true;
   if (name === 'users.index' && currentComponent === 'Tenant/Users/Index') return true;

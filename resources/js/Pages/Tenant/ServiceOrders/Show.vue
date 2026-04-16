@@ -180,7 +180,10 @@
             <p v-if="serviceOrder.vehicle?.mileage" class="text-xs text-gray-500 dark:text-gray-400">
               {{ formatMileage(serviceOrder.vehicle.mileage) }}
             </p>
-            <button class="mt-1.5 text-xs text-orange-600 hover:text-orange-700 font-medium">
+            <button
+              class="mt-1.5 text-xs text-orange-600 hover:text-orange-700 font-medium"
+              @click="router.visit(`/vehicles/${serviceOrder.vehicle?.id}/history`)"
+            >
               Ver histórico do veículo →
             </button>
           </div>

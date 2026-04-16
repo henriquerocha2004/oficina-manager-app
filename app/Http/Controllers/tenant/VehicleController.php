@@ -6,6 +6,7 @@ use App\Actions\Tenant\Vehicle\CheckVehiclePlateAction;
 use App\Actions\Tenant\Vehicle\CreateVehicleAction;
 use App\Actions\Tenant\Vehicle\DeleteVehicleAction;
 use App\Actions\Tenant\Vehicle\FindOneAction;
+use App\Actions\Tenant\Vehicle\GetVehicleHistoryStatsAction;
 use App\Actions\Tenant\Vehicle\GetVehicleStatsAction;
 use App\Actions\Tenant\Vehicle\SearchVehicleAction;
 use App\Actions\Tenant\Vehicle\TransferVehicleOwnershipAction;
@@ -28,6 +29,22 @@ class VehicleController extends Controller
     public function index(): InertiaResponse
     {
         return Inertia::render('Tenant/Vehicles/Index');
+    }
+
+    public function history(
+        string $id,
+        FindOneAction $findOneAction,
+        GetVehicleHistoryStatsAction $statsAction
+    ): InertiaResponse {
+        $vehicleId = Ulid::fromString($id);
+        $vehicle = $findOneAction($vehicleId);
+        $vehicle->load('currentOwner.client');
+        $stats = $statsAction($id);
+
+        return Inertia::render('Tenant/Vehicles/History', [
+            'vehicle' => $vehicle,
+            'stats' => $stats,
+        ]);
     }
 
     /**
