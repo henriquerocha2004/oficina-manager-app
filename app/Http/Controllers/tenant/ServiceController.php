@@ -65,7 +65,6 @@ class ServiceController extends Controller
                 data: ['services' => $services],
             );
         } catch (Exception $exception) {
-            dd($exception);
             Log::error(Messages::ERROR_FETCHING_SERVICES, [
                 'error' => $exception->getMessage(),
                 'line' => $exception->getLine(),

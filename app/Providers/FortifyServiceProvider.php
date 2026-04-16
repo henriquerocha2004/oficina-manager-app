@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Services\Tenant\Auth\TenantSessionBinding;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -25,7 +26,7 @@ class FortifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(LoginResponse::class, function () {
-            return new class implements LoginResponse {
+            return new class () implements LoginResponse {
                 public function toResponse($request): Response
                 {
                     if ($request->is('admin/*') || $request->is('admin')) {
@@ -48,9 +49,13 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(LogoutResponse::class, function () {
-            return new class implements LogoutResponse {
+            return new class () implements LogoutResponse {
                 public function toResponse($request): Response
                 {
+                    if (!$request->is('admin/*')) {
+                        app(TenantSessionBinding::class)->clear($request);
+                    }
+
                     $loginUrl = $request->is('admin/*') ? '/admin' : '/';
                     return Inertia::location($loginUrl);
                 }
@@ -58,7 +63,7 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(PasswordResetResponse::class, function () {
-            return new class implements PasswordResetResponse {
+            return new class () implements PasswordResetResponse {
                 public function toResponse($request): Response
                 {
                     $loginUrl = $request->is('admin/*') ? '/admin' : '/';

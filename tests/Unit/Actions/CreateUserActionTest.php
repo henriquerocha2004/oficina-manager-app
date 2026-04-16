@@ -24,6 +24,8 @@ class CreateUserActionTest extends TestCase
         $result = $action($userDto);
 
         $this->assertInstanceOf(User::class, $result);
+        $this->assertNotNull($result->ulid);
+        $this->assertSame('ulid', $result->getAuthIdentifierName());
         $this->assertDatabaseHas('users', [
             'email' => 'john.user@example.com',
             'is_active' => true,

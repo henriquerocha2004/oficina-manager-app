@@ -49,7 +49,7 @@ class MoveStockActionTest extends TestCase
             notes: 'Initial stock'
         );
 
-        $action = new MoveStockAction;
+        $action = new MoveStockAction();
         $action($dto);
 
         $this->assertDatabaseHas('stock_movements', [
@@ -85,7 +85,7 @@ class MoveStockActionTest extends TestCase
             notes: 'Sale order #123'
         );
 
-        $action = new MoveStockAction;
+        $action = new MoveStockAction();
         $action($dto);
 
         $this->assertDatabaseHas('stock_movements', [
@@ -97,7 +97,7 @@ class MoveStockActionTest extends TestCase
             'notes' => 'Sale order #123',
         ]);
 
-        $this->assertEquals(15, (new GetCurrentStockAction)($this->product));
+        $this->assertEquals(15, (new GetCurrentStockAction())($this->product));
     }
 
     public function test_throws_insufficient_stock_exception_when_stock_is_low(): void
@@ -123,7 +123,7 @@ class MoveStockActionTest extends TestCase
 
         $this->expectException(InsufficientStockException::class);
 
-        $action = new MoveStockAction;
+        $action = new MoveStockAction();
         $action($dto);
     }
 
@@ -138,7 +138,7 @@ class MoveStockActionTest extends TestCase
 
         $this->expectException(ProductNotFoundException::class);
 
-        $action = new MoveStockAction;
+        $action = new MoveStockAction();
         $action($dto);
     }
 
@@ -147,7 +147,7 @@ class MoveStockActionTest extends TestCase
         $user = User::factory()->create();
         Auth::login($user);
 
-        $action = new MoveStockAction;
+        $action = new MoveStockAction();
 
         $action(new StockMovementDto(
             productId: $this->product->id,
@@ -156,7 +156,7 @@ class MoveStockActionTest extends TestCase
             reason: StockMovementReasonEnum::REASON_INITIAL
         ));
 
-        $this->assertEquals(100, (new GetCurrentStockAction)($this->product));
+        $this->assertEquals(100, (new GetCurrentStockAction())($this->product));
 
         $action(new StockMovementDto(
             productId: $this->product->id,
@@ -165,7 +165,7 @@ class MoveStockActionTest extends TestCase
             reason: StockMovementReasonEnum::REASON_SALE
         ));
 
-        $this->assertEquals(70, (new GetCurrentStockAction)($this->product));
+        $this->assertEquals(70, (new GetCurrentStockAction())($this->product));
 
         $action(new StockMovementDto(
             productId: $this->product->id,
@@ -174,7 +174,7 @@ class MoveStockActionTest extends TestCase
             reason: StockMovementReasonEnum::REASON_PURCHASE
         ));
 
-        $this->assertEquals(120, (new GetCurrentStockAction)($this->product));
+        $this->assertEquals(120, (new GetCurrentStockAction())($this->product));
 
         $action(new StockMovementDto(
             productId: $this->product->id,
@@ -183,7 +183,7 @@ class MoveStockActionTest extends TestCase
             reason: StockMovementReasonEnum::REASON_LOSS
         ));
 
-        $this->assertEquals(100, (new GetCurrentStockAction)($this->product));
+        $this->assertEquals(100, (new GetCurrentStockAction())($this->product));
     }
 
     public function test_stores_user_id_correctly(): void
@@ -198,11 +198,12 @@ class MoveStockActionTest extends TestCase
             reason: StockMovementReasonEnum::REASON_PURCHASE
         );
 
-        $action = new MoveStockAction;
+        $action = new MoveStockAction();
         $action($dto);
 
         $movement = StockMovement::where('product_id', $this->product->id)->first();
 
+        $this->assertSame($user->ulid, Auth::id());
         $this->assertNotNull($movement->user_id);
         $this->assertEquals($user->id, $movement->user_id);
     }
@@ -220,7 +221,7 @@ class MoveStockActionTest extends TestCase
             notes: null
         );
 
-        $action = new MoveStockAction;
+        $action = new MoveStockAction();
         $action($dto);
 
         $this->assertDatabaseHas('stock_movements', [

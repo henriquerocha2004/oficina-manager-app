@@ -6,7 +6,7 @@ use Inertia\Inertia;
 require __DIR__.'/auth.php';
 
 // Protected tenant routes
-Route::middleware(['auth:tenant', 'tenant', 'tenant.permission'])->group(function () {
+Route::middleware(['auth:tenant', 'tenant.permission'])->group(function () {
     // Client routes
     require __DIR__.'/client.php';
 

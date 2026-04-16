@@ -9,6 +9,9 @@ class TenantCreateDto
         public string $document,
         public string $email,
         public string $domain,
+        public string $status = 'active',
+        public ?string $trial_until = null,
+        public ?string $client_id = null,
     ) {
     }
 }

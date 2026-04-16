@@ -3,6 +3,7 @@
 namespace App\Actions\Admin;
 
 use App\Actions\Tenant\User\CreateUserAction;
+use App\Enum\Tenant\User\UserRoleEnum;
 use Exception;
 use Throwable;
 use App\Dto\UserDto;
@@ -38,6 +39,9 @@ class CreateTenantAction
             'document' => $tenantCreateDto->document,
             'domain' => $tenantCreateDto->domain,
             'email' => $tenantCreateDto->email,
+            'status' => $tenantCreateDto->status,
+            'trial_until' => $tenantCreateDto->trial_until,
+            'client_id' => $tenantCreateDto->client_id,
         ]);
 
         try {
@@ -113,7 +117,8 @@ class CreateTenantAction
         $userSeed(new UserDto(
             name: $tenant->name,
             email: $tenant->email,
-            password: 'password'
+            role: UserRoleEnum::ADMINISTRATOR->value,
+            password: 'password',
         ));
     }
 }

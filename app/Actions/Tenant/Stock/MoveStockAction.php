@@ -9,6 +9,7 @@ use App\Exceptions\Product\ProductNotFoundException;
 use App\Exceptions\Stock\InsufficientStockException;
 use App\Models\Tenant\Product;
 use App\Models\Tenant\StockMovement;
+use App\Models\Tenant\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -46,7 +47,7 @@ class MoveStockAction
             'balance_after' => $balanceAfter,
             'reason' => $reason->value,
             'notes' => $notes,
-            'user_id' => Auth::id(),
+            'user_id' => $this->currentUserId(),
         ]);
     }
 
@@ -68,7 +69,18 @@ class MoveStockAction
             'balance_after' => $balanceAfter,
             'reason' => $reason->value,
             'notes' => $notes,
-            'user_id' => Auth::id(),
+            'user_id' => $this->currentUserId(),
         ]);
+    }
+
+    private function currentUserId(): int
+    {
+        $user = Auth::user();
+
+        if (!$user instanceof User) {
+            abort(401);
+        }
+
+        return $user->legacyId();
     }
 }

@@ -17,13 +17,41 @@ class TenantFactory extends Factory
      */
     public function definition(): array
     {
+        $uid = uniqid();
+
         return [
             'name' => fake()->company(),
-            'domain' => fake()->unique()->domainName(),
-            'database_name' => 'tenant_' . fake()->unique()->numerify('####'),
+            'domain' => 'tst' . $uid,
+            'database_name' => 'tnt_' . $uid,
             'is_active' => true,
-            'email' => fake()->unique()->safeEmail(),
+            'email' => "{$uid}@test.com",
             'document' => fake()->numerify('##########'),
+            'status' => 'active',
+            'trial_until' => null,
+            'client_id' => null,
         ];
+    }
+
+    public function trial(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'status' => 'trial',
+            'trial_until' => now()->addDays(30),
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'status' => 'inactive',
+        ]);
+    }
+
+    public function expiredTrial(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'status' => 'trial',
+            'trial_until' => now()->subDay(),
+        ]);
     }
 }

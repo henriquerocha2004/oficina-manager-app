@@ -38,6 +38,7 @@ use App\Http\Requests\tenant\UpdateDiagnosisRequest;
 use App\Http\Requests\tenant\UpdateDiscountRequest;
 use App\Http\Requests\tenant\UploadServiceOrderPhotoRequest;
 use App\Models\Tenant\ServiceOrderItem;
+use App\Models\Tenant\User;
 use App\Services\Tenant\ServiceOrder\ClientVehicleResolverService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
@@ -65,7 +66,7 @@ class ServiceOrderController extends Controller
                     $dto = new ServiceOrderDto(
                         client_id: $resolved->clientId,
                         vehicle_id: $resolved->vehicleId,
-                        created_by: auth()->id(),
+                        created_by: $this->authenticatedUserId(),
                         diagnosis: $request->input('diagnosis'),
                         observations: $request->input('observations'),
                         technician_id: $request->input('technician_id'),
@@ -138,7 +139,16 @@ class ServiceOrderController extends Controller
         $serviceOrder = $findOneAction($id);
 
         return Inertia::render('Tenant/ServiceOrders/Show', [
-            'serviceOrder' => $serviceOrder->load(['client', 'vehicle', 'creator', 'technician', 'items', 'payments', 'events.user', 'photos.uploader']),
+            'serviceOrder' => $serviceOrder->load([
+                'client',
+                'vehicle',
+                'creator',
+                'technician',
+                'items',
+                'payments',
+                'events.user',
+                'photos.uploader',
+            ]),
         ]);
     }
 
@@ -280,7 +290,7 @@ class ServiceOrderController extends Controller
         try {
             $serviceOrder = $action(
                 $id,
-                auth()->id(),
+                $this->authenticatedUserId(),
                 $request->input('diagnosis'),
                 $request->input('items')
             );
@@ -312,7 +322,7 @@ class ServiceOrderController extends Controller
         try {
             $serviceOrder = $action(
                 $id,
-                auth()->id(),
+                $this->authenticatedUserId(),
                 $request->input('diagnosis'),
                 $request->input('items')
             );
@@ -342,7 +352,7 @@ class ServiceOrderController extends Controller
     public function returnToApproval(string $id, ReturnToApprovalAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, auth()->id());
+            $serviceOrder = $action($id, $this->authenticatedUserId());
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_SENT_FOR_APPROVAL,
@@ -369,7 +379,7 @@ class ServiceOrderController extends Controller
     public function approve(string $id, ApproveAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, auth()->id());
+            $serviceOrder = $action($id, $this->authenticatedUserId());
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_APPROVED,
@@ -397,7 +407,7 @@ class ServiceOrderController extends Controller
     {
         try {
             $technicianId = $request->input('technician_id') ? (int) $request->input('technician_id') : null;
-            $serviceOrder = $action($id, auth()->id(), $technicianId);
+            $serviceOrder = $action($id, $this->authenticatedUserId(), $technicianId);
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_STARTED,
@@ -424,7 +434,7 @@ class ServiceOrderController extends Controller
     public function finishWork(string $id, FinishWorkAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, auth()->id());
+            $serviceOrder = $action($id, $this->authenticatedUserId());
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_FINISHED,
@@ -451,7 +461,7 @@ class ServiceOrderController extends Controller
     public function cancel(string $id, CancelServiceOrderRequest $request, CancelAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, auth()->id(), $request->input('reason'));
+            $serviceOrder = $action($id, $this->authenticatedUserId(), $request->input('reason'));
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_CANCELLED,
@@ -478,7 +488,7 @@ class ServiceOrderController extends Controller
     public function updateDiagnosis(string $id, UpdateDiagnosisRequest $request, UpdateDiagnosisAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, auth()->id(), $request->input('technical_diagnosis', ''));
+            $serviceOrder = $action($id, $this->authenticatedUserId(), $request->input('technical_diagnosis', ''));
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_DIAGNOSIS_UPDATED,
@@ -518,7 +528,7 @@ class ServiceOrderController extends Controller
                 'notes' => $itemDto->notes,
             ]);
 
-            $serviceOrder = $action($id, auth()->id(), $item);
+            $serviceOrder = $action($id, $this->authenticatedUserId(), $item);
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_ITEM_ADDED,
@@ -545,7 +555,7 @@ class ServiceOrderController extends Controller
     public function removeItem(string $id, string $itemId, RemoveItemAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, $itemId, auth()->id());
+            $serviceOrder = $action($id, $itemId, $this->authenticatedUserId());
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_ITEM_REMOVED,
@@ -572,7 +582,7 @@ class ServiceOrderController extends Controller
     public function updateDiscount(string $id, UpdateDiscountRequest $request, UpdateDiscountAction $action): JsonResponse
     {
         try {
-            $serviceOrder = $action($id, auth()->id(), (float) $request->input('discount', 0));
+            $serviceOrder = $action($id, $this->authenticatedUserId(), (float) $request->input('discount', 0));
 
             return $this->setResponse(
                 message: Messages::SERVICE_ORDER_DISCOUNT_UPDATED,
@@ -596,12 +606,15 @@ class ServiceOrderController extends Controller
     /**
      * @throws Throwable
      */
-    public function registerPayment(string $id, RegisterPaymentRequest $request, RegisterPaymentAction $action): JsonResponse
-    {
+    public function registerPayment(
+        string $id,
+        RegisterPaymentRequest $request,
+        RegisterPaymentAction $action
+    ): JsonResponse {
         try {
             $dto = $request->toDto($id);
 
-            $payment = $action($id, auth()->id(), $dto);
+            $payment = $action($id, $this->authenticatedUserId(), $dto);
 
             return $this->setResponse(
                 message: Messages::PAYMENT_REGISTERED_SUCCESS,
@@ -630,7 +643,7 @@ class ServiceOrderController extends Controller
         try {
             $serviceOrder = $action(
                 $id,
-                auth()->id(),
+                $this->authenticatedUserId(),
                 (float) $request->validated('amount'),
                 PaymentMethodEnum::from($request->validated('payment_method')),
                 $request->validated('notes'),
@@ -669,7 +682,7 @@ class ServiceOrderController extends Controller
             $dto = new ServiceOrderPhotoDto(
                 service_order_id: $id,
                 photo: $request->file('photo'),
-                uploaded_by: auth()->id(),
+                uploaded_by: $this->authenticatedUserId(),
             );
 
             $photo = $action($dto);
@@ -723,5 +736,16 @@ class ServiceOrderController extends Controller
                 code: Response::HTTP_INTERNAL_SERVER_ERROR,
             );
         }
+    }
+
+    private function authenticatedUserId(): int
+    {
+        $user = auth('tenant')->user();
+
+        if (!$user instanceof User) {
+            abort(Response::HTTP_UNAUTHORIZED);
+        }
+
+        return $user->legacyId();
     }
 }

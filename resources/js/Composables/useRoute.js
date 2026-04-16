@@ -11,6 +11,7 @@ import { usePage } from '@inertiajs/vue3';
 const adminRoutes = {
   'admin.dashboard': '/admin/dashboard',
   'admin.clients.index': '/admin/clients',
+  'admin.tenants.index': '/admin/tenants',
   'admin.tenants.create': '/admin/tenants/create',
   'admin.tenants.show': (id) => '/admin/tenants/' + id,
   'admin.tenants.edit': (id) => '/admin/tenants/' + id + '/edit',
@@ -108,6 +109,7 @@ export function routeCurrent(name) {
   if (name === 'admin.dashboard' && currentComponent === 'Admin/Dashboard') return true;
   if (name === 'tenant.dashboard' && currentComponent === 'Tenant/Dashboard') return true;
   if (name === 'admin.clients.index' && currentComponent === 'Admin/Clients/Index') return true;
+  if (name === 'admin.tenants.index' && currentComponent === 'Admin/Tenants/Index') return true;
   if (name === 'clients.index' && currentComponent === 'Tenant/Clients/Index') return true;
   if (name === 'vehicles.index' && currentComponent === 'Tenant/Vehicles/Index') return true;
   if (name === 'services.index' && currentComponent === 'Tenant/Services/Index') return true;

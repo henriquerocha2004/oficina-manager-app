@@ -10,5 +10,6 @@ Route::middleware(['auth:admin'])->group(function () {
         return Inertia::render('Admin/Dashboard');
     })->name('admin.dashboard');
 
-    // TODO: Add more protected routes (tenants, subscriptions, etc.)
+    require __DIR__ . '/client.php';
+    require __DIR__ . '/tenant.php';
 });

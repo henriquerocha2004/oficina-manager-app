@@ -11,7 +11,7 @@ use Laravel\Fortify\Http\Controllers\EmailVerificationPromptController;
 use Laravel\Fortify\Http\Controllers\VerifyEmailController;
 
 // Guest routes (unauthenticated)
-Route::middleware(['guest.admin', 'guard.resolver'])->group(function () {
+Route::middleware(['guest.admin'])->group(function () {
     // Login routes
     Route::get('/', [AuthController::class, 'login'])->name('admin.login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);

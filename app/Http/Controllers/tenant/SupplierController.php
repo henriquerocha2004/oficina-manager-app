@@ -84,8 +84,11 @@ class SupplierController extends Controller
         }
     }
 
-    public function update(SupplierRequest $request, string $id, UpdateSupplierAction $updateSupplierAction): JsonResponse
-    {
+    public function update(
+        SupplierRequest $request,
+        string $id,
+        UpdateSupplierAction $updateSupplierAction
+    ): JsonResponse {
         try {
             $supplierId = Ulid::fromString($id);
             $updateSupplierAction(
