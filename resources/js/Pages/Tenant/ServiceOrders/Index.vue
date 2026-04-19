@@ -1,6 +1,6 @@
 <template>
   <TenantLayout title="Ordens de Serviço" :breadcrumbs="breadcrumbs">
-    <div class="kt-container-fixed w-full h-full py-4 px-2 flex flex-col">
+    <div class="kt-container-fixed w-full lg:h-full py-4 px-2 flex flex-col">
       <div class="flex items-center justify-end gap-3 mb-4 shrink-0">
         <div v-if="!isMobile" class="view-toggle-switch">
           <button
@@ -24,7 +24,7 @@
         </button>
       </div>
 
-      <div class="flex-1 min-h-0">
+      <div class="lg:flex-1 lg:min-h-0">
         <Transition name="fade-slide" mode="out-in">
           <KanbanBoard v-if="viewMode === 'kanban' && !isMobile" ref="kanbanRef" />
           <ServiceOrderGridView v-else />

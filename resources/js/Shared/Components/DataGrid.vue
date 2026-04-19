@@ -1,28 +1,28 @@
 <template>
-  <div class="h-full flex flex-col">
+  <div class="h-full flex flex-col px-2 sm:px-0">
     <div class="card bg-white dark:bg-card border border-border rounded-lg flex-1 flex flex-col min-h-0">
 
       <!-- Header: busca + filtros + ações -->
-      <div class="card-header px-6 py-5 border-b border-neutral-300 dark:border-white/20 shrink-0">
-        <div class="flex flex-wrap items-center gap-3 mb-0">
-          <!-- Busca -->
-          <div v-if="searchable" class="relative" style="width: 280px !important; min-width: 280px !important; max-width: 280px !important; flex: 0 0 auto !important;">
-            <i class="ki-outline ki-magnifier absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-500 dark:text-gray-400 z-10 pointer-events-none"></i>
-            <input
-              v-model="localSearch"
-              @input="onSearchInput"
-              :placeholder="searchPlaceholder"
-              class="kt-input w-full !pl-10"
-            />
-          </div>
+      <div class="card-header px-4 py-4 sm:px-6 sm:py-5 border-b border-neutral-300 dark:border-white/20 shrink-0">
+        <!-- Linha 1: busca (full width no mobile) -->
+        <div v-if="searchable" class="relative w-full sm:w-[280px] mb-3">
+          <i class="ki-outline ki-magnifier absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-500 dark:text-gray-400 z-10 pointer-events-none"></i>
+          <input
+            v-model="localSearch"
+            @input="onSearchInput"
+            :placeholder="searchPlaceholder"
+            class="kt-input w-full !pl-10"
+          />
+        </div>
 
-          <!-- Filtros -->
+        <!-- Linha 2: filtros à esquerda, ações à direita -->
+        <div class="flex items-center justify-between gap-2">
           <div v-if="$slots.filters">
             <slot name="filters"></slot>
           </div>
+          <div v-else class="flex-1"></div>
 
-          <!-- Ações -->
-          <div v-if="$slots.actions" class="flex items-center gap-3 ml-auto">
+          <div v-if="$slots.actions" class="flex items-center gap-2 flex-shrink-0">
             <slot name="actions"></slot>
           </div>
         </div>
@@ -34,7 +34,7 @@
           <thead>
             <tr>
               <th
-                v-for="col in columns"
+                v-for="col in visibleColumns"
                 :key="col.key"
                 :class="col.headerClass || 'px-6 py-4 text-base font-semibold text-secondary-foreground text-start border-b border-neutral-300 dark:border-white/20'"
                 @click="() => onHeaderClick(col)"
@@ -48,11 +48,11 @@
           </thead>
           <tbody class="text-sm text-foreground">
             <tr v-if="items.length === 0">
-              <td :colspan="columns.length" class="py-6 text-center text-secondary-foreground">Nenhum registro encontrado.</td>
+              <td :colspan="visibleColumns.length" class="py-6 text-center text-secondary-foreground">Nenhum registro encontrado.</td>
             </tr>
             <tr v-for="row in items" :key="row.id" class="last:border-b-0">
               <td
-                v-for="col in columns"
+                v-for="col in visibleColumns"
                 :key="col.key + '-' + row.id"
                 class="px-6 py-4 text-sm border-b border-neutral-300 dark:border-white/20 align-top"
               >
@@ -89,7 +89,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
   columns: { type: Array, required: true },
@@ -102,6 +102,21 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['update:page', 'sort', 'search', 'edit', 'delete']);
+
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024);
+const isMobile = computed(() => windowWidth.value < 768);
+function onResize() { windowWidth.value = window.innerWidth; }
+onMounted(() => window.addEventListener('resize', onResize));
+onUnmounted(() => window.removeEventListener('resize', onResize));
+
+const visibleColumns = computed(() => {
+  if (!isMobile.value) return props.columns;
+  const nonAction = props.columns.filter(c => c.key !== 'actions');
+  const actionCol = props.columns.find(c => c.key === 'actions');
+  const result = nonAction.slice(0, 2);
+  if (actionCol) result.push(actionCol);
+  return result;
+});
 
 const localSearch = ref('');
 

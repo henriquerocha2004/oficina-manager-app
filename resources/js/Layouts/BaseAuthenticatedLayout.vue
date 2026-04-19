@@ -15,7 +15,7 @@
       <slot name="toolbar" />
 
       <!-- Main Content -->
-      <main class="flex-1 p-5 lg:p-10 overflow-y-auto min-h-0">
+      <main class="flex-1 p-0 sm:p-5 lg:p-10 overflow-y-auto min-h-0">
         <slot />
       </main>
 

@@ -7,7 +7,7 @@
     >
         <i v-if="!loading" class="ki-outline ki-exit-down"></i>
         <i v-else class="ki-outline ki-loading"></i>
-        <span>{{ loading ? 'Exportando...' : label }}</span>
+        <span class="hidden sm:inline">{{ loading ? 'Exportando...' : label }}</span>
     </button>
 </template>
 

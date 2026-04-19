@@ -1,6 +1,6 @@
 <template>
   <TenantLayout title="Clientes" :breadcrumbs="breadcrumbs">
-    <div class="kt-container-fixed w-full py-4 px-2">
+    <div class="kt-container-fixed w-full">
       <StatsContainer>
         <StatsCard
           v-for="(stat, index) in stats"
@@ -28,25 +28,35 @@
           <FilterDropdown
             :activeCount="activeFiltersCount"
             @clear="clearAllFilters"
+            v-slot="{ isMobile }"
           >
+            <div :class="isMobile ? '' : 'filters-grid'">
+            <!-- Estado -->
             <div class="filter-item">
               <label class="filter-label">Estado</label>
-              <select
-                v-model="filters.state"
-                class="kt-select"
-                @change="applyFilters"
-              >
+              <!-- Mobile: autocomplete via datalist, sem popup nativo -->
+              <template v-if="isMobile">
+                <input
+                  v-model="stateSearch"
+                  type="text"
+                  list="states-list"
+                  placeholder="Digite o estado..."
+                  class="kt-input"
+                  @change="onStateSearchChange"
+                />
+                <datalist id="states-list">
+                  <option value="">Todos</option>
+                  <option v-for="s in brazilianStates" :key="s.value" :value="s.label" />
+                </datalist>
+              </template>
+              <!-- Desktop: select nativo -->
+              <select v-else v-model="filters.state" class="kt-select" @change="applyFilters">
                 <option value="">Todos</option>
-                <option
-                  v-for="state in brazilianStates"
-                  :key="state.value"
-                  :value="state.value"
-                >
-                  {{ state.label }}
-                </option>
+                <option v-for="s in brazilianStates" :key="s.value" :value="s.value">{{ s.label }}</option>
               </select>
             </div>
 
+            <!-- Cidade -->
             <div class="filter-item">
               <label class="filter-label">Cidade</label>
               <input
@@ -58,17 +68,24 @@
               />
             </div>
 
+            <!-- Tipo -->
             <div class="filter-item">
               <label class="filter-label">Tipo</label>
-              <select
-                v-model="filters.type"
-                class="kt-select"
-                @change="applyFilters"
-              >
-                <option value="all">Todos</option>
-                <option value="pf">Pessoa Física</option>
-                <option value="pj">Pessoa Jurídica</option>
+              <!-- Mobile: chips sem popup -->
+              <div v-if="isMobile" class="type-chips">
+                <button
+                  v-for="opt in typeOptions"
+                  :key="opt.value"
+                  class="type-chip"
+                  :class="{ active: filters.type === opt.value }"
+                  @click="selectType(opt.value)"
+                >{{ opt.label }}</button>
+              </div>
+              <!-- Desktop: select nativo -->
+              <select v-else v-model="filters.type" class="kt-select" @change="applyFilters">
+                <option v-for="opt in typeOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
+            </div>
             </div>
           </FilterDropdown>
         </template>
@@ -76,7 +93,7 @@
         <template #actions>
           <div class="flex items-center gap-2">
             <ExportButton @export="handleExport" />
-            <button class="kt-btn kt-btn-primary" @click="onNew">Novo Cliente</button>
+            <button class="kt-btn kt-btn-primary whitespace-nowrap" @click="onNew">Novo Cliente</button>
           </div>
         </template>
         <template #cell-actions="{ row }">
@@ -136,9 +153,28 @@ const confirmModal = ref(null);
 
 const breadcrumbs = [ { label: 'Clientes' } ];
 
+const typeOptions = [
+  { value: 'all', label: 'Todos' },
+  { value: 'pf',  label: 'Pessoa Física' },
+  { value: 'pj',  label: 'Pessoa Jurídica' },
+];
+
 const { unmask } = useMasks();
 const { exportToCSV } = useExportCSV();
 const { filters, saveToStorage, loadFromStorage, clearFilters, activeFiltersCount } = useClientFilters();
+
+const stateSearch = ref('');
+
+function onStateSearchChange() {
+  const match = brazilianStates.find(s => s.label.toLowerCase() === stateSearch.value.toLowerCase());
+  filters.state = match ? match.value : '';
+  applyFilters();
+}
+
+function selectType(value) {
+  filters.type = value;
+  applyFilters();
+}
 
 const statsFromApi = ref(null);
 const { stats } = useStats(items, 'clients', statsFromApi);
@@ -319,15 +355,16 @@ const columns = [
 @media (min-width: 1280px) {
   .kt-container-fixed { max-width: 1600px; }
 }
-@media (max-width: 640px) {
-  html, body {
-    font-size: 1.1rem !important;
-    zoom: 1 !important;
-  }
-}
 </style>
 
 <style scoped>
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.875rem;
+    width: 100%;
+}
+
 .filter-item {
     display: flex;
     flex-direction: column;
@@ -343,5 +380,44 @@ const columns = [
 /* Dark mode */
 .dark .filter-label {
     color: #cbd5e1;
+}
+
+/* Chips de tipo para mobile */
+.type-chips {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.type-chip {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #6b7280;
+    background: transparent;
+    border: 1.5px solid #d1d5db;
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.type-chip.active {
+    color: #fff;
+    background: #f97316;
+    border-color: #f97316;
+}
+
+.dark .type-chip {
+    color: #94a3b8;
+    border-color: #334155;
+}
+
+.dark .type-chip.active {
+    color: #fff;
+    background: #f97316;
+    border-color: #f97316;
 }
 </style>

@@ -9,7 +9,9 @@ class FindOneClientAction
 {
     public function __invoke(string $id): Client
     {
-        $client = Client::query()->find($id);
+        $client = Client::query()
+            ->with('tenants')
+            ->find($id);
 
         if ($client === null) {
             throw new ClientNotFoundException();

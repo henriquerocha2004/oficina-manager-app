@@ -1,7 +1,7 @@
 <template>
   <div class="grid min-h-screen lg:grid-cols-2">
     <!-- Form Column - Left on desktop, Bottom on mobile -->
-    <div class="order-2 flex items-center justify-center p-8 lg:order-1 lg:p-10">
+    <div class="flex items-center justify-center p-8 lg:order-1 lg:p-10">
       <div class="kt-card w-full max-w-[370px]">
         <div class="kt-card-content flex flex-col gap-5 p-10">
           <slot />
@@ -9,8 +9,8 @@
       </div>
     </div>
 
-    <!-- Branded Column - Right on desktop, Top on mobile -->
-    <div class="order-1 lg:order-2 lg:m-5">
+    <!-- Branded Column - Right on desktop, hidden on mobile -->
+    <div class="hidden lg:block lg:order-2 lg:m-5">
       <!-- Conteúdo customizado via slot nomeado -->
       <slot name="branded">
         <!-- Fallback: conteúdo padrão quando slot não for fornecido -->

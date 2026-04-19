@@ -1,5 +1,5 @@
 <template>
-  <div class="service-order-grid-view h-full flex flex-col">
+  <div class="service-order-grid-view lg:h-full flex flex-col">
     <StatsContainer class="shrink-0">
       <StatsCard
         v-for="stat in stats"
@@ -11,7 +11,7 @@
       />
     </StatsContainer>
 
-    <div class="mt-4 flex-1 min-h-0">
+    <div class="mt-4 lg:flex-1 lg:min-h-0">
       <ServiceOrderGrid />
     </div>
   </div>

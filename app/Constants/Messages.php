@@ -242,5 +242,9 @@ class Messages
 
     public const string ADMIN_TENANT_CREATION_ERROR = 'An error occurred while creating the tenant.';
 
+    public const string TRIAL_CREATED_SUCCESS = 'Trial criado com sucesso.';
+
+    public const string ERROR_CREATING_TRIAL = 'Erro ao criar trial.';
+
     public const string TENANT_ACCOUNT_DISABLED = 'Sua conta foi desativada. Entre em contato com o suporte.';
 }
