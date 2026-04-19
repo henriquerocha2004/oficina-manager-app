@@ -20,9 +20,4 @@ export const adminMenu = [
         route: 'admin.clients.index',
         icon: 'ki-outline ki-profile-circle',
     },
-    {
-        label: 'Tenants',
-        route: 'admin.tenants.index',
-        icon: 'ki-outline ki-setting-2',
-    },
 ];

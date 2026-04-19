@@ -131,6 +131,25 @@ class TenantControllerTest extends AdminTestCase
         ], $this->adminConnection);
     }
 
+    public function testUpdateTenantRejectsPastTrialDate(): void
+    {
+        $tenant = Tenant::factory()->create(['status' => 'active']);
+
+        $data = [
+            'name' => $tenant->name,
+            'email' => $tenant->email,
+            'domain' => $tenant->domain,
+            'document' => $tenant->document,
+            'status' => 'trial',
+            'trial_until' => now()->subDay()->toDateString(),
+        ];
+
+        $response = $this->adminRequest('PUT', "/tenants/{$tenant->id}", $data);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['trial_until']);
+    }
+
     public function testFindOneReturnsTenant(): void
     {
         $tenant = Tenant::factory()->create();

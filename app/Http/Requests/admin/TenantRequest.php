@@ -10,6 +10,15 @@ use Illuminate\Validation\Rule;
 
 class TenantRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('status') !== TenantStatus::Trial->value) {
+            $this->merge([
+                'trial_until' => null,
+            ]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -19,6 +28,7 @@ class TenantRequest extends FormRequest
     {
         $rules = [
             'name' => ['required', 'string', 'max:255'],
+            'trade_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'email:rfc', 'max:255'],
             'domain' => ['required', 'string', 'max:25'],
             'document' => ['required', 'string', 'max:20'],
@@ -26,7 +36,7 @@ class TenantRequest extends FormRequest
 
         $rules['status'] = ['nullable', Rule::enum(TenantStatus::class)];
         $rules['client_id'] = ['nullable', 'string', 'max:26'];
-        $rules['trial_until'] = ['nullable', 'date', 'required_if:status,trial'];
+        $rules['trial_until'] = ['nullable', 'date', 'after_or_equal:today', 'required_if:status,trial'];
 
         if ($this->isMethod('put') || $this->isMethod('patch')) {
             $rules['status'] = ['required', Rule::enum(TenantStatus::class)];
@@ -47,6 +57,7 @@ class TenantRequest extends FormRequest
             'status.required' => 'O status é obrigatório.',
             'status.enum' => 'O status deve ser active, inactive ou trial.',
             'trial_until.required_if' => 'A data de expiração do trial é obrigatória quando o status é trial.',
+            'trial_until.after_or_equal' => 'A data de expiração do trial deve ser hoje ou uma data futura.',
         ];
     }
 
@@ -58,6 +69,7 @@ class TenantRequest extends FormRequest
             email: $this->validated('email'),
             domain: $this->validated('domain'),
             status: $this->validated('status') ?? 'active',
+            trade_name: $this->validated('trade_name'),
             trial_until: $this->validated('trial_until'),
             client_id: $this->validated('client_id'),
         );

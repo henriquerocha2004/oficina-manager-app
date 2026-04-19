@@ -3,6 +3,8 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Admin\Client;
+use App\Models\Admin\Tenant;
+use App\Services\Admin\ClientTenantService;
 use Illuminate\Auth\Middleware\Authenticate;
 use Tests\AdminTestCase;
 
@@ -38,15 +40,29 @@ class ClientControllerTest extends AdminTestCase
             'email' => "feature-{$uniqueId}@empresa.com",
             'document' => substr($uniqueId . '00000000000000', 0, 14),
             'phone' => '11999990000',
+            'domain' => 'client-' . $uniqueId,
+            'status' => 'active',
         ];
+
+        $client = Client::factory()->make([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'document' => $data['document'],
+        ]);
+        $tenant = Tenant::factory()->make([
+            'domain' => $data['domain'],
+            'status' => $data['status'],
+        ]);
+
+        $this->mock(ClientTenantService::class)
+            ->shouldReceive('create')
+            ->once()
+            ->andReturn(['client' => $client, 'tenant' => $tenant]);
 
         $response = $this->adminRequest('POST', '/clients', $data);
 
         $response->assertStatus(201);
-        $this->assertDatabaseHas('clients', [
-            'email' => $data['email'],
-            'document' => $data['document'],
-        ], $this->adminConnection);
+        $response->assertJsonPath('data.client.email', $data['email']);
     }
 
     public function testStoreValidatesRequiredFields(): void
@@ -54,7 +70,7 @@ class ClientControllerTest extends AdminTestCase
         $response = $this->adminRequest('POST', '/clients', []);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['name', 'email', 'document']);
+        $response->assertJsonValidationErrors(['name', 'email', 'document', 'domain', 'status']);
     }
 
     public function testUpdateChangesClientData(): void
@@ -104,10 +120,14 @@ class ClientControllerTest extends AdminTestCase
     public function testFindOneReturnsClient(): void
     {
         $client = Client::factory()->create();
+        $tenant = Tenant::factory()->create([
+            'client_id' => $client->id,
+        ]);
 
         $response = $this->adminRequest('GET', "/clients/{$client->id}");
 
         $response->assertStatus(200);
         $response->assertJsonPath('data.client.id', $client->id);
+        $response->assertJsonPath('data.client.tenants.0.id', $tenant->id);
     }
 }

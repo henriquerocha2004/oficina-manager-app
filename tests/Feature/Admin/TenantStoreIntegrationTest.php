@@ -3,8 +3,10 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Admin\Tenant;
+use App\Notifications\Admin\TenantAccessCreatedNotification;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 use Throwable;
 
@@ -43,6 +45,8 @@ class TenantStoreIntegrationTest extends TestCase
             'document' => substr($uniqueId . '00000000000000', 0, 14),
         ];
 
+        Notification::fake();
+
         $response = $this->adminRequest('POST', '/tenants', $data);
 
         $response->assertStatus(201);
@@ -54,6 +58,14 @@ class TenantStoreIntegrationTest extends TestCase
 
         $this->createdTenantId = $tenant->id;
         $this->createdDatabaseName = $tenant->database_name;
+
+        Notification::assertSentOnDemand(
+            TenantAccessCreatedNotification::class,
+            function (TenantAccessCreatedNotification $notification, array $channels, object $notifiable) use ($data) {
+                return in_array('mail', $channels, true)
+                    && ($notifiable->routes['mail'] ?? null) === $data['email'];
+            }
+        );
     }
 
     protected function tearDown(): void

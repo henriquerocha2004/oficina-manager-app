@@ -37,6 +37,7 @@ class CreateTenantAction
         $passwordToUse = is_null($password) || $password === '' ? 'password' : $password;
         $tenantCreated =  Tenant::query()->create([
             'name' => $tenantCreateDto->name,
+            'trade_name' => $tenantCreateDto->trade_name,
             'document' => $tenantCreateDto->document,
             'domain' => $tenantCreateDto->domain,
             'email' => $tenantCreateDto->email,
@@ -120,6 +121,7 @@ class CreateTenantAction
             email: $tenant->email,
             role: UserRoleEnum::ADMINISTRATOR->value,
             password: $password,
+            must_change_password: true,
         ));
     }
 }

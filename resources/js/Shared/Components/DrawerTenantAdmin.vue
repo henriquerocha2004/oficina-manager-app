@@ -22,8 +22,13 @@
             class="flex flex-col gap-4 p-5 flex-1 overflow-y-auto"
             @submit.prevent="submitHandler"
           >
-            <FormField name="name" label="Nome" v-slot="{ field, errors }">
-              <input v-bind="field" class="kt-input w-full" placeholder="Nome do tenant" />
+            <FormField name="name" label="Razão Social" v-slot="{ field, errors }">
+              <input v-bind="field" class="kt-input w-full" placeholder="Razão social" />
+              <FormError :errors="errors" />
+            </FormField>
+
+            <FormField name="trade_name" label="Nome Fantasia / Filial" v-slot="{ field, errors }">
+              <input v-bind="field" class="kt-input w-full" placeholder="Ex: Oficina Centro, Filial Norte" />
               <FormError :errors="errors" />
             </FormField>
 
@@ -100,6 +105,7 @@ const emit = defineEmits(['close', 'submit']);
 
 const schema = yup.object({
   name: yup.string().required('Nome é obrigatório'),
+  trade_name: yup.string().nullable(),
   email: yup.string().email('Email inválido').required('Email é obrigatório'),
   domain: yup.string().required('Domínio é obrigatório'),
   document: yup.string().required('Documento é obrigatório'),
@@ -112,6 +118,7 @@ const { handleSubmit, setValues, resetForm, values } = useForm({
   validationSchema: schema,
   initialValues: {
     name: '',
+    trade_name: '',
     email: '',
     domain: '',
     document: '',
@@ -127,6 +134,7 @@ watch(
     if (val) {
       setValues({
         name: val.name || '',
+        trade_name: val.trade_name || '',
         email: val.email || '',
         domain: val.domain || '',
         document: val.document || '',

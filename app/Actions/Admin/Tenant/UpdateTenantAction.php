@@ -18,6 +18,7 @@ class UpdateTenantAction
 
         $tenant->update([
             'name' => $dto->name,
+            'trade_name' => $dto->trade_name,
             'email' => $dto->email,
             'domain' => $dto->domain,
             'status' => $dto->status,

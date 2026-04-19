@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\admin;
 
-use App\Actions\Admin\CreateTenantAction;
 use App\Actions\Admin\Tenant\DeleteTenantAction;
 use App\Actions\Admin\Tenant\FindOneTenantAction;
 use App\Actions\Admin\Tenant\SearchTenantAction;
@@ -11,6 +10,7 @@ use App\Constants\Messages;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\admin\TenantRequest;
 use App\Http\Requests\FindRequest;
+use App\Services\Admin\TenantProvisioningService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -29,10 +29,10 @@ class TenantController extends Controller
     /**
      * @throws Throwable
      */
-    public function store(TenantRequest $request, CreateTenantAction $createTenantAction): JsonResponse
+    public function store(TenantRequest $request, TenantProvisioningService $tenantProvisioningService): JsonResponse
     {
         try {
-            $tenant = $createTenantAction($request->toCreateDto());
+            $tenant = $tenantProvisioningService->create($request->toCreateDto());
 
             return $this->setResponse(
                 message: Messages::ADMIN_TENANT_CREATED_SUCCESS,

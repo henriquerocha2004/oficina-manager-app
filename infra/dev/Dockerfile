@@ -24,6 +24,7 @@ RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
 
 COPY docker-php-ext-xdebug.ini "${PHP_INI_DIR}/conf.d"
+COPY php.ini "${PHP_INI_DIR}/conf.d/uploads.ini"
 
 # Instala Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.permission' => EnsureTenantPermission::class,
             'check.tenant.status' => CheckTenantStatus::class,
             'tenant.auth.session' => EnsureTenantSessionIsValid::class,
+            'password.change' => \App\Http\Middleware\EnsurePasswordIsChanged::class,
         ]);
         $middleware->web(
             append: [
