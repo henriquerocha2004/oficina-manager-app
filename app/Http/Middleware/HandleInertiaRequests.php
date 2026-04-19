@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\MediaStorage;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,7 +37,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         return [
-            'logo_url'    => $logo ? '/storage/' . $logo : null,
+            'logo_url'    => MediaStorage::url($logo),
             'tenant_name' => $tenantName,
         ];
     }

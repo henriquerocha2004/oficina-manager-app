@@ -7,7 +7,7 @@ use App\Exceptions\ServiceOrder\ServiceOrderNotFoundException;
 use App\Exceptions\ServiceOrder\ServiceOrderPhotoLimitExceededException;
 use App\Models\Tenant\ServiceOrder;
 use App\Models\Tenant\ServiceOrderPhoto;
-use Illuminate\Support\Facades\Storage;
+use App\Support\MediaStorage;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\JpegEncoder;
@@ -54,12 +54,11 @@ readonly class UploadServiceOrderPhotoAction
 
         // Encode as JPEG with 85% quality
         $encodedImage = $image->encode(new JpegEncoder(quality: 85));
+        $encodedContents = (string) $encodedImage;
+        $fileSize = strlen($encodedContents);
 
         // Store the processed image
-        Storage::disk('public')->put($relativePath, (string) $encodedImage);
-
-        // Get file size
-        $fileSize = Storage::disk('public')->size($relativePath);
+        MediaStorage::put($relativePath, $encodedContents);
 
         // Get next display order
         $displayOrder = $serviceOrder->photos()->max('display_order') + 1;

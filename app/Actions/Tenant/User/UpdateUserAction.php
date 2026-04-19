@@ -6,8 +6,8 @@ use App\Dto\UserDto;
 use App\Exceptions\User\UserAlreadyExistsException;
 use App\Exceptions\User\UserNotFoundException;
 use App\Models\Tenant\User;
+use App\Support\MediaStorage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager;
@@ -42,9 +42,7 @@ class UpdateUserAction
             $oldAvatarPath = $user->avatar_path;
             $user->update(['avatar_path' => null]);
 
-            if (!is_null($oldAvatarPath) && Storage::disk('public')->exists($oldAvatarPath)) {
-                Storage::disk('public')->delete($oldAvatarPath);
-            }
+            MediaStorage::delete($oldAvatarPath);
 
             return;
         }
@@ -61,9 +59,7 @@ class UpdateUserAction
 
         $user->update(['avatar_path' => $newAvatarPath]);
 
-        if (!is_null($oldAvatarPath) && Storage::disk('public')->exists($oldAvatarPath)) {
-            Storage::disk('public')->delete($oldAvatarPath);
-        }
+        MediaStorage::delete($oldAvatarPath);
     }
 
     private function storeAvatar(UploadedFile $avatarFile, int $userId): string
@@ -77,7 +73,7 @@ class UpdateUserAction
         $image->fillTransparentAreas('ffffff');
 
         $encodedImage = $image->encode(new JpegEncoder(quality: 85));
-        Storage::disk('public')->put($relativePath, (string) $encodedImage);
+        MediaStorage::put($relativePath, (string) $encodedImage);
 
         return $relativePath;
     }

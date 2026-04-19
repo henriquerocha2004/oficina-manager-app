@@ -3,8 +3,8 @@
 namespace App\Actions\Tenant\Setting;
 
 use App\Models\Tenant\TenantSetting;
+use App\Support\MediaStorage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager;
@@ -18,9 +18,7 @@ class UploadLogoAction
         if ($logoFile === null) {
             TenantSetting::setValue('logo_path', null);
 
-            if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
-                Storage::disk('public')->delete($oldLogoPath);
-            }
+            MediaStorage::delete($oldLogoPath);
 
             return;
         }
@@ -34,12 +32,10 @@ class UploadLogoAction
         $image->fillTransparentAreas('ffffff');
 
         $encodedImage = $image->encode(new JpegEncoder(quality: 85));
-        Storage::disk('public')->put($relativePath, (string) $encodedImage);
+        MediaStorage::put($relativePath, (string) $encodedImage);
 
         TenantSetting::setValue('logo_path', $relativePath);
 
-        if ($oldLogoPath && Storage::disk('public')->exists($oldLogoPath)) {
-            Storage::disk('public')->delete($oldLogoPath);
-        }
+        MediaStorage::delete($oldLogoPath);
     }
 }

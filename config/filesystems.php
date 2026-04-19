@@ -15,6 +15,12 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'tenant_media_disk' => env('TENANT_MEDIA_DISK', 'public'),
+
+    'tenant_media_url_temporary' => env('TENANT_MEDIA_URL_TEMPORARY', true),
+
+    'tenant_media_url_expiration' => (int) env('TENANT_MEDIA_URL_EXPIRATION', 1440),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -57,6 +63,20 @@ return [
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
             'throw' => false,
+            'report' => false,
+        ],
+
+        'tenant_media' => [
+            'driver' => 's3',
+            'key' => env('OCI_MEDIA_ACCESS_KEY_ID'),
+            'secret' => env('OCI_MEDIA_SECRET_ACCESS_KEY'),
+            'region' => env('OCI_MEDIA_REGION'),
+            'bucket' => env('OCI_MEDIA_BUCKET'),
+            'url' => env('OCI_MEDIA_URL'),
+            'endpoint' => env('OCI_MEDIA_ENDPOINT'),
+            'use_path_style_endpoint' => env('OCI_MEDIA_USE_PATH_STYLE_ENDPOINT', true),
+            'visibility' => env('OCI_MEDIA_VISIBILITY', 'private'),
+            'throw' => true,
             'report' => false,
         ],
 

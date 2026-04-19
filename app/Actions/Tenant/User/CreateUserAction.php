@@ -5,8 +5,8 @@ namespace App\Actions\Tenant\User;
 use App\Dto\UserDto;
 use App\Exceptions\User\UserAlreadyExistsException;
 use App\Models\Tenant\User;
+use App\Support\MediaStorage;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager;
@@ -56,7 +56,7 @@ class CreateUserAction
         $image->fillTransparentAreas('ffffff');
 
         $encodedImage = $image->encode(new JpegEncoder(quality: 85));
-        Storage::disk('public')->put($relativePath, (string) $encodedImage);
+        MediaStorage::put($relativePath, (string) $encodedImage);
 
         return $relativePath;
     }

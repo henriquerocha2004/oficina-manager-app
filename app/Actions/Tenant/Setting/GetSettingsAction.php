@@ -3,6 +3,7 @@
 namespace App\Actions\Tenant\Setting;
 
 use App\Models\Tenant\TenantSetting;
+use App\Support\MediaStorage;
 
 class GetSettingsAction
 {
@@ -11,7 +12,7 @@ class GetSettingsAction
         $logoPath = TenantSetting::getValue('logo_path');
 
         return [
-            'logo_url' => $logoPath ? '/storage/' . $logoPath : null,
+            'logo_url' => MediaStorage::url($logoPath),
         ];
     }
 }
