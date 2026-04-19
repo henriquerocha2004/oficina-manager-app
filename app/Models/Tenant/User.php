@@ -4,6 +4,7 @@ namespace App\Models\Tenant;
 
 use App\Enum\Tenant\User\UserRoleEnum;
 use App\Notifications\Tenant\ResetPasswordNotification;
+use App\Support\MediaStorage;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'is_active',
         'avatar_path',
         'preferences',
+        'must_change_password',
     ];
 
     protected $appends = [
@@ -44,6 +46,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRoleEnum::class,
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
             'preferences' => 'array',
         ];
     }
@@ -66,11 +69,7 @@ class User extends Authenticatable
 
     public function getAvatarAttribute(): ?string
     {
-        if (is_null($this->avatar_path) || $this->avatar_path === '') {
-            return null;
-        }
-
-        return '/storage/' . $this->avatar_path;
+        return MediaStorage::url($this->avatar_path);
     }
 
     public function getConnectionName(): ?string
