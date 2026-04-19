@@ -10,6 +10,7 @@ class TenantCreateDto
         public string $email,
         public string $domain,
         public string $status = 'active',
+        public ?string $trade_name = null,
         public ?string $trial_until = null,
         public ?string $client_id = null,
     ) {

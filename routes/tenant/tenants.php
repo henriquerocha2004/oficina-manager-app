@@ -6,7 +6,7 @@ use Inertia\Inertia;
 require __DIR__.'/auth.php';
 
 // Protected tenant routes
-Route::middleware(['auth:tenant', 'tenant.permission'])->group(function () {
+Route::middleware(['auth:tenant', 'tenant.permission', 'password.change'])->group(function () {
     // Client routes
     require __DIR__.'/client.php';
 
@@ -31,4 +31,7 @@ Route::middleware(['auth:tenant', 'tenant.permission'])->group(function () {
     // Service Order routes
     require __DIR__.'/service_order.php';
     require __DIR__.'/service_order_pages.php';
+
+    // Settings routes
+    require __DIR__.'/setting.php';
 });

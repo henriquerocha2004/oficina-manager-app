@@ -28,6 +28,7 @@ class CreateUserAction
             'password' => $userDto->password,
             'role' => $userDto->role,
             'is_active' => $userDto->is_active ?? true,
+            'must_change_password' => $userDto->must_change_password,
         ]);
 
         if (is_null($avatarFile)) {

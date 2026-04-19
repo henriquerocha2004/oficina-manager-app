@@ -3,7 +3,8 @@
     <!-- Mobile Header -->
     <template #mobile-header>
       <TenantMobileHeader
-        brand-name="Oficina Manager"
+        :brand-name="tenantName"
+        :logo="tenantLogo"
         @toggle-sidebar="toggleSidebar"
       />
     </template>
@@ -12,7 +13,8 @@
     <template #sidebar>
       <Sidebar :is-sidebar-open="isSidebarOpen">
         <SidebarHeader
-          brand-name="Oficina Manager"
+          :brand-name="tenantName"
+          :logo="tenantLogo"
           :collapsed="!isSidebarOpen"
           :show-search="true"
           :show-add-new="true"
@@ -76,7 +78,7 @@
 
 <script setup>
 import { ref, computed, provide, onMounted } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, router as inertiaRouter } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 import BaseAuthenticatedLayout from './BaseAuthenticatedLayout.vue';
 import Sidebar from '@/Components/Shared/Navigation/Sidebar.vue';
@@ -112,6 +114,9 @@ const {
   isAccordionOpen,
   closeSidebarOnMobile,
 } = useSidebar('tenant');
+
+const tenantLogo = computed(() => page.props.tenant_settings?.logo_url || undefined);
+const tenantName = computed(() => page.props.tenant_settings?.tenant_name || 'Easy Oficina');
 
 const { role } = usePermissions();
 const filteredMenu = computed(() =>

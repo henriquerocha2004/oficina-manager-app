@@ -2,7 +2,6 @@
 
 namespace Tests\Unit\Controllers\Admin;
 
-use App\Actions\Admin\CreateTenantAction;
 use App\Actions\Admin\Tenant\DeleteTenantAction;
 use App\Actions\Admin\Tenant\UpdateTenantAction;
 use App\Dto\Admin\TenantUpdateDto;
@@ -10,6 +9,7 @@ use App\Dto\TenantCreateDto;
 use App\Http\Controllers\admin\TenantController;
 use App\Http\Requests\admin\TenantRequest;
 use App\Models\Admin\Tenant;
+use App\Services\Admin\TenantProvisioningService;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\MockInterface;
@@ -35,12 +35,12 @@ class TenantControllerTest extends AdminTestCase
 
         $createdTenant = new Tenant();
 
-        /** @var CreateTenantAction&MockInterface $createAction */
-        $createAction = Mockery::mock(CreateTenantAction::class);
-        $createAction->shouldReceive('__invoke')->andReturn($createdTenant);
+        /** @var TenantProvisioningService&MockInterface $tenantProvisioningService */
+        $tenantProvisioningService = Mockery::mock(TenantProvisioningService::class);
+        $tenantProvisioningService->shouldReceive('create')->andReturn($createdTenant);
 
         $controller = new TenantController();
-        $response = $controller->store($requestMock, $createAction);
+        $response = $controller->store($requestMock, $tenantProvisioningService);
 
         $this->assertSame(Response::HTTP_CREATED, $response->getStatusCode());
         $payload = $response->getData(true);

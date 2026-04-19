@@ -35,6 +35,12 @@ Route::middleware(['auth:tenant'])->group(function () {
     // Logout
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('tenant.logout');
 
+    // Force password change (first login)
+    Route::get('/change-password', [AuthController::class, 'showForceChangePassword'])
+        ->name('tenant.password.force-change');
+    Route::post('/change-password', [AuthController::class, 'forceChangePassword'])
+        ->name('tenant.password.force-change.update');
+
     // Email verification routes
     if (Features::enabled(Features::emailVerification())) {
         Route::get('/email/verify', [EmailVerificationPromptController::class, '__invoke'])

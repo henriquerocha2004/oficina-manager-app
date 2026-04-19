@@ -63,6 +63,7 @@ class Tenant extends ManagerBaseModel
         'email',
         'is_active',
         'name',
+        'trade_name',
         'document',
         'database_name',
         'status',

@@ -2,13 +2,15 @@
 
 namespace Tests\Unit\Controllers\Admin;
 
-use App\Actions\Admin\Client\CreateClientAction;
 use App\Actions\Admin\Client\DeleteClientAction;
 use App\Actions\Admin\Client\UpdateClientAction;
 use App\Dto\Admin\ClientDto;
 use App\Http\Controllers\admin\ClientController;
+use App\Http\Requests\ClientTenantRequest;
 use App\Http\Requests\admin\ClientRequest;
 use App\Models\Admin\Client;
+use App\Models\Admin\Tenant;
+use App\Services\Admin\ClientTenantService;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\MockInterface;
@@ -27,23 +29,31 @@ class ClientControllerTest extends AdminTestCase
             'document' => '12345678901234',
         ]);
 
-        /** @var ClientRequest&MockInterface $requestMock */
-        $requestMock = Mockery::mock(ClientRequest::class);
-        $requestMock->shouldReceive('toDto')->andReturn($dto);
+        /** @var ClientTenantRequest&MockInterface $requestMock */
+        $requestMock = Mockery::mock(ClientTenantRequest::class);
+        $requestMock->shouldReceive('toClientDto')->andReturn($dto);
+        $requestMock->shouldReceive('tenantDomain')->andReturn('empresa-teste');
+        $requestMock->shouldReceive('tenantStatus')->andReturn('active');
+        $requestMock->shouldReceive('tenantTrialUntil')->andReturn(null);
 
         $createdClient = new Client();
+        $createdTenant = new Tenant();
 
-        /** @var CreateClientAction&MockInterface $createAction */
-        $createAction = Mockery::mock(CreateClientAction::class);
-        $createAction->shouldReceive('__invoke')->andReturn($createdClient);
+        /** @var ClientTenantService&MockInterface $clientTenantService */
+        $clientTenantService = Mockery::mock(ClientTenantService::class);
+        $clientTenantService->shouldReceive('create')->andReturn([
+            'client' => $createdClient,
+            'tenant' => $createdTenant,
+        ]);
 
         $controller = new ClientController();
-        $response = $controller->store($requestMock, $createAction);
+        $response = $controller->store($requestMock, $clientTenantService);
 
         $this->assertSame(Response::HTTP_CREATED, $response->getStatusCode());
         $payload = $response->getData(true);
         $this->assertArrayHasKey('data', $payload);
         $this->assertArrayHasKey('client', $payload['data']);
+        $this->assertArrayHasKey('tenant', $payload['data']);
     }
 
     public function testUpdateReturnsOkResponse(): void

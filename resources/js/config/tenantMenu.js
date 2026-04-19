@@ -35,4 +35,10 @@ export const tenantMenu = [
         icon: 'ki-outline ki-user',
         roles: ['administrator'],
     },
+    {
+        label: 'Configurações',
+        route: 'settings.index',
+        icon: 'ki-outline ki-setting-2',
+        roles: ['administrator'],
+    },
 ];

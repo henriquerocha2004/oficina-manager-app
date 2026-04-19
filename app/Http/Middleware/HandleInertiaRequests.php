@@ -21,6 +21,26 @@ class HandleInertiaRequests extends Middleware
      *
      * @see https://inertiajs.com/asset-versioning
      */
+    private function resolveTenantSettings(Request $request): array
+    {
+        $tenantName = null;
+        if (app()->bound('tenant')) {
+            $tenantName = app('tenant')?->trade_name;
+        }
+
+        $logo = null;
+        try {
+            $logo = \App\Models\Tenant\TenantSetting::getValue('logo_path');
+        } catch (\Throwable $e) {
+            // settings table may not exist yet for this tenant
+        }
+
+        return [
+            'logo_url'    => $logo ? '/storage/' . $logo : null,
+            'tenant_name' => $tenantName,
+        ];
+    }
+
     public function version(Request $request): ?string
     {
         return parent::version($request);
@@ -50,6 +70,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'success' => fn () => $request->session()->get('success'),
             ],
+            'tenant_settings' => fn () => $isAdminRequest ? null : $this->resolveTenantSettings($request),
         ];
     }
 }

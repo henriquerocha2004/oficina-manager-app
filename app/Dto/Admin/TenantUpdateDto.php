@@ -9,6 +9,7 @@ class TenantUpdateDto
         public string $email,
         public string $domain,
         public string $status,
+        public ?string $trade_name = null,
         public ?string $client_id = null,
         public ?string $trial_until = null,
     ) {
@@ -21,6 +22,7 @@ class TenantUpdateDto
             email: $data['email'],
             domain: $data['domain'],
             status: $data['status'],
+            trade_name: $data['trade_name'] ?? null,
             client_id: $data['client_id'] ?? null,
             trial_until: $data['trial_until'] ?? null,
         );
@@ -30,6 +32,7 @@ class TenantUpdateDto
     {
         return array_filter([
             'name' => $this->name,
+            'trade_name' => $this->trade_name,
             'email' => $this->email,
             'domain' => $this->domain,
             'status' => $this->status,

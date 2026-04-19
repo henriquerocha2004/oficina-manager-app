@@ -34,6 +34,11 @@ class FortifyServiceProvider extends ServiceProvider
                     }
 
                     $user = $request->user('tenant');
+
+                    if ($user?->must_change_password) {
+                        return Inertia::location('/change-password');
+                    }
+
                     $role = $user?->role instanceof \BackedEnum
                         ? $user->role->value
                         : (string) ($user?->role ?? '');
