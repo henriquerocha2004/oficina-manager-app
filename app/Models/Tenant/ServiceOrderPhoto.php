@@ -2,12 +2,12 @@
 
 namespace App\Models\Tenant;
 
+use App\Support\MediaStorage;
 use App\Models\Tenant\User;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * @property string $id
@@ -71,7 +71,7 @@ class ServiceOrderPhoto extends Model
 
     public function getUrlAttribute(): string
     {
-        return '/storage/' . $this->file_path;
+        return MediaStorage::url($this->file_path) ?? '';
     }
 
     protected static function boot()
@@ -80,9 +80,7 @@ class ServiceOrderPhoto extends Model
 
         // Delete physical file when model is deleted
         static::deleting(function (ServiceOrderPhoto $photo) {
-            if ($photo->file_path && Storage::disk('public')->exists($photo->file_path)) {
-                Storage::disk('public')->delete($photo->file_path);
-            }
+            MediaStorage::delete($photo->file_path);
         });
     }
 }

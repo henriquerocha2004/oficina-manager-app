@@ -7,6 +7,8 @@ use App\Dto\UserDto;
 use App\Exceptions\User\UserAlreadyExistsException;
 use App\Exceptions\User\UserNotFoundException;
 use App\Models\Tenant\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class UpdateUserActionTest extends TestCase
@@ -81,5 +83,67 @@ class UpdateUserActionTest extends TestCase
         $this->expectException(UserNotFoundException::class);
 
         (new UpdateUserAction())($dto, 999999);
+    }
+
+    public function testStoresAvatarInTenantMediaDiskWhenProvided(): void
+    {
+        config(['filesystems.tenant_media_disk' => 'tenant_media']);
+        Storage::fake('tenant_media');
+
+        $user = User::query()->create([
+            'name' => 'Avatar User',
+            'email' => 'avatar.update@example.com',
+            'role' => 'administrator',
+            'password' => '12345678',
+            'is_active' => true,
+        ]);
+
+        $dto = UserDto::fromArray([
+            'name' => 'Avatar User Updated',
+            'email' => 'avatar.update@example.com',
+            'role' => 'administrator',
+            'is_active' => true,
+        ]);
+
+        $avatar = UploadedFile::fake()->image('avatar.png', 400, 400);
+
+        (new UpdateUserAction())($dto, $user->id, $avatar);
+
+        $user->refresh();
+
+        $this->assertNotNull($user->avatar_path);
+        Storage::disk('tenant_media')->assertExists($user->avatar_path);
+    }
+
+    public function testDeletesPreviousAvatarFromTenantMediaDiskWhenRemovingAvatar(): void
+    {
+        config(['filesystems.tenant_media_disk' => 'tenant_media']);
+        Storage::fake('tenant_media');
+
+        $oldAvatarPath = 'users/avatars/1/old-avatar.jpg';
+        Storage::disk('tenant_media')->put($oldAvatarPath, 'avatar');
+
+        $user = User::query()->create([
+            'name' => 'Avatar User',
+            'email' => 'avatar.remove@example.com',
+            'role' => 'administrator',
+            'password' => '12345678',
+            'is_active' => true,
+            'avatar_path' => $oldAvatarPath,
+        ]);
+
+        $dto = UserDto::fromArray([
+            'name' => 'Avatar User',
+            'email' => 'avatar.remove@example.com',
+            'role' => 'administrator',
+            'is_active' => true,
+        ]);
+
+        (new UpdateUserAction())($dto, $user->id, removeAvatar: true);
+
+        $user->refresh();
+
+        $this->assertNull($user->avatar_path);
+        Storage::disk('tenant_media')->assertMissing($oldAvatarPath);
     }
 }
