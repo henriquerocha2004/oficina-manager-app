@@ -29,11 +29,12 @@ class CreateTenantAction
     /**
      * @throws Throwable
      */
-    public function __invoke(TenantCreateDto $tenantCreateDto): ?Tenant
+    public function __invoke(TenantCreateDto $tenantCreateDto, ?string $password = null): ?Tenant
     {
         $tenant = Tenant::whereDomain($tenantCreateDto->domain)->first();
         throw_if(!is_null($tenant), TenantAlreadyExistsException::class);
         $databaseName = "";
+        $passwordToUse = is_null($password) || $password === '' ? 'password' : $password;
         $tenantCreated =  Tenant::query()->create([
             'name' => $tenantCreateDto->name,
             'document' => $tenantCreateDto->document,
@@ -50,7 +51,7 @@ class CreateTenantAction
             $tenantCreated->update(['database_name' => $databaseName]);
             $this->connectToTenantDatabaseCreated($tenantCreated);
             $this->runMigrations();
-            $this->createUser($tenantCreated);
+            $this->createUser($tenantCreated, $passwordToUse);
 
             return $tenantCreated;
         } catch (Throwable $exception) {
@@ -110,7 +111,7 @@ class CreateTenantAction
         );
     }
 
-    private function createUser(Tenant $tenant): void
+    private function createUser(Tenant $tenant, string $password): void
     {
         /** @var CreateUserAction $userSeed */
         $userSeed = app(CreateUserAction::class);
@@ -118,7 +119,7 @@ class CreateTenantAction
             name: $tenant->name,
             email: $tenant->email,
             role: UserRoleEnum::ADMINISTRATOR->value,
-            password: 'password',
+            password: $password,
         ));
     }
 }

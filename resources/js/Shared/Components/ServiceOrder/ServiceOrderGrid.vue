@@ -1,5 +1,5 @@
 <template>
-  <div class="service-order-grid h-full">
+  <div class="service-order-grid lg:h-full">
     <DataGrid
       :columns="columns"
       :items="items"

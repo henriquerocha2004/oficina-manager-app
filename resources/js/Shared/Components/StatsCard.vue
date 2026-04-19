@@ -28,11 +28,13 @@ defineProps({
     border-width: 1px;
     border-style: solid;
     border-radius: 0.75rem;
-    padding: 1rem;
+    padding: 0.75rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     transition: box-shadow 0.2s ease;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .stats-card:hover {
@@ -63,15 +65,23 @@ defineProps({
 .stats-card__title {
     font-size: 0.75rem;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    line-height: 1.2;
 }
 
 .stats-card__value {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     line-height: 1.1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+    .stats-card__value {
+        font-size: 1.5rem;
+    }
 }
 
 /* ── Cores dos ícones ── */

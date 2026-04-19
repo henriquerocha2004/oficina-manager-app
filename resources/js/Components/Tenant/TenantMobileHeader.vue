@@ -4,9 +4,9 @@
   >
     <!-- Logo -->
     <div class="flex items-center gap-2 flex-1">
-      <img 
-        :src="logo" 
-        class="h-8 w-8" 
+      <img
+        :src="resolvedLogo"
+        :class="isCustomLogo ? 'h-8 w-8 object-contain rounded' : 'h-8 w-8'"
         :alt="brandName"
       />
       <span class="text-lg font-semibold text-gray-100">
@@ -27,12 +27,13 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import logoUrl from '@assets/media/app/mini-logo-circle-success.svg';
 
-defineProps({
+const props = defineProps({
   logo: {
     type: String,
-    default: logoUrl,
+    default: undefined,
   },
   brandName: {
     type: String,
@@ -41,4 +42,7 @@ defineProps({
 });
 
 defineEmits(['toggle-sidebar']);
+
+const isCustomLogo = computed(() => !!props.logo && !props.logo.endsWith('.svg'));
+const resolvedLogo = computed(() => props.logo || logoUrl);
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <footer class="fixed bottom-0 left-0 w-full z-30 border-t border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 font-sans">
+  <footer class="shrink-0 w-full border-t border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 font-sans">
     <div class="flex flex-col md:flex-row items-center justify-between gap-4 px-5 py-3 min-h-14">
       <div class="text-xs text-muted-foreground">
         {{ currentYear }} &copy; {{ appName }}

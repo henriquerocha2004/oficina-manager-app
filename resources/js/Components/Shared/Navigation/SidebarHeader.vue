@@ -3,9 +3,9 @@
     <!-- Logo e Brand -->
     <div class="flex items-center justify-between gap-2">
       <div class="flex items-center gap-2">
-        <img 
-          :src="logo" 
-          class="h-8 w-8" 
+        <img
+          :src="logo"
+          :class="isCustomLogo ? 'h-8 w-8 object-contain rounded' : 'h-8 w-8'"
           :alt="brandName"
         />
         <span v-if="!collapsed" class="text-lg font-semibold text-gray-100">
@@ -19,12 +19,13 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import logoUrl from '@assets/media/app/mini-logo-circle-success.svg';
 
 const props = defineProps({
   logo: {
     type: String,
-    default: logoUrl,
+    default: undefined,
   },
   brandName: {
     type: String,
@@ -45,4 +46,7 @@ const props = defineProps({
 });
 
 defineEmits(['open-search', 'add-new']);
+
+const isCustomLogo = computed(() => !!props.logo && !props.logo.endsWith('.svg'));
+const logo = computed(() => props.logo || logoUrl);
 </script>

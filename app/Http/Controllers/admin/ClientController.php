@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\admin;
 
-use App\Actions\Admin\Client\CreateClientAction;
 use App\Actions\Admin\Client\DeleteClientAction;
 use App\Actions\Admin\Client\FindOneClientAction;
 use App\Actions\Admin\Client\SearchClientAction;
@@ -10,7 +9,9 @@ use App\Actions\Admin\Client\UpdateClientAction;
 use App\Constants\Messages;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\admin\ClientRequest;
+use App\Http\Requests\ClientTenantRequest;
 use App\Http\Requests\FindRequest;
+use App\Services\Admin\ClientTenantService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -25,15 +26,20 @@ class ClientController extends Controller
         return Inertia::render('Admin/Clients/Index');
     }
 
-    public function store(ClientRequest $request, CreateClientAction $createClientAction): JsonResponse
+    public function store(ClientTenantRequest $request, ClientTenantService $clientTenantService): JsonResponse
     {
         try {
-            $client = $createClientAction($request->toDto());
+            $result = $clientTenantService->create(
+                clientDto: $request->toClientDto(),
+                domain: $request->tenantDomain(),
+                status: $request->tenantStatus(),
+                trialUntil: $request->tenantTrialUntil(),
+            );
 
             return $this->setResponse(
                 message: Messages::ADMIN_CLIENT_CREATED_SUCCESS,
                 code: Response::HTTP_CREATED,
-                data: ['client' => $client],
+                data: $result,
             );
         } catch (Exception $exception) {
             Log::error(Messages::ADMIN_CLIENT_CREATION_ERROR, [

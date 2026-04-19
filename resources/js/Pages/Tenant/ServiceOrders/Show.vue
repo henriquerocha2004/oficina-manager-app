@@ -1,6 +1,6 @@
 <template>
   <TenantLayout :title="serviceOrder ? `OS-${serviceOrder.order_number}` : 'OS'" :breadcrumbs="breadcrumbs">
-    <div v-if="serviceOrder" class="-m-5 lg:-m-10 flex flex-col h-full">
+    <div v-if="serviceOrder" class="sm:-m-5 lg:-m-10 flex flex-col h-full">
 
       <!-- Header da OS -->
       <div class="flex items-center gap-2 px-4 py-2 border-b border-gray-200 dark:border-gray-700 shrink-0">
