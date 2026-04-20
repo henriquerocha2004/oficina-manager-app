@@ -24,7 +24,7 @@ class MigrateTenantsCommand extends Command
         $tenants = Tenant::all();
 
         if ($tenants->isEmpty()) {
-            $this->info('Nenhum tenant encontrado.');
+            $this->info('Nenhum tenant encontrado. Cadastre um tenant para continuar.');
             return self::SUCCESS;
         }
 
