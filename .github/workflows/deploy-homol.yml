@@ -39,7 +39,7 @@ jobs:
                  echo "${{ secrets.HOMOL_SERVER_KEY }}" > private_key
                  chmod 600 private_key
 
-                 rsync -azr --delete --no-perms --no-owner --no-group \
+                 rsync -rlzt -O --delete --no-perms --no-owner --no-group \
                    -e "ssh -i private_key -o StrictHostKeyChecking=no" \
                    --exclude=".git/" \
                    --exclude=".github/" \
