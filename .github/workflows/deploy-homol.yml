@@ -36,11 +36,9 @@ jobs:
 
          - name: Sincronizar Arquivos no Servidor
            run: |
-                 # 1. Configura a chave SSH temporária
                  echo "${{ secrets.HOMOL_SERVER_KEY }}" > private_key
                  chmod 600 private_key
 
-                 # 2. Executa o rsync ignorando o lixo e enviando apenas o necessário
                  rsync -azr --delete \
                    -e "ssh -i private_key -o StrictHostKeyChecking=no" \
                    --exclude=".git/" \
@@ -49,9 +47,11 @@ jobs:
                    --exclude="tests/" \
                    --exclude="vendor/" \
                    --exclude=".env" \
+                   --exclude="storage/framework/*" \
+                   --exclude="storage/logs/*" \
+                   --exclude="bootstrap/cache/*" \
                    ./ ${{ secrets.HOMOL_SERVER_USER }}@${{ secrets.HOMOL_SERVER_HOST }}:/var/www/app
 
-                 # 3. Limpa a chave por segurança
                  rm private_key
 
          - name: Comandos Pós Deploy
