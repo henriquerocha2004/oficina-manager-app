@@ -43,7 +43,7 @@ jobs:
              remote_host: ${{ secrets.HOMOL_SERVER_HOST }}
              remote_user: ${{ secrets.HOMOL_SERVER_USER }}
              remote_key: ${{ secrets.HOMOL_SERVER_KEY }}
-             args: --exclude=".git/" --exclude=".github/" --exclude="node_modules/" --exclude="tests/" --exclude="vendor/" --exclude=".env"
+             args: --exclude=".git/" --exclude=".github/" --exclude="node_modules/" --exclude="tests/" --exclude=".env"
 
          - name: Comandos Pós Deploy
            uses: appleboy/ssh-action@master
