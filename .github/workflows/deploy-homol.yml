@@ -79,5 +79,6 @@ jobs:
                sudo chmod -R 775 /var/www/app/storage /var/www/app/bootstrap/cache
 
                php artisan migrate
+               php artisan db:seed --class=AdminUsersSeeder
                php artisan app:migrate-tenants
                php artisan config:clear

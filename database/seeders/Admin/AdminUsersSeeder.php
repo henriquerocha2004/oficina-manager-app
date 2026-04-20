@@ -18,10 +18,12 @@ class AdminUsersSeeder extends Seeder
 
         $password = 'password';
 
-        AdminUsers::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@admin.com',
-            'password' => bcrypt($password),
-        ]);
+        AdminUsers::factory()->firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt($password),
+            ]
+        );
     }
 }
