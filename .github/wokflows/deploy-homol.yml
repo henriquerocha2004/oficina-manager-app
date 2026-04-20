@@ -1,0 +1,58 @@
+name: Deploy Easy Oficina (HML)
+
+on:
+   push:
+      branches: [homol]
+jobs:
+   deploy-app:
+      runs-on: ubuntu-latest
+      steps:
+         - name: Checkout Code
+           uses: actions/checkout@v4
+
+         - name: Setup PHP
+           uses: shivammathur/setup-php@v2
+           with:
+              php-version: '8.5'
+              extensions: mbstring, xml, pdo_pgsql, pgsql, bcmath
+              coverage: none
+
+         - name: Instalar Dependencias PHP
+           run: composer install --no-dev --optimize-autoloader --no-progress
+
+         - name: Setup NodeJS
+           uses: actions/setup-node@v4
+           with:
+              node-version: '20'
+
+         - name: Complilar Assets (Vite + Vue + Inertia)
+           run: |
+               npm install
+               npm run build
+
+         - name: Sincronizar Arquivos no Servidor
+           uses: Burnett01/rsync-deployments@5.2.1
+           with:
+             switches: -avz --delete
+             path: .
+             remote_path: /var/www/app
+             remote_host: ${{ secrets.HOMOL_SERVER_HOST }}
+             remote_user: ${{ secrets.HOMOL_SERVER_USER }}
+             remote_key: ${{ secrets.HOMOL_SERVER_KEY }}
+             args: --exclude=.git* --exclude=node_modules --exclude=tests --exclude=storage/*.key
+
+         - name: Comandos Pós Deploy
+           uses: appleboy/ssh-action@master
+           with:
+             host: ${{ secrets.HOMOL_SERVER_HOST }}
+             username: ${{ secrets.HOMOL_SERVER_USER }}
+             key: ${{ secrets.HOMOL_SERVER_KEY }}
+             script: |
+               cd /var/www/app
+               sudo chown -R www-data:www-data storage bootstrap/cache
+               sudo chmod -R 775 storage bootstrap/cache
+
+               php artisan app:migrate-tenants
+               php artisan config:cache
+               php artisan route:cache
+               php artisan view:cache
