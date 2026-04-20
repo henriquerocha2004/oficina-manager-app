@@ -30,6 +30,10 @@ jobs:
                npm install
                npm run build
 
+         - name: Criar arquivo .env a partir da Secret
+           run: |
+              echo "${{ secrets.HOMOL_ENV_FILE }}" > .env
+
          - name: Sincronizar Arquivos no Servidor
            uses: Burnett01/rsync-deployments@5.2.1
            with:
