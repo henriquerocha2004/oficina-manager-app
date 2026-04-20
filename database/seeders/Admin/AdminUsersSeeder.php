@@ -18,7 +18,7 @@ class AdminUsersSeeder extends Seeder
 
         $password = 'password';
 
-        AdminUsers::factory()->firstOrCreate(
+        AdminUsers::query()->firstOrCreate(
             ['email' => 'admin@admin.com'],
             [
                 'name' => 'Admin User',
