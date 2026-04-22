@@ -13,6 +13,12 @@ class GetVehicleStatsActionTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Vehicle::query()->delete();
+    }
+
     public function test_returns_correct_stats_structure(): void
     {
         // Arrange
