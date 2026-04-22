@@ -7,8 +7,8 @@ use App\Exceptions\Supplier\SupplierNotFoundException;
 use App\Models\Tenant\Product;
 use App\Models\Tenant\Supplier;
 use Symfony\Component\Uid\Ulid;
-
 use Throwable;
+
 use function ulid_db;
 
 trait ValidatesProductSupplier

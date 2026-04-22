@@ -6,6 +6,7 @@ import { fetchSuppliers, createSupplier, updateSupplier, deleteSupplier } from '
 // Mock services
 vi.mock('@/services/supplierService', () => ({
     fetchSuppliers: vi.fn(),
+    fetchSupplierStats: vi.fn().mockResolvedValue({ success: true, data: {} }),
     createSupplier: vi.fn(),
     updateSupplier: vi.fn(),
     deleteSupplier: vi.fn(),

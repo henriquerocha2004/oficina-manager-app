@@ -14,7 +14,8 @@ class ServiceOrderItemDto
         public ?string $service_id = null,
         public ?string $product_id = null,
         public ?string $notes = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { createApp } from 'vue';
 import Index from '@/Pages/Tenant/Clients/Index.vue';
-import { fetchClients, createClient, updateClient, deleteClient } from '@/services/clientService';
+import { fetchClients, createClient, updateClient, deleteClient, fetchClientStats } from '@/services/clientService';
 import { useToast } from '@/Shared/composables/useToast';
 import { useMasks } from '@/Composables/useMasks';
 
@@ -72,6 +72,7 @@ describe('Index.vue', () => {
         mockCreateClient = vi.mocked(createClient);
         mockUpdateClient = vi.mocked(updateClient);
         mockDeleteClient = vi.mocked(deleteClient);
+        vi.mocked(fetchClientStats).mockResolvedValue({ success: true, data: {} });
         mockToast = { success: vi.fn(), error: vi.fn() };
         useToast.mockReturnValue(mockToast);
         mockUnmask = vi.fn((value) => value);

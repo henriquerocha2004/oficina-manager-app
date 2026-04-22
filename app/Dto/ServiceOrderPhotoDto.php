@@ -10,5 +10,6 @@ class ServiceOrderPhotoDto
         public string $service_order_id,
         public UploadedFile $photo,
         public int $uploaded_by,
-    ) {}
+    ) {
+    }
 }
