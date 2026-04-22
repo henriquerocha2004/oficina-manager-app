@@ -17,7 +17,7 @@ class UpdateProductAction
         $product = Product::query()->find($idStr);
 
         if (is_null($product)) {
-            throw new ProductNotFoundException;
+            throw new ProductNotFoundException();
         }
 
         $product->update($productDto->toArray());

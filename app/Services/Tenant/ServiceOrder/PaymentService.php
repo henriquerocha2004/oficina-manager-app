@@ -29,35 +29,37 @@ class PaymentService
         ?string $notes = null,
         ?int $installments = null
     ): ServiceOrderPayment {
-        return DB::transaction(function () use ($serviceOrder, $userId, $amount, $paymentMethod, $notes, $installments) {
-            $this->ensureCanReceivePayment($serviceOrder);
+        return DB::transaction(
+            function () use ($serviceOrder, $userId, $amount, $paymentMethod, $notes, $installments) {
+                $this->ensureCanReceivePayment($serviceOrder);
 
-            $serviceOrder = $this->lockServiceOrder($serviceOrder->id);
+                $serviceOrder = $this->lockServiceOrder($serviceOrder->id);
 
-            $payment = $this->createPaymentRecord(
-                serviceOrder: $serviceOrder,
-                userId: $userId,
-                amount: $amount,
-                paymentMethod: $paymentMethod,
-                notes: $notes,
-                installments: $installments
-            );
+                $payment = $this->createPaymentRecord(
+                    serviceOrder: $serviceOrder,
+                    userId: $userId,
+                    amount: $amount,
+                    paymentMethod: $paymentMethod,
+                    notes: $notes,
+                    installments: $installments
+                );
 
-            $previousPaidAmount = $serviceOrder->paid_amount;
+                $previousPaidAmount = $serviceOrder->paid_amount;
 
-            $this->updateServiceOrderFinances($serviceOrder, $amount);
+                $this->updateServiceOrderFinances($serviceOrder, $amount);
 
-            $this->logPaymentReceived(
-                serviceOrder: $serviceOrder,
-                userId: $userId,
-                payment: $payment,
-                previousPaidAmount: $previousPaidAmount
-            );
+                $this->logPaymentReceived(
+                    serviceOrder: $serviceOrder,
+                    userId: $userId,
+                    payment: $payment,
+                    previousPaidAmount: $previousPaidAmount
+                );
 
-            $this->tryAutoComplete($serviceOrder, $userId);
+                $this->tryAutoComplete($serviceOrder, $userId);
 
-            return $payment;
-        });
+                return $payment;
+            }
+        );
     }
 
     /**

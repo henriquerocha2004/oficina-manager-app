@@ -23,7 +23,16 @@ class SettingController extends Controller
         $tenant = app('tenant');
 
         return Inertia::render('Tenant/Settings/Index', [
-            'tenant'   => $tenant->only('name', 'trade_name', 'domain', 'email', 'document', 'phone', 'status', 'is_active'),
+            'tenant'   => $tenant->only(
+                'name',
+                'trade_name',
+                'domain',
+                'email',
+                'document',
+                'phone',
+                'status',
+                'is_active'
+            ),
             'settings' => $getSettingsAction(),
         ]);
     }

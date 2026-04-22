@@ -11,11 +11,17 @@ class GetClientStatsActionTest extends TestCase
 {
     use DatabaseTransactions;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Client::query()->delete();
+    }
+
     public function test_returns_correct_stats_structure(): void
     {
         // Arrange
         Client::factory()->count(5)->create();
-        $action = new GetClientStatsAction;
+        $action = new GetClientStatsAction();
 
         // Act
         $result = $action();
@@ -42,7 +48,7 @@ class GetClientStatsActionTest extends TestCase
         Client::factory()->count(2)->create([
             'created_at' => now()->subDays(120),
         ]);
-        $action = new GetClientStatsAction;
+        $action = new GetClientStatsAction();
 
         // Act
         $result = $action();
@@ -61,7 +67,7 @@ class GetClientStatsActionTest extends TestCase
         Client::factory()->count(3)->create(['city' => 'São Paulo']);
         Client::factory()->count(2)->create(['city' => 'Rio de Janeiro']);
         Client::factory()->count(1)->create(['city' => null]);
-        $action = new GetClientStatsAction;
+        $action = new GetClientStatsAction();
 
         // Act
         $result = $action();
@@ -75,7 +81,7 @@ class GetClientStatsActionTest extends TestCase
     public function test_handles_empty_database_gracefully(): void
     {
         // Arrange
-        $action = new GetClientStatsAction;
+        $action = new GetClientStatsAction();
 
         // Act
         $result = $action();

@@ -24,7 +24,9 @@ class IdentifyTenant
         View::share('subdomain', Route::current()->parameter('subdomain'));
         $request->route()->forgetParameter('subdomain');
 
-        if (app()->environment() === 'testing') return $next($request);
+        if (app()->environment() === 'testing') {
+            return $next($request);
+        }
         $tenantManager = $this->tenantManager->loadTenant($request->getHost());
         if (!$tenantManager->getTenant()) {
             Log::error(Messages::TENANT_NOT_FOUND, [

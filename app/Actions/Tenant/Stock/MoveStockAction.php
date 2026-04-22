@@ -28,8 +28,16 @@ class MoveStockAction
 
         DB::transaction(function () use ($product, $movementDto) {
             match ($movementDto->movement) {
-                MovementTypeEnum::IN => $this->in($product, $movementDto->quantity, $movementDto->reason, $movementDto->notes),
-                MovementTypeEnum::OUT => $this->out($product, $movementDto->quantity, $movementDto->reason, $movementDto->notes)
+                MovementTypeEnum::IN => $this->in(
+                    $product,
+                    $movementDto->quantity, $movementDto->reason, $movementDto->notes
+                ),
+                MovementTypeEnum::OUT => $this->out(
+                    $product,
+                    $movementDto->quantity,
+                    $movementDto->reason,
+                    $movementDto->notes
+                )
             };
         });
     }

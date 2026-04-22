@@ -60,7 +60,7 @@ class UpdateDiagnosisActionTest extends TestCase
         $action = new UpdateDiagnosisAction($domain);
         $result = $action($serviceOrder->id, $user->id, 'Updated diagnosis - engine issue');
 
-        $this->assertEquals('Updated diagnosis - engine issue', $result->diagnosis);
+        $this->assertEquals('Updated diagnosis - engine issue', $result->technical_diagnosis);
     }
 
     public function test_throws_exception_when_completed(): void
