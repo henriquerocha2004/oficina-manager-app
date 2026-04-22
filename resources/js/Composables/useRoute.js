@@ -58,6 +58,7 @@ const tenantRoutes = {
   'users.show': (id) => '/users/' + id,
   'users.edit': (id) => '/users/' + id + '/edit',
   'settings.index': '/settings',
+  'faq.index': '/faq',
   'account.index': '/account',
   'tenant.logout': '/logout',
 };
@@ -125,6 +126,7 @@ export function routeCurrent(name) {
   if (name === 'service-orders.create' && currentComponent === 'Tenant/ServiceOrders/Create') return true;
   if (name === 'users.index' && currentComponent === 'Tenant/Users/Index') return true;
   if (name === 'settings.index' && currentComponent === 'Tenant/Settings/Index') return true;
+  if (name === 'faq.index' && currentComponent === 'Tenant/Faq/Index') return true;
   if (name === 'account.index' && currentComponent === 'Tenant/Account/Index') return true;
 
   // Fallback: Verifica pela URL (exata apenas, sem startsWith para evitar múltiplas seleções)
