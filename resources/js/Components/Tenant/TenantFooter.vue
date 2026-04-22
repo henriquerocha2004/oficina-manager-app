@@ -31,7 +31,7 @@ const props = defineProps({
   links: {
     type: Array,
     default: () => [
-      { label: 'Ajuda', url: '#', external: false },
+      { label: 'Ajuda', url: '/faq', external: false },
       { label: 'Suporte', url: '#', external: false },
       { label: 'Política de Privacidade', url: '#', external: false },
     ],

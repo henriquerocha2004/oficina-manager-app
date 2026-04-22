@@ -407,19 +407,39 @@
               <div v-if="newItem" class="p-3 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg space-y-3 bg-gray-50 dark:bg-gray-800/50">
                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Novo Item</p>
 
-                <div class="flex flex-col sm:flex-row gap-2 items-start">
-                  <!-- Tipo -->
-                  <select
-                    v-model="newItem.type"
-                    class="kt-select w-full sm:w-28 shrink-0"
-                    @change="onNewItemTypeChange"
-                  >
-                    <option value="service">Serviço</option>
-                    <option value="part">Peça</option>
-                  </select>
+                <!-- Mobile: empilhado / Desktop: linha única -->
+                <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <!-- Tipo (dropdown customizado) -->
+                  <div class="relative w-full sm:w-28 shrink-0" @click.stop>
+                    <button
+                      type="button"
+                      class="kt-input w-full flex items-center justify-between gap-2 cursor-pointer select-none"
+                      @click="showTypeDropdown = !showTypeDropdown"
+                    >
+                      <span>{{ itemTypeOptions.find(o => o.value === newItem.type)?.label }}</span>
+                      <i class="ki-outline ki-down text-xs text-gray-400 shrink-0 transition-transform" :class="{ 'rotate-180': showTypeDropdown }"></i>
+                    </button>
+                    <div
+                      v-if="showTypeDropdown"
+                      class="absolute left-0 top-full mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden"
+                    >
+                      <button
+                        v-for="opt in itemTypeOptions"
+                        :key="opt.value"
+                        type="button"
+                        class="w-full text-left px-3 py-2 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                        :class="newItem.type === opt.value
+                          ? 'text-orange-600 dark:text-orange-400 font-medium bg-orange-50 dark:bg-orange-900/20'
+                          : 'text-gray-700 dark:text-gray-300'"
+                        @click="selectItemType(opt.value)"
+                      >
+                        {{ opt.label }}
+                      </button>
+                    </div>
+                  </div>
 
                   <!-- Descrição com dropdown de busca -->
-                  <div class="flex-1 relative w-full">
+                  <div class="relative w-full sm:flex-1">
                     <input
                       ref="newItemDescInput"
                       v-model="newItem.description"
@@ -449,29 +469,27 @@
                     </teleport>
                   </div>
 
-                  <div class="flex gap-2 w-full sm:w-auto">
-                    <!-- Quantidade -->
+                  <!-- Quantidade + Preço -->
+                  <div class="grid grid-cols-2 gap-2 sm:flex sm:gap-2 sm:w-auto">
                     <input
                       v-model.number="newItem.quantity"
                       type="number"
-                      class="kt-input w-full sm:w-20 shrink-0"
+                      class="kt-input w-full sm:w-20"
                       placeholder="Qtd"
                       min="1"
                     />
-
-                    <!-- Preço unitário -->
                     <input
                       v-model.number="newItem.unit_price"
                       type="number"
-                      class="kt-input w-full sm:w-28 shrink-0"
-                      placeholder="Preço"
+                      class="kt-input w-full sm:w-28"
+                      placeholder="Preço (R$)"
                       step="0.01"
                       min="0"
                     />
                   </div>
                 </div>
 
-                <div class="flex gap-2 justify-end">
+                <div class="flex gap-2 justify-end pt-1">
                   <button type="button" class="kt-btn kt-btn-sm kt-btn-light" @click="cancelAddItem">Cancelar</button>
                   <button
                     type="button"
@@ -617,6 +635,19 @@ const transitioning = ref(false);
 const cancelModalOpen = ref(false);
 const cancelReason = ref('');
 const showActionsDropdown = ref(false);
+
+// Dropdown de tipo de item
+const showTypeDropdown = ref(false);
+const itemTypeOptions = [
+  { value: 'service', label: 'Serviço' },
+  { value: 'part',    label: 'Peça'    },
+];
+
+function selectItemType(value) {
+  onNewItemTypeChange();
+  newItem.value.type = value;
+  showTypeDropdown.value = false;
+}
 
 // Dropdown de busca de serviços
 const newItemDescInput = ref(null);
@@ -865,11 +896,10 @@ function handleCancelFromFinanceiro() {
   cancelModalOpen.value = true;
 }
 
-// Fechar dropdown ao clicar fora
+// Fechar dropdowns ao clicar fora
 function handleClickOutside(event) {
-  if (showActionsDropdown.value) {
-    showActionsDropdown.value = false;
-  }
+  if (showActionsDropdown.value) showActionsDropdown.value = false;
+  if (showTypeDropdown.value) showTypeDropdown.value = false;
 }
 
 onMounted(() => {
