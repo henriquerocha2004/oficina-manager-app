@@ -59,6 +59,9 @@ jobs:
               cp .env.example .env
               php artisan key:generate
 
+         - name: Criar manifest Vite (stub para testes)
+           run: mkdir -p public/build && echo '{}' > public/build/manifest.json
+
          - name: Criar banco manager_test
            run: PGPASSWORD=password psql -h 127.0.0.1 -U user -d postgres -c "CREATE DATABASE oficina_manager_test;"
 
