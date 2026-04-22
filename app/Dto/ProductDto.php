@@ -16,7 +16,8 @@ class ProductDto
         public ?int $min_stock_level = null,
         public ?float $suggested_price = null,
         public ?bool $is_active = true,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

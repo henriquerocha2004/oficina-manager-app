@@ -25,7 +25,7 @@ class FindOneProductAction
             ->find($idStr);
 
         if ($product === null) {
-            throw new ProductNotFoundException;
+            throw new ProductNotFoundException();
         }
 
         return $product;

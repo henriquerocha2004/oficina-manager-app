@@ -20,7 +20,8 @@ class ServiceOrderSearchDto
         public ?string $date_to = null,
         public ?string $client_name = null,
         public ?string $plate = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

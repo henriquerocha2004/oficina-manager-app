@@ -11,7 +11,8 @@ readonly class CancelAction
 {
     public function __construct(
         private ServiceOrderDomain $domain
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Throwable

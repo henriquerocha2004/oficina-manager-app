@@ -17,7 +17,7 @@ class UpdateSupplierAction
         $supplier = Supplier::query()->find($idStr);
 
         if (is_null($supplier)) {
-            throw new SupplierNotFoundException;
+            throw new SupplierNotFoundException();
         }
 
         $supplier->update($supplierDto->toArray());
