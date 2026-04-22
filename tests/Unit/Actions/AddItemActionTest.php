@@ -63,7 +63,7 @@ class AddItemActionTest extends TestCase
             'type' => ServiceOrderItemTypeEnum::SERVICE,
             'description' => 'Oil change',
             'quantity' => 1,
-            'unit_price' => 1000.00,
+            'unit_price' => 100.00,
             'subtotal' => 100.00,
         ]);
 
