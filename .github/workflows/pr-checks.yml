@@ -76,6 +76,7 @@ jobs:
               DB_PORT: 5432
               DB_USERNAME: user
               DB_PASSWORD: password
+              CONNECTION_TENANT: tenant_test
            run: php artisan migrate --database=tenant_test --path=database/migrations/tenants --force
 
          - name: Rodar Testes Unitários
