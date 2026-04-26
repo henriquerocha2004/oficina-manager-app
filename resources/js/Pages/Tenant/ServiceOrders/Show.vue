@@ -286,6 +286,7 @@
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Fotos</h3>
                 <PhotoUploadZone
                   :service-order-id="serviceOrder.id"
+                  :service-order-number="serviceOrder.order_number"
                   :photos="serviceOrder.photos || []"
                   :disabled="serviceOrder.status === 'cancelled'"
                   @uploaded="handlePhotoUploaded"
@@ -682,6 +683,13 @@ function startAddItem() {
   newItem.value = { type: 'service', service_id: null, description: '', quantity: 1, unit_price: 0 };
 }
 
+function getTrackingContext() {
+  return {
+    serviceOrderNumber: props.serviceOrder.order_number,
+    serviceOrderStatus: props.serviceOrder.status,
+  };
+}
+
 function cancelAddItem() {
   newItem.value = null;
   filteredServices.value = [];
@@ -692,7 +700,7 @@ async function confirmAddItem() {
   if (!canSaveNewItem.value) return;
   savingItem.value = true;
   itemError.value = null;
-  const result = await addServiceOrderItem(props.serviceOrder.id, newItem.value);
+  const result = await addServiceOrderItem(props.serviceOrder.id, newItem.value, getTrackingContext());
   savingItem.value = false;
   if (result.success) {
     newItem.value = null;
@@ -708,7 +716,7 @@ async function confirmAddItem() {
 async function handleRemoveItem(itemId) {
   removingItemId.value = itemId;
   itemError.value = null;
-  const result = await removeServiceOrderItem(props.serviceOrder.id, itemId);
+  const result = await removeServiceOrderItem(props.serviceOrder.id, itemId, getTrackingContext());
   removingItemId.value = null;
   if (result.success) {
     toast.success('Item removido com sucesso!');
@@ -772,7 +780,7 @@ async function handleDiagnosisBlur() {
     return;
   }
 
-  const result = await updateDiagnosis(props.serviceOrder.id, diagnosisInput.value);
+  const result = await updateDiagnosis(props.serviceOrder.id, diagnosisInput.value, getTrackingContext());
   if (result.success) {
     toast.success('Diagnóstico técnico atualizado com sucesso!');
     router.reload();
@@ -857,10 +865,10 @@ async function handleTransition(toStatus) {
         quantity: i.quantity, unit_price: i.unit_price,
         service_id: i.service_id ?? null,
       }))
-    });
+    }, getTrackingContext());
   } else {
     transitioning.value = true;
-    result = await changeServiceOrderStatus(props.serviceOrder.id, toStatus, props.serviceOrder.status);
+    result = await changeServiceOrderStatus(props.serviceOrder.id, toStatus, props.serviceOrder.status, getTrackingContext());
   }
 
   transitioning.value = false;
@@ -881,7 +889,7 @@ async function handleTransition(toStatus) {
 
 async function handleCancel() {
   if (!cancelReason.value.trim()) return;
-  const result = await cancelServiceOrder(props.serviceOrder.id, cancelReason.value);
+  const result = await cancelServiceOrder(props.serviceOrder.id, cancelReason.value, getTrackingContext());
   if (result.success) {
     cancelModalOpen.value = false;
     cancelReason.value = '';

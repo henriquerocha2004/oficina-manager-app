@@ -24,10 +24,7 @@ class HandleInertiaRequests extends Middleware
      */
     private function resolveTenantSettings(Request $request): array
     {
-        $tenantName = null;
-        if (app()->bound('tenant')) {
-            $tenantName = app('tenant')?->trade_name;
-        }
+        $tenant = app()->bound('tenant') ? app('tenant') : null;
 
         $logo = null;
         try {
@@ -37,8 +34,10 @@ class HandleInertiaRequests extends Middleware
         }
 
         return [
-            'logo_url'    => MediaStorage::url($logo),
-            'tenant_name' => $tenantName,
+            'logo_url'     => MediaStorage::url($logo),
+            'tenant_name'  => $tenant?->trade_name,
+            'tenant_id'    => $tenant?->id,
+            'tenant_domain' => $tenant?->domain,
         ];
     }
 
