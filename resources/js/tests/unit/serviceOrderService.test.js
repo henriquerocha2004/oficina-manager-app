@@ -1,7 +1,13 @@
 vi.mock('axios');
+vi.mock('mixpanel-browser', () => ({
+    default: {
+        track: vi.fn(),
+    },
+}));
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
+import mixpanel from 'mixpanel-browser';
 import {
     fetchServiceOrdersKanban,
     fetchServiceOrders,
@@ -19,10 +25,17 @@ import {
     deleteServiceOrder,
     registerPayment,
     registerRefund,
+    uploadServiceOrderPhoto,
+    deleteServiceOrderPhoto,
     fetchServiceOrderStats,
 } from '@/services/serviceOrderService';
 
 const mockedAxios = vi.mocked(axios);
+const mockedMixpanel = vi.mocked(mixpanel);
+const trackingContext = {
+    serviceOrderNumber: '2026-0001',
+    serviceOrderStatus: 'draft',
+};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -270,6 +283,48 @@ describe('serviceOrderService', () => {
             expect(mockedAxios.post).toHaveBeenCalledWith('/service-orders/os-001/return-to-approval');
         });
 
+        it('tracks the status change with the OS number', async () => {
+            mockedAxios.post.mockResolvedValue({
+                data: { data: { service_order: makeBackendOS({ status: 'completed' }) } },
+            });
+
+            await changeServiceOrderStatus('os-001', 'waiting_payment', 'in_progress', {
+                serviceOrderNumber: '2026-0001',
+                serviceOrderStatus: 'in_progress',
+            });
+
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_completed',
+                expect.objectContaining({
+                    service_order_id: 'os-001',
+                    service_order_number: '2026-0001',
+                    previous_status: 'in_progress',
+                    current_status: 'completed',
+                })
+            );
+        });
+
+        it('tracks waiting payment without marking the OS as completed', async () => {
+            mockedAxios.post.mockResolvedValue({
+                data: { data: { service_order: makeBackendOS({ status: 'waiting_payment' }) } },
+            });
+
+            await changeServiceOrderStatus('os-001', 'waiting_payment', 'in_progress', {
+                serviceOrderNumber: '2026-0001',
+                serviceOrderStatus: 'in_progress',
+            });
+
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_waiting_payment',
+                expect.objectContaining({
+                    service_order_id: 'os-001',
+                    service_order_number: '2026-0001',
+                    previous_status: 'in_progress',
+                    current_status: 'waiting_payment',
+                })
+            );
+        });
+
         it('returns success:false for invalid transition', async () => {
             const result = await changeServiceOrderStatus('os-001', 'cancelled');
 
@@ -288,13 +343,20 @@ describe('serviceOrderService', () => {
             const result = await sendForApprovalWithData('os-001', {
                 diagnosis: 'Diagnóstico completo',
                 items: [{ type: 'service', description: 'Test', quantity: 1, unit_price: 100, subtotal: 100 }],
-            });
+            }, trackingContext);
 
             expect(mockedAxios.post).toHaveBeenCalledWith(
                 '/service-orders/os-001/send-for-approval',
                 expect.objectContaining({ diagnosis: 'Diagnóstico completo' })
             );
             expect(result.success).toBe(true);
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_sent_for_approval',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    items_count: 1,
+                })
+            );
         });
     });
 
@@ -306,11 +368,21 @@ describe('serviceOrderService', () => {
                 data: { data: { service_order: makeBackendOS() } },
             });
 
-            await requestNewApproval('os-001', { diagnosis: 'Updated', items: [] });
+            await requestNewApproval('os-001', { diagnosis: 'Updated', items: [] }, {
+                serviceOrderNumber: '2026-0001',
+                serviceOrderStatus: 'in_progress',
+            });
 
             expect(mockedAxios.post).toHaveBeenCalledWith(
                 '/service-orders/os-001/request-new-approval',
                 { diagnosis: 'Updated', items: [] }
+            );
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_new_approval_requested',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    previous_status: 'in_progress',
+                })
             );
         });
     });
@@ -323,11 +395,18 @@ describe('serviceOrderService', () => {
                 data: { data: { service_order: makeBackendOS() } },
             });
 
-            await updateDiagnosis('os-001', 'Nova diagnose');
+            await updateDiagnosis('os-001', 'Nova diagnose', trackingContext);
 
             expect(mockedAxios.put).toHaveBeenCalledWith(
                 '/service-orders/os-001/diagnosis',
                 { technical_diagnosis: 'Nova diagnose' }
+            );
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_diagnosis_updated',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    diagnosis_length: 13,
+                })
             );
         });
     });
@@ -340,11 +419,18 @@ describe('serviceOrderService', () => {
                 data: { data: { service_order: makeBackendOS() } },
             });
 
-            await updateDiscount('os-001', 50);
+            await updateDiscount('os-001', 50, trackingContext);
 
             expect(mockedAxios.put).toHaveBeenCalledWith(
                 '/service-orders/os-001/discount',
                 { discount: 50 }
+            );
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_discount_updated',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    discount_amount: 50,
+                })
             );
         });
     });
@@ -357,13 +443,20 @@ describe('serviceOrderService', () => {
                 data: { data: { service_order: makeBackendOS({ status: 'cancelled' }) } },
             });
 
-            const result = await cancelServiceOrder('os-001', 'Cliente desistiu');
+            const result = await cancelServiceOrder('os-001', 'Cliente desistiu', trackingContext);
 
             expect(mockedAxios.post).toHaveBeenCalledWith(
                 '/service-orders/os-001/cancel',
                 { reason: 'Cliente desistiu' }
             );
             expect(result.success).toBe(true);
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_cancelled',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    cancel_reason: 'Cliente desistiu',
+                })
+            );
         });
     });
 
@@ -380,6 +473,13 @@ describe('serviceOrderService', () => {
             expect(mockedAxios.post).toHaveBeenCalledWith('/service-orders', expect.any(Object));
             expect(result.success).toBe(true);
             expect(result.data.id).toBe('os-001');
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_created',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    current_status: 'draft',
+                })
+            );
         });
 
         it('returns success:false on error', async () => {
@@ -398,9 +498,16 @@ describe('serviceOrderService', () => {
             mockedAxios.post.mockResolvedValue({ data: { data: { service_order: makeBackendOS() } } });
 
             const item = { type: 'service', description: 'Troca de óleo', quantity: 1, unit_price: 100, subtotal: 100 };
-            await addServiceOrderItem('os-001', item);
+            await addServiceOrderItem('os-001', item, trackingContext);
 
             expect(mockedAxios.post).toHaveBeenCalledWith('/service-orders/os-001/items', item);
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_item_added',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    item_description: 'Troca de óleo',
+                })
+            );
         });
     });
 
@@ -410,9 +517,16 @@ describe('serviceOrderService', () => {
         it('deletes item from items endpoint', async () => {
             mockedAxios.delete.mockResolvedValue({ data: { data: { service_order: makeBackendOS() } } });
 
-            await removeServiceOrderItem('os-001', 'item-1');
+            await removeServiceOrderItem('os-001', 'item-1', trackingContext);
 
             expect(mockedAxios.delete).toHaveBeenCalledWith('/service-orders/os-001/items/item-1');
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_item_removed',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    item_id: 'item-1',
+                })
+            );
         });
     });
 
@@ -448,6 +562,9 @@ describe('serviceOrderService', () => {
                 amount: 150,
                 installments: null,
                 notes: null,
+            }, {
+                serviceOrderNumber: '2026-0001',
+                serviceOrderStatus: 'waiting_payment',
             });
 
             expect(mockedAxios.post).toHaveBeenCalledWith(
@@ -456,6 +573,13 @@ describe('serviceOrderService', () => {
             );
             expect(result.success).toBe(true);
             expect(result.data.id).toBe('pay-1');
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_payment_registered',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    payment_amount: 150,
+                })
+            );
         });
     });
 
@@ -465,11 +589,72 @@ describe('serviceOrderService', () => {
         it('posts refund data to refund endpoint', async () => {
             mockedAxios.post.mockResolvedValue({ data: { data: { service_order: makeBackendOS() } } });
 
-            await registerRefund('os-001', { amount: 50, payment_method: 'cash', notes: 'Cobrou a mais' });
+            await registerRefund('os-001', { amount: 50, payment_method: 'cash', notes: 'Cobrou a mais' }, trackingContext);
 
             expect(mockedAxios.post).toHaveBeenCalledWith(
                 '/service-orders/os-001/refund',
                 expect.objectContaining({ amount: 50, payment_method: 'cash' })
+            );
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_refund_registered',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    refund_amount: 50,
+                })
+            );
+        });
+    });
+
+    // ─── uploadServiceOrderPhoto ────────────────────────────────────────────
+
+    describe('uploadServiceOrderPhoto', () => {
+        it('uploads the photo and tracks it with the OS number', async () => {
+            const photoFile = new File(['photo'], 'before.jpg', { type: 'image/jpeg' });
+
+            mockedAxios.post.mockResolvedValue({
+                data: {
+                    data: {
+                        photo: { id: 'photo-1', original_filename: 'before.jpg', file_size: 12345 },
+                    }
+                }
+            });
+
+            const result = await uploadServiceOrderPhoto('os-001', photoFile, trackingContext);
+
+            expect(mockedAxios.post).toHaveBeenCalledWith(
+                '/service-orders/os-001/photos',
+                expect.any(FormData),
+                expect.objectContaining({
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                })
+            );
+            expect(result.success).toBe(true);
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_photo_uploaded',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    photo_id: 'photo-1',
+                })
+            );
+        });
+    });
+
+    // ─── deleteServiceOrderPhoto ────────────────────────────────────────────
+
+    describe('deleteServiceOrderPhoto', () => {
+        it('deletes the photo and tracks it with the OS number', async () => {
+            mockedAxios.delete.mockResolvedValue({});
+
+            const result = await deleteServiceOrderPhoto('os-001', 'photo-1', trackingContext);
+
+            expect(mockedAxios.delete).toHaveBeenCalledWith('/service-orders/os-001/photos/photo-1');
+            expect(result.success).toBe(true);
+            expect(mockedMixpanel.track).toHaveBeenCalledWith(
+                'service_order_photo_deleted',
+                expect.objectContaining({
+                    service_order_number: '2026-0001',
+                    photo_id: 'photo-1',
+                })
             );
         });
     });

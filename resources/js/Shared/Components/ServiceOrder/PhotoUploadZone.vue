@@ -218,6 +218,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  serviceOrderNumber: {
+    type: String,
+    required: true,
+  },
   photos: {
     type: Array,
     default: () => [],
@@ -295,7 +299,9 @@ async function uploadPhoto(file) {
   }
 
   uploading.value = true;
-  const result = await uploadServiceOrderPhoto(props.serviceOrderId, file);
+  const result = await uploadServiceOrderPhoto(props.serviceOrderId, file, {
+    serviceOrderNumber: props.serviceOrderNumber,
+  });
   uploading.value = false;
 
   if (result.success) {
@@ -308,7 +314,9 @@ async function uploadPhoto(file) {
 
 async function handleDeletePhoto(photoId) {
   deleting.value = photoId;
-  const result = await deleteServiceOrderPhoto(props.serviceOrderId, photoId);
+  const result = await deleteServiceOrderPhoto(props.serviceOrderId, photoId, {
+    serviceOrderNumber: props.serviceOrderNumber,
+  });
   deleting.value = null;
 
   if (result.success) {

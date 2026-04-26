@@ -10,6 +10,13 @@ import { useMasks } from '@/Composables/useMasks';
 vi.mock('@/services/clientService');
 vi.mock('@/Shared/composables/useToast');
 vi.mock('@/Composables/useMasks');
+vi.mock('@/Composables/useMixpanel', () => ({
+    useMixpanel: () => ({
+        track: vi.fn(),
+        identify: vi.fn(),
+        setTenant: vi.fn(),
+    }),
+}));
 
 // Mock Inertia
 vi.mock('@inertiajs/vue3', () => ({
