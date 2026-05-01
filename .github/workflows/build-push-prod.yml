@@ -18,6 +18,8 @@ concurrency:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_METADATA_SHORT_SHA_LENGTH: 40
 
     steps:
       - name: Checkout code
