@@ -1,6 +1,5 @@
 FROM php:8.5-fpm
 
-# Instala extensões necessárias do Laravel
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpng-dev \
@@ -19,7 +18,6 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd
 
-# Instala e configura Xdebug
 RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
 
@@ -35,5 +33,3 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 
 # Define o diretório padrão
 WORKDIR /var/www
-
-# Dev Container irá gerenciar usuários automaticamente

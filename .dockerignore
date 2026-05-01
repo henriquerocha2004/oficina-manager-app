@@ -1,0 +1,16 @@
+.git
+.github/prompts
+node_modules
+vendor
+tests
+docs
+storage/logs
+storage/framework/cache/data
+storage/framework/sessions
+storage/framework/views
+coverage
+test-results
+.env
+.env.*
+infra/dev/db_data
+.DS_Store
