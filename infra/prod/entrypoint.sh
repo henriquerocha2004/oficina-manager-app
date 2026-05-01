@@ -2,6 +2,12 @@
 set -eu
 
 if [ "${CONTAINER_ROLE:-app}" = "app" ]; then
+    mkdir -p \
+        /var/www/storage/framework/views \
+        /var/www/storage/framework/cache/data \
+        /var/www/storage/framework/sessions \
+        /var/www/storage/logs
+
     if [ "${WARMUP_CACHE:-true}" = "true" ]; then
         php artisan config:cache
         php artisan route:cache
