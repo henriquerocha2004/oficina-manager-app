@@ -97,14 +97,18 @@ class StoreServiceOrderRequest extends FormRequest
         $validator->after(function ($validator) {
             // Valida exclusividade: client_id XOR new_client
             if ($this->filled('client_id') && $this->filled('new_client')) {
-                $validator->errors()->add('client_id',
-                    'Não é possível enviar client_id e new_client simultaneamente.');
+                $validator->errors()->add(
+                    'client_id',
+                    'Não é possível enviar client_id e new_client simultaneamente.'
+                );
             }
 
             // Valida exclusividade: vehicle_id XOR new_vehicle
             if ($this->filled('vehicle_id') && $this->filled('new_vehicle')) {
-                $validator->errors()->add('vehicle_id',
-                    'Não é possível enviar vehicle_id e new_vehicle simultaneamente.');
+                $validator->errors()->add(
+                    'vehicle_id',
+                    'Não é possível enviar vehicle_id e new_vehicle simultaneamente.'
+                );
             }
         });
     }

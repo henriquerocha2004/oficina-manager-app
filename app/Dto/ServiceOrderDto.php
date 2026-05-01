@@ -12,7 +12,8 @@ class ServiceOrderDto
         public ?string $observations = null,
         public ?int $technician_id = null,
         public float $discount = 0.0,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

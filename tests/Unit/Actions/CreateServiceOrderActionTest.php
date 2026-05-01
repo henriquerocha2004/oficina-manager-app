@@ -141,7 +141,7 @@ class CreateServiceOrderActionTest extends TestCase
         $action = new CreateServiceOrderAction($domain);
         $result = $action($dto);
 
-        $this->assertEquals('Diagnóstico completo', $result->diagnosis);
+        $this->assertEquals('Diagnóstico completo', $result->reported_problem);
         $this->assertEquals('Observações importantes', $result->observations);
         $this->assertEquals($technician->id, $result->technician_id);
         $this->assertEquals(100.00, $result->discount);
@@ -151,7 +151,7 @@ class CreateServiceOrderActionTest extends TestCase
             'client_id' => $client->id,
             'vehicle_id' => $vehicle->id,
             'created_by' => $user->id,
-            'diagnosis' => 'Diagnóstico completo',
+            'reported_problem' => 'Diagnóstico completo',
             'observations' => 'Observações importantes',
             'technician_id' => $technician->id,
         ]);

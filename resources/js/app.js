@@ -1,9 +1,10 @@
 import './bootstrap';
-import '../assets/js/core.bundle.js';
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
 import FlashMessages from './Components/FlashMessages.vue'
 import { useTheme } from './Composables/useTheme'
+import MixPanel from './plugins/mixpanel'
+
 
 // Inicializar tema
 const { initTheme } = useTheme();
@@ -40,6 +41,7 @@ createInertiaApp({
           warning: (message) => toast.show({ message, icon: '<i class="ki-filled ki-warning text-yellow-500 text-xl"></i>' })
         }
         app.provide('toast', toast)
+        app.use(MixPanel)
 
         app.mount(el)
     },

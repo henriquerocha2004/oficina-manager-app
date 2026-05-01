@@ -69,7 +69,7 @@ export async function searchProducts(search) {
             data: products.data.map(p => ({ id: p.id, name: p.name })),
         };
     } catch (error) {
-        throw error;
+        return { success: false, error };
     }
 }
 

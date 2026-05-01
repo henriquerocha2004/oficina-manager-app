@@ -30,16 +30,39 @@ jobs:
                npm install
                npm run build
 
-         - name: Sincronizar Arquivos no Servidor
-           uses: Burnett01/rsync-deployments@5.2.1
+         - name: Criar arquivo .env a partir da Secret
+           run: |
+              echo "${{ secrets.HOMOL_ENV_FILE }}" > .env
+
+         - name: Preparar permissões (Pré-Deploy)
+           uses: appleboy/ssh-action@master
            with:
-             switches: -avz --delete
-             path: .
-             remote_path: /var/www/app
-             remote_host: ${{ secrets.HOMOL_SERVER_HOST }}
-             remote_user: ${{ secrets.HOMOL_SERVER_USER }}
-             remote_key: ${{ secrets.HOMOL_SERVER_KEY }}
-             args: --exclude=.git* --exclude=node_modules --exclude=tests --exclude=storage/*.key
+              host: ${{ secrets.HOMOL_SERVER_HOST }}
+              username: ${{ secrets.HOMOL_SERVER_USER }}
+              key: ${{ secrets.HOMOL_SERVER_KEY }}
+              script: |
+                sudo chown -R ubuntu:ubuntu /var/www/app
+
+                # Remove manualmente as pastas que costumam travar o rsync
+                rm -rf /var/www/app/storage/app/.gitignore
+                rm -rf /var/www/app/storage/framework/cache/data/*
+
+         - name: Sincronizar Arquivos no Servidor
+           run: |
+                 echo "${{ secrets.HOMOL_SERVER_KEY }}" > private_key
+                 chmod 600 private_key
+
+                 rsync -rlzt -O --delete --no-perms --no-owner --no-group \
+                      -e "ssh -i private_key -o StrictHostKeyChecking=no" \
+                      --exclude=".git/" \
+                      --exclude=".github/" \
+                      --exclude="node_modules/" \
+                      --exclude="vendor/" \
+                      --exclude="storage/" \
+                      --exclude="bootstrap/cache/" \
+                      ./ ${{ secrets.HOMOL_SERVER_USER }}@${{ secrets.HOMOL_SERVER_HOST }}:/var/www/app
+
+                 rm private_key
 
          - name: Comandos Pós Deploy
            uses: appleboy/ssh-action@master
@@ -49,10 +72,13 @@ jobs:
              key: ${{ secrets.HOMOL_SERVER_KEY }}
              script: |
                cd /var/www/app
-               sudo chown -R www-data:www-data storage bootstrap/cache
-               sudo chmod -R 775 storage bootstrap/cache
+               echo "${{ secrets.HOMOL_ENV_FILE }}" | tr -d '\r' > .env
 
+               php artisan migrate
+               php artisan db:seed --class="Database\\Seeders\\Admin\\AdminDatabaseSeeder"
                php artisan app:migrate-tenants
-               php artisan config:cache
-               php artisan route:cache
-               php artisan view:cache
+               php artisan config:clear
+
+               mkdir -p storage/framework/{sessions,views,cache/data}
+               sudo chown -R www-data:www-data /var/www/app/storage /var/www/app/bootstrap/cache
+               sudo chmod -R 775 /var/www/app/storage /var/www/app/bootstrap/cache

@@ -1,0 +1,116 @@
+name: PR Checks
+
+on:
+   pull_request:
+      branches: ['**']
+
+jobs:
+   lint-php:
+      name: PHPCS (PSR-12)
+      runs-on: ubuntu-latest
+      steps:
+         - name: Checkout Code
+           uses: actions/checkout@v4
+
+         - name: Setup PHP
+           uses: shivammathur/setup-php@v2
+           with:
+              php-version: '8.5'
+              tools: phpcs
+              coverage: none
+
+         - name: Rodar PHPCS
+           run: phpcs --standard=PSR12 --extensions=php --ignore=app/helpers.php app/
+
+   test-backend:
+      name: Testes Unitários (PHP)
+      runs-on: ubuntu-latest
+      services:
+         postgres:
+            image: postgres:16
+            env:
+               POSTGRES_USER: user
+               POSTGRES_PASSWORD: password
+               POSTGRES_DB: oficina_tenant_test
+            ports:
+               - 5432:5432
+            options: >-
+               --health-cmd pg_isready
+               --health-interval 10s
+               --health-timeout 5s
+               --health-retries 5
+
+      steps:
+         - name: Checkout Code
+           uses: actions/checkout@v4
+
+         - name: Setup PHP
+           uses: shivammathur/setup-php@v2
+           with:
+              php-version: '8.5'
+              extensions: mbstring, xml, pdo_pgsql, pgsql, bcmath
+              coverage: none
+
+         - name: Instalar Dependências PHP
+           run: composer install --optimize-autoloader --no-progress
+
+         - name: Preparar .env
+           run: |
+              cp .env.example .env
+              php artisan key:generate
+
+         - name: Criar manifest Vite (stub para testes)
+           run: |
+              mkdir -p public/build
+              echo '{
+                "resources/css/app.css": { "file": "assets/app.css", "src": "resources/css/app.css" },
+                "resources/js/app.js": { "file": "assets/app.js", "src": "resources/js/app.js" }
+              }' > public/build/manifest.json
+
+         - name: Criar banco manager_test
+           run: PGPASSWORD=password psql -h 127.0.0.1 -U user -d postgres -c "CREATE DATABASE oficina_manager_test;"
+
+         - name: Rodar Migrations (manager_test)
+           env:
+              DB_HOST: 127.0.0.1
+              DB_PORT: 5432
+              DB_USERNAME: user
+              DB_PASSWORD: password
+           run: php artisan migrate --database=manager_test --force
+
+         - name: Rodar Migrations (tenant_test)
+           env:
+              DB_HOST: 127.0.0.1
+              DB_PORT: 5432
+              DB_USERNAME: user
+              DB_PASSWORD: password
+              CONNECTION_TENANT: tenant_test
+           run: php artisan migrate --database=tenant_test --path=database/migrations/tenants --force
+
+         - name: Rodar Testes Unitários
+           env:
+              DB_HOST: 127.0.0.1
+              DB_PORT: 5432
+              DB_USERNAME: user
+              DB_PASSWORD: password
+           run: php artisan test --testsuite=Unit
+
+   test-frontend:
+      name: Testes Unitários (Frontend)
+      runs-on: ubuntu-latest
+      steps:
+         - name: Checkout Code
+           uses: actions/checkout@v4
+
+         - name: Setup NodeJS
+           uses: actions/setup-node@v4
+           with:
+              node-version: '20'
+
+         - name: Instalar Dependências JS
+           run: npm install
+
+         - name: Rodar Testes Unitários
+           env:
+              LARAVEL_BYPASS_ENV_CHECK: 1
+           run: npm test -- --run

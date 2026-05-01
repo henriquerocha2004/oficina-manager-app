@@ -23,7 +23,8 @@ class SupplierDto
         public ?int $payment_term_days = null,
         public ?string $notes = null,
         public bool $is_active = true,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

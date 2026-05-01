@@ -135,9 +135,11 @@ import { useToast } from '@/Shared/composables/useToast.js';
 import { useStats } from '@/Composables/useStats.js';
 import { useExportCSV } from '@/Composables/useExportCSV.js';
 import { useClientFilters } from '@/Composables/useClientFilters.js';
+import { useMixpanel } from '@/Composables/useMixpanel';
 import { brazilianStates } from '@/Data/brazilianStates.js';
 
 const toast = useToast();
+const { track } = useMixpanel();
 
 const page = ref(1);
 const perPage = ref(6);
@@ -229,6 +231,7 @@ const loadStats = async () => {
 };
 
 onMounted(() => {
+    track('screen_viewed', { screen: 'clients' });
     const saved = loadFromStorage();
     if (saved.state) filters.state = saved.state;
     if (saved.city) filters.city = saved.city;

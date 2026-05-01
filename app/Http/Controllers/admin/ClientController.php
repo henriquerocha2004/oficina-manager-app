@@ -58,7 +58,25 @@ class ClientController extends Controller
     public function find(FindRequest $request, SearchClientAction $searchClientAction): JsonResponse
     {
         try {
-            $clients = $searchClientAction($request->toDto());
+            $dto = $request->toDto();
+
+            Log::info('[AdminClients] find request received', [
+                'search'         => $dto->search,
+                'per_page'       => $dto->per_page,
+                'sort_by'        => $dto->sort_by,
+                'sort_direction' => $dto->sort_direction,
+                'filters'        => $dto->filters,
+                'db_connection'  => config('database.default'),
+                'db_name'        => config('database.connections.' . config('database.default') . '.database'),
+            ]);
+
+            $clients = $searchClientAction($dto);
+
+            Log::info('[AdminClients] find result', [
+                'total'        => $clients->total(),
+                'current_page' => $clients->currentPage(),
+                'per_page'     => $clients->perPage(),
+            ]);
 
             return $this->setResponse(
                 message: Messages::ADMIN_CLIENTS_FETCHED_SUCCESS,
@@ -68,8 +86,8 @@ class ClientController extends Controller
         } catch (Exception $exception) {
             Log::error(Messages::ADMIN_CLIENTS_FETCH_ERROR, [
                 'error' => $exception->getMessage(),
-                'line' => $exception->getLine(),
-                'file' => $exception->getFile(),
+                'line'  => $exception->getLine(),
+                'file'  => $exception->getFile(),
             ]);
 
             return $this->setResponse(

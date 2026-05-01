@@ -11,7 +11,8 @@ readonly class StartWorkAction
 {
     public function __construct(
         private ServiceOrderDomain $domain
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Throwable

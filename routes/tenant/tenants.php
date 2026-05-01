@@ -7,6 +7,8 @@ require __DIR__.'/auth.php';
 
 // Protected tenant routes
 Route::middleware(['auth:tenant', 'tenant.permission', 'password.change'])->group(function () {
+    Route::get('/faq', fn () => Inertia::render('Tenant/Faq/Index'))->name('faq.index');
+
     // Client routes
     require __DIR__.'/client.php';
 

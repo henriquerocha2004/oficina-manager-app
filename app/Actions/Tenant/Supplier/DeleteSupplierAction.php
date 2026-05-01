@@ -16,7 +16,7 @@ class DeleteSupplierAction
         $supplier = Supplier::query()->find($idStr);
 
         if ($supplier === null) {
-            throw new SupplierNotFoundException;
+            throw new SupplierNotFoundException();
         }
 
         $supplier->delete();

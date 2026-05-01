@@ -188,7 +188,7 @@ class ProductController extends Controller
                 code: Response::HTTP_CREATED,
                 data: ['product' => $product],
             );
-        } catch (ProductNotFoundException|SupplierNotFoundException $exception) {
+        } catch (ProductNotFoundException | SupplierNotFoundException $exception) {
             return $this->setResponse(
                 message: $exception->getMessage(),
                 code: Response::HTTP_NOT_FOUND,
@@ -233,7 +233,7 @@ class ProductController extends Controller
                 code: Response::HTTP_OK,
                 data: ['product' => $product],
             );
-        } catch (ProductNotFoundException|SupplierNotFoundException|ProductSupplierNotFoundException $exception) {
+        } catch (ProductNotFoundException | SupplierNotFoundException | ProductSupplierNotFoundException $exception) {
             return $this->setResponse(
                 message: $exception->getMessage(),
                 code: Response::HTTP_NOT_FOUND,
@@ -269,7 +269,7 @@ class ProductController extends Controller
                 message: Messages::PRODUCT_SUPPLIER_DETACHED_SUCCESS,
                 code: Response::HTTP_OK,
             );
-        } catch (ProductNotFoundException|SupplierNotFoundException|ProductSupplierNotFoundException $exception) {
+        } catch (ProductNotFoundException | SupplierNotFoundException | ProductSupplierNotFoundException $exception) {
             return $this->setResponse(
                 message: $exception->getMessage(),
                 code: Response::HTTP_NOT_FOUND,
