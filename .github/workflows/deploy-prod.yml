@@ -1,0 +1,43 @@
+name: Deploy Production
+
+on:
+  workflow_run:
+    workflows:
+      - Build and Publish Production Images
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy with SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_SERVER_HOST }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_KEY }}
+          envs: PROD_ENV_FILE
+          script: |
+            set -eu
+            cd /var/www/oficina-manager-app
+
+            echo "${{ secrets.PROD_ENV_FILE }}" | tr -d '\r' > infra/prod/.env
+
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+
+            export APP_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-app:sha-${{ github.event.workflow_run.head_sha }}"
+            export WEB_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-web:sha-${{ github.event.workflow_run.head_sha }}"
+
+            docker compose -f infra/prod/docker-compose.prod.yml pull
+            docker compose -f infra/prod/docker-compose.prod.yml up -d --remove-orphans
+
+            docker compose -f infra/prod/docker-compose.prod.yml exec -T app php artisan migrate --force
+            docker compose -f infra/prod/docker-compose.prod.yml exec -T app php artisan app:migrate-tenants
+
+            docker image prune -f
