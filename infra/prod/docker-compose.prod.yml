@@ -35,21 +35,21 @@ services:
     networks:
       - oficina-manager
 
-  worker:
-    image: ${APP_IMAGE}
-    container_name: oficina-manager-worker
-    restart: unless-stopped
-    env_file:
-      - .app.env
-    environment:
-      CONTAINER_ROLE: worker
-      WARMUP_CACHE: "false"
-      RUN_MIGRATIONS: "false"
-    command: ["php", "artisan", "queue:work", "--sleep=1", "--tries=3", "--timeout=90"]
-    depends_on:
-      - app
-    networks:
-      - oficina-manager
+  # worker:
+  #   image: ${APP_IMAGE}
+  #   container_name: oficina-manager-worker
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .app.env
+  #   environment:
+  #     CONTAINER_ROLE: worker
+  #     WARMUP_CACHE: "false"
+  #     RUN_MIGRATIONS: "false"
+  #   command: ["php", "artisan", "queue:work", "--sleep=1", "--tries=3", "--timeout=90"]
+  #   depends_on:
+  #     - app
+  #   networks:
+  #     - oficina-manager
 
   scheduler:
     image: ${APP_IMAGE}
