@@ -5,7 +5,6 @@ if [ "${CONTAINER_ROLE:-app}" = "app" ]; then
     if [ "${WARMUP_CACHE:-true}" = "true" ]; then
         php artisan config:cache
         php artisan route:cache
-        php artisan view:cache
     fi
 
     if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
