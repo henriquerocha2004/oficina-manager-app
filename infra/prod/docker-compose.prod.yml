@@ -1,0 +1,72 @@
+services:
+  app:
+    image: ${APP_IMAGE}
+    container_name: oficina-manager-app
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    environment:
+      CONTAINER_ROLE: app
+      WARMUP_CACHE: "true"
+      RUN_MIGRATIONS: "false"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - oficina-manager
+
+  web:
+    image: ${WEB_IMAGE}
+    container_name: oficina-manager-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/up >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - oficina-manager
+
+  worker:
+    image: ${APP_IMAGE}
+    container_name: oficina-manager-worker
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    environment:
+      CONTAINER_ROLE: worker
+      WARMUP_CACHE: "false"
+      RUN_MIGRATIONS: "false"
+    command: ["php", "artisan", "queue:work", "--sleep=1", "--tries=3", "--timeout=90"]
+    depends_on:
+      - app
+    networks:
+      - oficina-manager
+
+  scheduler:
+    image: ${APP_IMAGE}
+    container_name: oficina-manager-scheduler
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    environment:
+      CONTAINER_ROLE: scheduler
+      WARMUP_CACHE: "false"
+      RUN_MIGRATIONS: "false"
+    command: ["sh", "-c", "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"]
+    depends_on:
+      - app
+    networks:
+      - oficina-manager
+
+networks:
+  oficina-manager:
+    driver: bridge
