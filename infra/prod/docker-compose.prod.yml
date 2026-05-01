@@ -26,6 +26,8 @@ services:
       - "80:80"
     depends_on:
       - app
+    volumes:
+      - /home/ubuntu/certs:/etc/nginx/ssl:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/up >/dev/null 2>&1 || exit 1"]
       interval: 30s
