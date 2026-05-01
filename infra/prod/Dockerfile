@@ -14,7 +14,7 @@ RUN apk add --no-cache \
     curl \
     bash \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) pdo_pgsql mbstring exif pcntl bcmath gd intl opcache
+    && docker-php-ext-install -j$(nproc) pdo_pgsql mbstring exif pcntl bcmath gd intl
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
