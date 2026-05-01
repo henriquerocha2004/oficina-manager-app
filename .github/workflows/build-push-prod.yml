@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm64
     env:
       DOCKER_METADATA_SHORT_SHA_LENGTH: 40
 
