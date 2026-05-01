@@ -22,9 +22,12 @@ jobs:
           host: ${{ secrets.PROD_SERVER_HOST }}
           username: ${{ secrets.PROD_SERVER_USER }}
           key: ${{ secrets.PROD_SERVER_KEY }}
+          envs: PROD_ENV_FILE
           script: |
             set -eu
             cd /var/www/oficina-manager-app
+
+            echo "${{ secrets.PROD_ENV_FILE }}" | tr -d '\r' > infra/prod/.env
 
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
