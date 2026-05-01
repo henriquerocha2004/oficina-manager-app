@@ -22,7 +22,7 @@ services:
     volumes:
       - ../../:/var/www
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      - /etc/nginx/ssl:/etc/nginx/ssl:ro
+      - /opt/oficina/ssl:/etc/nginx/ssl:ro
     depends_on:
       - oficina-manager-app
     networks:
