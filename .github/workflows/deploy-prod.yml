@@ -44,14 +44,14 @@ jobs:
           host: ${{ secrets.PROD_SERVER_HOST }}
           username: ${{ secrets.PROD_SERVER_USER }}
           key: ${{ secrets.PROD_SERVER_KEY }}
-          envs: PROD_ENV_FILE
+          envs: PROD_ENV_FILE,GHCR_TOKEN,GHCR_USERNAME
           script: |
             set -eu
             cd /opt/oficina
 
-            echo "${{ secrets.PROD_ENV_FILE }}" | tr -d '\r' > .env
+            printf '%s' "$PROD_ENV_FILE" | tr -d '\r' > .env
 
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
             export APP_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-app:sha-${{ github.event.workflow_run.head_sha }}"
             export WEB_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-web:sha-${{ github.event.workflow_run.head_sha }}"
