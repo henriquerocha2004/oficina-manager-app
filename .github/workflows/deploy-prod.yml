@@ -53,17 +53,17 @@ jobs:
             set -eu
             cd /opt/oficina
 
-            printf '%s' "$PROD_ENV_FILE" | tr -d '\r' > .env
+            printf '%s' "$PROD_ENV_FILE" | tr -d '\r' > .app.env
 
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
             export APP_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-app:sha-${{ github.event.workflow_run.head_sha }}"
             export WEB_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-web:sha-${{ github.event.workflow_run.head_sha }}"
 
-            docker compose --env-file .env -f docker-compose.prod.yml pull
-            docker compose --env-file .env -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
-            docker compose --env-file .env -f docker-compose.prod.yml exec -T app php artisan migrate --force
-            docker compose --env-file .env -f docker-compose.prod.yml exec -T app php artisan app:migrate-tenants
+            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
+            docker compose -f docker-compose.prod.yml exec -T app php artisan app:migrate-tenants
 
             docker image prune -f
