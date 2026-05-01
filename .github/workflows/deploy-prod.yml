@@ -16,6 +16,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Ensure deploy directory exists
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_SERVER_HOST }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_KEY }}
+          script: |
+            mkdir -p /opt/oficina
+
+      - name: Sync compose file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SERVER_HOST }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_KEY }}
+          source: infra/prod/docker-compose.prod.yml
+          target: /opt/oficina
+          strip_components: 2
+
       - name: Deploy with SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -25,19 +47,19 @@ jobs:
           envs: PROD_ENV_FILE
           script: |
             set -eu
-            cd /var/www/oficina-manager-app
+            cd /opt/oficina
 
-            echo "${{ secrets.PROD_ENV_FILE }}" | tr -d '\r' > infra/prod/.env
+            echo "${{ secrets.PROD_ENV_FILE }}" | tr -d '\r' > .env
 
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
 
             export APP_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-app:sha-${{ github.event.workflow_run.head_sha }}"
             export WEB_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-web:sha-${{ github.event.workflow_run.head_sha }}"
 
-            docker compose -f infra/prod/docker-compose.prod.yml pull
-            docker compose -f infra/prod/docker-compose.prod.yml up -d --remove-orphans
+            docker compose --env-file .env -f docker-compose.prod.yml pull
+            docker compose --env-file .env -f docker-compose.prod.yml up -d --remove-orphans
 
-            docker compose -f infra/prod/docker-compose.prod.yml exec -T app php artisan migrate --force
-            docker compose -f infra/prod/docker-compose.prod.yml exec -T app php artisan app:migrate-tenants
+            docker compose --env-file .env -f docker-compose.prod.yml exec -T app php artisan migrate --force
+            docker compose --env-file .env -f docker-compose.prod.yml exec -T app php artisan app:migrate-tenants
 
             docker image prune -f
