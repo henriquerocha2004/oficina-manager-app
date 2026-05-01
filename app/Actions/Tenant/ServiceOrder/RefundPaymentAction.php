@@ -12,7 +12,8 @@ readonly class RefundPaymentAction
 {
     public function __construct(
         private PaymentService $paymentService
-    ) {}
+    ) {
+    }
 
     /**
      * @throws Throwable

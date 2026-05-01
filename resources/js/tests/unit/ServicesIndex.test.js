@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
 import Index from '@/Pages/Tenant/Services/Index.vue';
-import { fetchServices, createService, updateService, deleteService } from '@/services/serviceService';
+import { fetchServices, createService, updateService, deleteService, fetchServiceStats } from '@/services/serviceService';
 import { useToast } from '@/Shared/composables/useToast';
 
 // Mock the services
@@ -77,6 +77,7 @@ describe('Services Index.vue', () => {
         mockCreateService = vi.mocked(createService);
         mockUpdateService = vi.mocked(updateService);
         mockDeleteService = vi.mocked(deleteService);
+        vi.mocked(fetchServiceStats).mockResolvedValue({ success: true, data: {} });
         mockToast = { success: vi.fn(), error: vi.fn() };
         useToast.mockReturnValue(mockToast);
 

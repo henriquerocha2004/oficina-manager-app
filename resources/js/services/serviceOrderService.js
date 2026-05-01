@@ -1,5 +1,59 @@
 import axios from 'axios';
+import mixpanel from 'mixpanel-browser';
 import { ServiceOrderStatus } from '@/Data/serviceOrderStatuses.js';
+
+const contextualStatusEvents = {
+    [`${ServiceOrderStatus.IN_PROGRESS}:${ServiceOrderStatus.WAITING_APPROVAL}`]: 'service_order_new_approval_requested',
+    [`${ServiceOrderStatus.WAITING_PAYMENT}:${ServiceOrderStatus.WAITING_APPROVAL}`]: 'service_order_returned_to_approval',
+    [`${ServiceOrderStatus.IN_PROGRESS}:${ServiceOrderStatus.WAITING_PAYMENT}`]: 'service_order_waiting_payment',
+};
+
+const statusEvents = {
+    [ServiceOrderStatus.WAITING_APPROVAL]: 'service_order_sent_for_approval',
+    [ServiceOrderStatus.APPROVED]: 'service_order_approved',
+    [ServiceOrderStatus.IN_PROGRESS]: 'service_order_started',
+    [ServiceOrderStatus.COMPLETED]: 'service_order_completed',
+    [ServiceOrderStatus.CANCELLED]: 'service_order_cancelled',
+};
+
+function getServiceOrderId(serviceOrder) {
+    return serviceOrder?.id ?? serviceOrder?.service_order_id ?? null;
+}
+
+function getServiceOrderNumber(serviceOrder) {
+    return serviceOrder?.code ?? serviceOrder?.order_number ?? serviceOrder?.service_order_number ?? null;
+}
+
+function resolveTrackingServiceOrder(serviceOrderId, trackingContext = {}, serviceOrder = null) {
+    return {
+        id: serviceOrder?.id ?? trackingContext.serviceOrderId ?? serviceOrderId ?? null,
+        code: trackingContext.serviceOrderNumber ?? serviceOrder?.code ?? serviceOrder?.order_number ?? null,
+        status: serviceOrder?.status ?? trackingContext.serviceOrderStatus ?? null,
+    };
+}
+
+function buildTrackingProps(serviceOrder, extra = {}) {
+    return {
+        service_order_id: getServiceOrderId(serviceOrder),
+        service_order_number: getServiceOrderNumber(serviceOrder),
+        service_order_status: serviceOrder?.status ?? null,
+        ...extra,
+    };
+}
+
+function trackServiceOrderEvent(event, serviceOrder, extra = {}) {
+    mixpanel.track(event, buildTrackingProps(serviceOrder, extra));
+}
+
+function resolveStatusEvent(serviceOrderStatus, fromStatus = null) {
+    const contextualKey = fromStatus ? `${fromStatus}:${serviceOrderStatus}` : null;
+
+    if (contextualKey && contextualStatusEvents[contextualKey]) {
+        return contextualStatusEvents[contextualKey];
+    }
+
+    return statusEvents[serviceOrderStatus] ?? 'service_order_status_changed';
+}
 
 /**
  * Mapeia campos do backend para formato usado pelo frontend
@@ -187,7 +241,7 @@ const statusEndpoints = {
  * @param {string|null} fromStatus - Status atual (necessário para rotas contextuais)
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function changeServiceOrderStatus(id, newStatus, fromStatus = null) {
+export async function changeServiceOrderStatus(id, newStatus, fromStatus = null, trackingContext = {}) {
     let endpoint = statusEndpoints[newStatus];
 
     if (fromStatus === ServiceOrderStatus.WAITING_PAYMENT && newStatus === ServiceOrderStatus.WAITING_APPROVAL) {
@@ -200,7 +254,19 @@ export async function changeServiceOrderStatus(id, newStatus, fromStatus = null)
 
     try {
         const { data } = await axios.post(`/service-orders/${id}/${endpoint}`);
-        return { success: true, data: mapServiceOrder(data.data.service_order) };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(id, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent(
+            resolveStatusEvent(serviceOrder.status, fromStatus),
+            trackingServiceOrder,
+            {
+                previous_status: fromStatus,
+                current_status: serviceOrder.status,
+            }
+        );
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         console.error('Error changing service order status:', error);
         return { success: false, error: error.response?.data?.message || error.message };
@@ -215,13 +281,23 @@ export async function changeServiceOrderStatus(id, newStatus, fromStatus = null)
  * @param {Array} params.items - Itens (serviços/produtos)
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function sendForApprovalWithData(id, { diagnosis, items }) {
+export async function sendForApprovalWithData(id, { diagnosis, items }, trackingContext = {}) {
     try {
         const { data } = await axios.post(`/service-orders/${id}/send-for-approval`, {
             diagnosis,
             items
         });
-        return { success: true, data: mapServiceOrder(data.data.service_order) };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(id, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent('service_order_sent_for_approval', trackingServiceOrder, {
+            diagnosis_provided: Boolean(diagnosis),
+            items_count: items.length,
+            previous_status: ServiceOrderStatus.DRAFT,
+            current_status: serviceOrder.status,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         console.error('Error sending for approval:', error);
         return { success: false, error: error.response?.data?.message || error.message };
@@ -236,13 +312,23 @@ export async function sendForApprovalWithData(id, { diagnosis, items }) {
  * @param {Array} params.items - Novos itens
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function requestNewApproval(id, { diagnosis, items }) {
+export async function requestNewApproval(id, { diagnosis, items }, trackingContext = {}) {
     try {
         const { data } = await axios.post(`/service-orders/${id}/request-new-approval`, {
             diagnosis,
             items
         });
-        return { success: true, data: mapServiceOrder(data.data.service_order) };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(id, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent('service_order_new_approval_requested', trackingServiceOrder, {
+            diagnosis_provided: Boolean(diagnosis),
+            items_count: items.length,
+            previous_status: ServiceOrderStatus.IN_PROGRESS,
+            current_status: serviceOrder.status,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         console.error('Error requesting new approval:', error);
         return { success: false, error: error.response?.data?.message || error.message };
@@ -255,10 +341,17 @@ export async function requestNewApproval(id, { diagnosis, items }) {
  * @param {string} diagnosis
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function updateDiagnosis(id, diagnosis) {
+export async function updateDiagnosis(id, diagnosis, trackingContext = {}) {
     try {
         const { data } = await axios.put(`/service-orders/${id}/diagnosis`, { technical_diagnosis: diagnosis });
-        return { success: true, data: mapServiceOrder(data.data.service_order) };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(id, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent('service_order_diagnosis_updated', trackingServiceOrder, {
+            diagnosis_length: diagnosis?.trim()?.length ?? 0,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         console.error('Error updating diagnosis:', error);
         return { success: false, error: error.response?.data?.message || error.message };
@@ -271,10 +364,17 @@ export async function updateDiagnosis(id, diagnosis) {
  * @param {number} discount
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function updateDiscount(id, discount) {
+export async function updateDiscount(id, discount, trackingContext = {}) {
     try {
         const { data } = await axios.put(`/service-orders/${id}/discount`, { discount });
-        return { success: true, data: mapServiceOrder(data.data.service_order) };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(id, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent('service_order_discount_updated', trackingServiceOrder, {
+            discount_amount: discount,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         console.error('Error updating discount:', error);
         return { success: false, error: error.response?.data?.message || error.message };
@@ -287,10 +387,18 @@ export async function updateDiscount(id, discount) {
  * @param {string} reason
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function cancelServiceOrder(id, reason) {
+export async function cancelServiceOrder(id, reason, trackingContext = {}) {
     try {
         const { data } = await axios.post(`/service-orders/${id}/cancel`, { reason });
-        return { success: true, data: mapServiceOrder(data.data.service_order) };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(id, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent('service_order_cancelled', trackingServiceOrder, {
+            cancel_reason: reason,
+            current_status: serviceOrder.status,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         console.error('Error cancelling service order:', error);
         return { success: false, error: error.response?.data?.message || error.message };
@@ -319,7 +427,13 @@ export async function fetchServiceOrderStats() {
 export async function createServiceOrder(osData) {
     try {
         const { data } = await axios.post('/service-orders', osData);
-        return { success: true, data: mapServiceOrder(data.data.service_order) };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+
+        trackServiceOrderEvent('service_order_created', serviceOrder, {
+            current_status: serviceOrder.status,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         console.error('Error creating service order:', error);
         return { success: false, error: error.response?.data?.message || error.message };
@@ -332,10 +446,20 @@ export async function createServiceOrder(osData) {
  * @param {Object} item - { type, description, quantity, unit_price, service_id?, product_id? }
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function addServiceOrderItem(serviceOrderId, item) {
+export async function addServiceOrderItem(serviceOrderId, item, trackingContext = {}) {
     try {
         const { data } = await axios.post(`/service-orders/${serviceOrderId}/items`, item);
-        return { success: true, data: data.data.service_order };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(serviceOrderId, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent('service_order_item_added', trackingServiceOrder, {
+            item_type: item.type,
+            item_description: item.description,
+            item_quantity: item.quantity,
+            item_unit_price: item.unit_price,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         return { success: false, error: error.response?.data?.message || error.message };
     }
@@ -347,10 +471,17 @@ export async function addServiceOrderItem(serviceOrderId, item) {
  * @param {string} itemId
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function removeServiceOrderItem(serviceOrderId, itemId) {
+export async function removeServiceOrderItem(serviceOrderId, itemId, trackingContext = {}) {
     try {
         const { data } = await axios.delete(`/service-orders/${serviceOrderId}/items/${itemId}`);
-        return { success: true, data: data.data.service_order };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(serviceOrderId, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent('service_order_item_removed', trackingServiceOrder, {
+            item_id: itemId,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         return { success: false, error: error.response?.data?.message || error.message };
     }
@@ -377,7 +508,7 @@ export async function deleteServiceOrder(id) {
  * @param {{ payment_method: string, amount: number, installments?: number, notes?: string }} payload
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function registerPayment(serviceOrderId, { payment_method, amount, installments, notes }) {
+export async function registerPayment(serviceOrderId, { payment_method, amount, installments, notes }, trackingContext = {}) {
     try {
         const { data } = await axios.post(`/service-orders/${serviceOrderId}/payments`, {
             payment_method,
@@ -385,7 +516,19 @@ export async function registerPayment(serviceOrderId, { payment_method, amount, 
             installments: installments || null,
             notes: notes || null,
         });
-        return { success: true, data: data.data.payment };
+        const trackingServiceOrder = resolveTrackingServiceOrder(serviceOrderId, trackingContext);
+
+        trackServiceOrderEvent('service_order_payment_registered', trackingServiceOrder, {
+            payment_id: data.data.payment.id,
+            payment_method,
+            payment_amount: amount,
+            installments: installments || null,
+        });
+
+        return {
+            success: true,
+            data: data.data.payment
+        };
     } catch (error) {
         return { success: false, error: error.response?.data?.message || error.message };
     }
@@ -397,14 +540,22 @@ export async function registerPayment(serviceOrderId, { payment_method, amount, 
  * @param {{ amount: number, payment_method: string, notes?: string }} payload
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function registerRefund(serviceOrderId, { amount, payment_method, notes }) {
+export async function registerRefund(serviceOrderId, { amount, payment_method, notes }, trackingContext = {}) {
     try {
         const { data } = await axios.post(`/service-orders/${serviceOrderId}/refund`, {
             amount,
             payment_method,
             notes: notes || null,
         });
-        return { success: true, data: data.data.service_order };
+        const serviceOrder = mapServiceOrder(data.data.service_order);
+        const trackingServiceOrder = resolveTrackingServiceOrder(serviceOrderId, trackingContext, serviceOrder);
+
+        trackServiceOrderEvent('service_order_refund_registered', trackingServiceOrder, {
+            refund_amount: amount,
+            payment_method,
+        });
+
+        return { success: true, data: serviceOrder };
     } catch (error) {
         return { success: false, error: error.response?.data?.message || error.message };
     }
@@ -416,7 +567,7 @@ export async function registerRefund(serviceOrderId, { amount, payment_method, n
  * @param {File} photoFile
  * @returns {Promise<{success: boolean, data?: Object, error?: any}>}
  */
-export async function uploadServiceOrderPhoto(serviceOrderId, photoFile) {
+export async function uploadServiceOrderPhoto(serviceOrderId, photoFile, trackingContext = {}) {
     try {
         const formData = new FormData();
         formData.append('photo', photoFile);
@@ -431,7 +582,18 @@ export async function uploadServiceOrderPhoto(serviceOrderId, photoFile) {
             }
         );
 
-        return { success: true, data: data.data.photo };
+        const trackingServiceOrder = resolveTrackingServiceOrder(serviceOrderId, trackingContext);
+
+        trackServiceOrderEvent('service_order_photo_uploaded', trackingServiceOrder, {
+            photo_id: data.data.photo.id,
+            photo_name: data.data.photo.original_filename,
+            photo_size: data.data.photo.file_size,
+        });
+
+        return {
+            success: true,
+            data: data.data.photo
+        };
     } catch (error) {
         console.error('Error uploading photo:', error);
         return {
@@ -447,9 +609,15 @@ export async function uploadServiceOrderPhoto(serviceOrderId, photoFile) {
  * @param {string} photoId
  * @returns {Promise<{success: boolean, error?: any}>}
  */
-export async function deleteServiceOrderPhoto(serviceOrderId, photoId) {
+export async function deleteServiceOrderPhoto(serviceOrderId, photoId, trackingContext = {}) {
     try {
         await axios.delete(`/service-orders/${serviceOrderId}/photos/${photoId}`);
+        const trackingServiceOrder = resolveTrackingServiceOrder(serviceOrderId, trackingContext);
+
+        trackServiceOrderEvent('service_order_photo_deleted', trackingServiceOrder, {
+            photo_id: photoId,
+        });
+
         return { success: true };
     } catch (error) {
         console.error('Error deleting photo:', error);

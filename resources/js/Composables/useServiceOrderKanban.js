@@ -108,6 +108,16 @@ export function useServiceOrderKanban() {
         return null;
     }
 
+    function findServiceOrder(serviceOrderId) {
+        for (const status of KanbanStatuses) {
+            const found = columns[status].value.find(so => String(so.id) === String(serviceOrderId));
+            if (found) {
+                return found;
+            }
+        }
+        return null;
+    }
+
     /**
      * Remove item da coluna atual
      */
@@ -138,9 +148,13 @@ export function useServiceOrderKanban() {
      */
     async function changeStatus(serviceOrderId, newStatus) {
         const currentStatus = findCurrentStatus(serviceOrderId);
+        const serviceOrder = findServiceOrder(serviceOrderId);
         addToColumn(serviceOrderId, newStatus);
 
-        const result = await changeServiceOrderStatus(serviceOrderId, newStatus, currentStatus);
+        const result = await changeServiceOrderStatus(serviceOrderId, newStatus, currentStatus, {
+            serviceOrderNumber: serviceOrder?.code ?? null,
+            serviceOrderStatus: currentStatus,
+        });
 
         if (!result.success) {
             await load();
@@ -153,13 +167,18 @@ export function useServiceOrderKanban() {
      */
     async function changeStatusWithData(serviceOrderId, currentStatus, newStatus, data) {
         let result;
+        const serviceOrder = findServiceOrder(serviceOrderId);
+        const trackingContext = {
+            serviceOrderNumber: serviceOrder?.code ?? null,
+            serviceOrderStatus: currentStatus,
+        };
         
         if (currentStatus === 'draft') {
-            result = await sendForApprovalWithData(serviceOrderId, data);
+            result = await sendForApprovalWithData(serviceOrderId, data, trackingContext);
         } else if (currentStatus === 'in_progress') {
-            result = await requestNewApproval(serviceOrderId, data);
+            result = await requestNewApproval(serviceOrderId, data, trackingContext);
         } else {
-            result = await changeServiceOrderStatus(serviceOrderId, newStatus);
+            result = await changeServiceOrderStatus(serviceOrderId, newStatus, currentStatus, trackingContext);
         }
 
         if (!result.success) {

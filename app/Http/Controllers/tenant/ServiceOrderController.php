@@ -485,8 +485,11 @@ class ServiceOrderController extends Controller
     /**
      * @throws Throwable
      */
-    public function updateDiagnosis(string $id, UpdateDiagnosisRequest $request, UpdateDiagnosisAction $action): JsonResponse
-    {
+    public function updateDiagnosis(
+        string $id,
+        UpdateDiagnosisRequest $request,
+        UpdateDiagnosisAction $action
+    ): JsonResponse {
         try {
             $serviceOrder = $action($id, $this->authenticatedUserId(), $request->input('technical_diagnosis', ''));
 
@@ -579,8 +582,11 @@ class ServiceOrderController extends Controller
     /**
      * @throws Throwable
      */
-    public function updateDiscount(string $id, UpdateDiscountRequest $request, UpdateDiscountAction $action): JsonResponse
-    {
+    public function updateDiscount(
+        string $id,
+        UpdateDiscountRequest $request,
+        UpdateDiscountAction $action
+    ): JsonResponse {
         try {
             $serviceOrder = $action($id, $this->authenticatedUserId(), (float) $request->input('discount', 0));
 

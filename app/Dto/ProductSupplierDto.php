@@ -12,7 +12,8 @@ class ProductSupplierDto
         public ?int $min_order_quantity = 1,
         public ?bool $is_preferred = false,
         public ?string $notes = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

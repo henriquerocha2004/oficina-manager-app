@@ -7,6 +7,7 @@ use App\Actions\Tenant\ServiceOrder\GetServiceOrderStatsAction;
 use App\Domain\Tenant\ServiceOrder\ServiceOrderDomain;
 use App\Dto\ServiceOrderDto;
 use App\Models\Tenant\Client;
+use App\Models\Tenant\ServiceOrder;
 use App\Models\Tenant\User;
 use App\Models\Tenant\Vehicle;
 use App\Services\Tenant\ServiceOrder\PaymentService;
@@ -17,6 +18,12 @@ use Tests\TestCase;
 class GetServiceOrderStatsActionTest extends TestCase
 {
     use DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        ServiceOrder::withTrashed()->forceDelete();
+    }
 
     public function test_returns_stats_with_no_service_orders(): void
     {

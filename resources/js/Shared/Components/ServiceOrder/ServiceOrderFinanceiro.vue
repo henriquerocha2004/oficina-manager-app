@@ -564,6 +564,13 @@ const refundForm   = ref({ amount: 0, method: 'cash', notes: '' });
 const receiptForm  = ref({ type: 'payment', amount: 0, method: 'cash' });
 const discountValue = ref(parseFloat(props.serviceOrder.discount) || 0);
 
+function getTrackingContext() {
+  return {
+    serviceOrderNumber: props.serviceOrder.order_number,
+    serviceOrderStatus: props.serviceOrder.status,
+  };
+}
+
 // ---- Computed ----
 const history = computed(() =>
   [...(props.serviceOrder.payments || [])]
@@ -653,7 +660,7 @@ async function handleRegisterPayment() {
     amount: paymentForm.value.amount,
     installments: paymentForm.value.method === 'credit_card' ? paymentForm.value.installments : null,
     notes: paymentForm.value.notes || null,
-  });
+  }, getTrackingContext());
   savingPayment.value = false;
   if (result.success) {
     showPaymentForm.value = false;
@@ -676,7 +683,7 @@ async function handleRegisterRefund() {
     amount: refundForm.value.amount,
     payment_method: refundForm.value.method,
     notes: refundForm.value.notes,
-  });
+  }, getTrackingContext());
   savingRefund.value = false;
   if (result.success) {
     showRefundModal.value = false;
@@ -692,7 +699,7 @@ async function handleRegisterRefund() {
 async function handleDiscountUpdate() {
   const newValue = discountValue.value ?? 0;
   if (newValue === (parseFloat(props.serviceOrder.discount) || 0)) return;
-  const result = await updateDiscount(props.serviceOrder.id, newValue);
+  const result = await updateDiscount(props.serviceOrder.id, newValue, getTrackingContext());
   if (result.success) {
     toast.success('Desconto atualizado!');
     router.reload();

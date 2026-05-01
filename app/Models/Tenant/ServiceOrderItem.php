@@ -38,7 +38,7 @@ class ServiceOrderItem extends Model
     protected $table = 'service_order_items';
     public $incrementing = false;
     protected $keyType = 'string';
-    
+
     protected $fillable = [
         'id',
         'service_order_id',
