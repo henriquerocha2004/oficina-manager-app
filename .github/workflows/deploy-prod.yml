@@ -40,6 +40,10 @@ jobs:
 
       - name: Deploy with SSH
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
         with:
           host: ${{ secrets.PROD_SERVER_HOST }}
           username: ${{ secrets.PROD_SERVER_USER }}
