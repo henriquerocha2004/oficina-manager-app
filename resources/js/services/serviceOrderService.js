@@ -42,7 +42,13 @@ function buildTrackingProps(serviceOrder, extra = {}) {
 }
 
 function trackServiceOrderEvent(event, serviceOrder, extra = {}) {
-    mixpanel.track(event, buildTrackingProps(serviceOrder, extra));
+    try {
+        mixpanel.track(event, buildTrackingProps(serviceOrder, extra));
+    } catch (error) {
+        if (import.meta.env.DEV) {
+            console.warn('Mixpanel track failed', error);
+        }
+    }
 }
 
 function resolveStatusEvent(serviceOrderStatus, fromStatus = null) {

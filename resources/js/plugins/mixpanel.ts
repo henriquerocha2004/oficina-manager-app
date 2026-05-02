@@ -1,6 +1,21 @@
 import mixpanel from "mixpanel-browser";
 import { router } from "@inertiajs/vue3";
 
+const mixpanelToken = import.meta.env.VITE_MIX_PANEL_TOKEN;
+let isMixpanelEnabled = false;
+
+function withMixpanel(fn: () => void) {
+    if (!isMixpanelEnabled) {
+        return;
+    }
+
+    try {
+        fn();
+    } catch (error) {
+        console.warn("Mixpanel call failed", error);
+    }
+}
+
 function setup(props: Record<string, any>) {
     const user = props.auth?.user;
     const tenantId: string | undefined = props.tenant_settings?.tenant_id != null
@@ -12,34 +27,49 @@ function setup(props: Record<string, any>) {
 
     const userId = user.ulid ?? String(user.id);
 
-    mixpanel.identify(userId);
+    withMixpanel(() => mixpanel.identify(userId));
 
     // Super properties: anexadas automaticamente em TODOS os eventos futuros
     // É assim que o painel consegue filtrar por tenant
-    mixpanel.register({
-        tenant_id: tenantId ?? null,
-        tenant_domain: tenantDomain ?? null,
-        user_role: user.role,
+    withMixpanel(() => {
+        mixpanel.register({
+            tenant_id: tenantId ?? null,
+            tenant_domain: tenantDomain ?? null,
+            user_role: user.role,
+        });
     });
 
-    mixpanel.people.set({
-        $name: user.name,
-        $email: user.email,
-        role: user.role,
-        tenant_id: tenantId ?? null,
-        tenant_domain: tenantDomain ?? null,
+    withMixpanel(() => {
+        mixpanel.people.set({
+            $name: user.name,
+            $email: user.email,
+            role: user.role,
+            tenant_id: tenantId ?? null,
+            tenant_domain: tenantDomain ?? null,
+        });
     });
 
     if (tenantId) {
-        mixpanel.set_group('tenant_id', tenantId);
+        withMixpanel(() => mixpanel.set_group('tenant_id', tenantId));
     }
 }
 
 export default {
     install(_app: any) {
-        mixpanel.init(import.meta.env.VITE_MIX_PANEL_TOKEN, {
-            debug: import.meta.env.DEV,
-        });
+        if (!mixpanelToken) {
+            console.warn("Mixpanel disabled: missing VITE_MIX_PANEL_TOKEN");
+            return;
+        }
+
+        try {
+            mixpanel.init(mixpanelToken, {
+                debug: import.meta.env.DEV,
+            });
+            isMixpanelEnabled = true;
+        } catch (error) {
+            console.warn("Mixpanel init failed", error);
+            return;
+        }
 
         // Lê os props iniciais direto do atributo data-page que o Inertia injeta no HTML.
         // Necessário porque o evento 'navigate' dispara antes deste listener ser registrado

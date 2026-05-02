@@ -18,10 +18,17 @@ concurrency:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_METADATA_SHORT_SHA_LENGTH: 40
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: 'arm64'  
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -45,13 +52,23 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
 
+      - name: Prepare Vite environment file
+        env:
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+        shell: bash
+        run: |
+          printf '%s' "$PROD_ENV_FILE" | tr -d '\r' | grep '^VITE_' > .vite.env
+
       - name: Build and push app image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: infra/prod/Dockerfile
           target: app-runtime
+          platforms: linux/arm64
           push: true
+          secret-files: |
+            vite_env=.vite.env
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
           cache-from: type=gha
@@ -75,7 +92,10 @@ jobs:
           context: .
           file: infra/prod/Dockerfile
           target: web-runtime
+          platforms: linux/arm64
           push: true
+          secret-files: |
+            vite_env=.vite.env
           tags: ${{ steps.meta-web.outputs.tags }}
           labels: ${{ steps.meta-web.outputs.labels }}
           cache-from: type=gha

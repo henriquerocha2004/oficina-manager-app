@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM php:8.5-fpm-alpine AS php-builder
 
 RUN apk add --no-cache \
@@ -14,7 +15,7 @@ RUN apk add --no-cache \
     curl \
     bash \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) pdo_pgsql mbstring exif pcntl bcmath gd intl opcache
+    && docker-php-ext-install -j$(nproc) pdo_pgsql mbstring exif pcntl bcmath gd intl
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -26,7 +27,8 @@ RUN composer install \
     --prefer-dist \
     --no-interaction \
     --no-progress \
-    --optimize-autoloader
+    --optimize-autoloader \
+    --no-scripts
 
 COPY . .
 RUN composer dump-autoload --optimize --classmap-authoritative
@@ -41,7 +43,7 @@ RUN npm ci
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.js ./vite.config.js
-RUN npm run build
+RUN --mount=type=secret,id=vite_env,target=/app/.env.production npm run build
 
 FROM php:8.5-fpm-alpine AS app-runtime
 

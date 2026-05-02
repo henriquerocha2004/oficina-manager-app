@@ -16,28 +16,54 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy with SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Ensure deploy directory exists
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.PROD_SERVER_HOST }}
           username: ${{ secrets.PROD_SERVER_USER }}
           key: ${{ secrets.PROD_SERVER_KEY }}
-          envs: PROD_ENV_FILE
+          script: |
+            mkdir -p /opt/oficina
+
+      - name: Sync compose file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PROD_SERVER_HOST }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_KEY }}
+          source: infra/prod/docker-compose.prod.yml
+          target: /opt/oficina
+          strip_components: 2
+
+      - name: Deploy with SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+        with:
+          host: ${{ secrets.PROD_SERVER_HOST }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_KEY }}
+          envs: PROD_ENV_FILE,GHCR_TOKEN,GHCR_USERNAME
           script: |
             set -eu
-            cd /var/www/oficina-manager-app
+            cd /opt/oficina
 
-            echo "${{ secrets.PROD_ENV_FILE }}" | tr -d '\r' > infra/prod/.env
+            printf '%s' "$PROD_ENV_FILE" | tr -d '\r' > .app.env
 
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
             export APP_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-app:sha-${{ github.event.workflow_run.head_sha }}"
             export WEB_IMAGE="ghcr.io/${{ github.repository_owner }}/oficina-manager-app-web:sha-${{ github.event.workflow_run.head_sha }}"
 
-            docker compose -f infra/prod/docker-compose.prod.yml pull
-            docker compose -f infra/prod/docker-compose.prod.yml up -d --remove-orphans
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
-            docker compose -f infra/prod/docker-compose.prod.yml exec -T app php artisan migrate --force
-            docker compose -f infra/prod/docker-compose.prod.yml exec -T app php artisan app:migrate-tenants
+            docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force
+            docker compose -f docker-compose.prod.yml exec -T app php artisan app:migrate-tenants
 
             docker image prune -f
