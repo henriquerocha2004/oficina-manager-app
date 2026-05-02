@@ -52,6 +52,13 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
 
+      - name: Prepare Vite environment file
+        env:
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+        shell: bash
+        run: |
+          printf '%s' "$PROD_ENV_FILE" | tr -d '\r' | grep '^VITE_' > .vite.env
+
       - name: Build and push app image
         uses: docker/build-push-action@v6
         with:
@@ -60,6 +67,8 @@ jobs:
           target: app-runtime
           platforms: linux/arm64
           push: true
+          secret-files: |
+            vite_env=.vite.env
           tags: ${{ steps.meta-app.outputs.tags }}
           labels: ${{ steps.meta-app.outputs.labels }}
           cache-from: type=gha
@@ -85,6 +94,8 @@ jobs:
           target: web-runtime
           platforms: linux/arm64
           push: true
+          secret-files: |
+            vite_env=.vite.env
           tags: ${{ steps.meta-web.outputs.tags }}
           labels: ${{ steps.meta-web.outputs.labels }}
           cache-from: type=gha
