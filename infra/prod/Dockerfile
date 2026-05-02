@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 FROM php:8.5-fpm-alpine AS php-builder
 
 RUN apk add --no-cache \
@@ -42,7 +43,7 @@ RUN npm ci
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.js ./vite.config.js
-RUN npm run build
+RUN --mount=type=secret,id=vite_env,target=/app/.env.production npm run build
 
 FROM php:8.5-fpm-alpine AS app-runtime
 
