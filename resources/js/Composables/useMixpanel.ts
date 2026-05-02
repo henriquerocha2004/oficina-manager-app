@@ -4,9 +4,7 @@ function safeMixpanelCall(fn: () => void) {
     try {
         fn();
     } catch (error) {
-        if (import.meta.env.DEV) {
-            console.warn("Mixpanel call skipped", error);
-        }
+        console.warn("Mixpanel call skipped", error);
     }
 }
 
