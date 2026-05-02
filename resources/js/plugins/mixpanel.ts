@@ -12,9 +12,7 @@ function withMixpanel(fn: () => void) {
     try {
         fn();
     } catch (error) {
-        if (import.meta.env.DEV) {
-            console.warn("Mixpanel call failed", error);
-        }
+        console.warn("Mixpanel call failed", error);
     }
 }
 
@@ -59,9 +57,7 @@ function setup(props: Record<string, any>) {
 export default {
     install(_app: any) {
         if (!mixpanelToken) {
-            if (import.meta.env.DEV) {
-                console.warn("Mixpanel disabled: missing VITE_MIX_PANEL_TOKEN");
-            }
+            console.warn("Mixpanel disabled: missing VITE_MIX_PANEL_TOKEN");
             return;
         }
 
@@ -71,9 +67,7 @@ export default {
             });
             isMixpanelEnabled = true;
         } catch (error) {
-            if (import.meta.env.DEV) {
-                console.warn("Mixpanel init failed", error);
-            }
+            console.warn("Mixpanel init failed", error);
             return;
         }
 
